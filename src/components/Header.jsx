@@ -1,33 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { Search, Moon, ShoppingCart, User } from "lucide-react";
+import React from "react";
+import { FaSearch, FaShoppingCart, FaUserCircle } from "react-icons/fa"; // ícones corretos
+import styles from "./Header.module.css";
+import logo from "../assets/logo192white.png";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-white shadow-md" : "bg-transparent"}`}>
-      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-3">
-        <nav className="flex gap-6 text-sm font-medium">
-          <a href="#" className="hover:text-blue-500">New</a>
-          <a href="#" className="hover:text-blue-500">Exclusiv</a>
-          <a href="#" className="hover:text-blue-500">Futebol</a>
-          <a href="#" className="hover:text-blue-500">Comunidade</a>
-          <a href="#" className="hover:text-blue-500">Sobre</a>
-        </nav>
+    <header>
+      <div className={styles.navbarWrapper}>
+        <div className={styles.nav}>
+          <div className={styles.centeredMenu}>
+            <ul className={styles.noBreak}>
 
-        <div className="text-xl font-bold">LOGO</div>
+              <li className={styles.navItem}>Home</li>
+              <li className={styles.navItem}>Exclusivo</li>
+              <li className={styles.navItem}>Futebol</li>
+              <li className={styles.navItem}>Comunidade</li>
+              <li className={styles.navItem}>Sale</li>
+              <li className={styles.navItem}>Sobre</li>
 
-        <div className="flex items-center gap-5">
-          <Search className="cursor-pointer hover:text-blue-500" />
-          <Moon className="cursor-pointer hover:text-blue-500" />
-          <User className="cursor-pointer hover:text-blue-500" />
-          <ShoppingCart className="cursor-pointer hover:text-blue-500" />
+            </ul>
+          </div>
+
+          <div className={styles.logoWrapper}>
+            <a href="/">
+              <img src={logo} alt="Logo" className={styles.defaultImage} />
+            </a>
+          </div>
+
+          <div className={styles.rightMenuWrapper}>
+            <div className={styles.rightMenu}>
+              <ul>
+                <li>
+                  <button type="button" className="search-icon-desktop">
+                    <FaSearch />
+                  </button>
+                </li>
+                <li>
+                  <button type="button">
+                    <FaShoppingCart />
+                  </button>
+                </li>
+                <li>
+                  <button type="button">
+                    <FaUserCircle />
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </header>

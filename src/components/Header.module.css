@@ -1,0 +1,147 @@
+
+
+.noBreak {
+  white-space: nowrap;       /* impede quebra de linha */
+  overflow: hidden;          /* esconde o excesso de texto */
+  text-overflow: ellipsis;   /* adiciona "..." quando o texto passa do limite */
+}
+
+
+.navbarWrapper {
+    position: absolute;
+    display: inline;
+    width: 100%;
+    gap: 1rem;
+    justify-content: space-between;
+    height: 0 !important;
+}
+
+.nav {
+    position: relative;
+    display: inline-flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    background-color: transparent;
+    padding-top: 15px;
+    
+    
+}
+
+
+/* --- MENU ESQUERDO --- */
+.centeredMenu {
+    padding-top: 0;
+    display: inline-flex;
+    position: relative;
+    height: auto;
+    width: calc(100% / 3);
+    z-index: 1;
+    padding-left: 4rem;
+}
+.centeredMenu ul {
+    display: inline-flex;
+    list-style: none;
+    height: 3rem;
+    align-items: top;
+    margin: 4px;
+    gap: 1rem;
+}
+.centeredMenu li {
+  position: relative;
+  text-transform: uppercase;
+  font-size: 15px;
+  padding: 15px 0 25px;
+  cursor: pointer;
+  
+}
+.centeredMenu li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 2px;
+  background-color: white; /* cor da barrinha */
+  transition: width 0.3s ease-in-out;
+}
+.centeredMenu li:hover::after {
+  width: 100%;
+}
+
+.l1 {
+    width: 11rem;
+    position: relative;
+    z-index: 26;
+    margin: auto;
+}
+.l1 img {
+    -webkit-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 500ms linear;
+    display: block;
+    height: 6rem;
+    margin-top: 0;
+    margin-left: 25%;
+}
+
+/* --- MENU DIREITO --- */
+
+.rightMenuWrapper {
+    width: calc(100% / 3);
+    display: flex;
+    justify-content: space-around;
+}
+
+.rightMenu {
+    justify-content: center;
+    position: relative;
+    display: block;
+    width: auto;
+    color: white;
+    z-index: 1;
+    
+}
+
+.rightMenu ul {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    align-items: center;
+    margin: 0 1rem;
+    padding: 0;
+    }
+
+.rightMenu li button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: white;
+    transition: transform 0.2s ease, color 0.3s ease;
+    }
+
+.rightMenu li button:hover {
+    transform: scale(1.3);
+    color: #ffffff; /* cor ao passar o mouse */
+    }
+
+
+@media (min-width: 1201px) {
+    .search-icon-desktop {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        z-index: 999;
+    }
+}
+
+
+/* --- IMAGEM --- */
+
+
+
+
+/* <img src={logoHover} alt="Logo-hover" className={`${styles.hoverImage}`}  */

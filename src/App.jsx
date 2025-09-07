@@ -4,7 +4,7 @@ import Hero from "./components/Hero";
 
 export default function App() {
   return (
-    <div className="w-full h-screen">
+    <div className="">
       <Header />
       <Hero />
     </div>

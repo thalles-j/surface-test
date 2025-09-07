@@ -1,4 +1,28 @@
 /* estilos personalizados opcionais */
-body {
-  font-family: 'Inter', sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    
+}
+
+header {
+  max-width: 100%;
+  display: flex;           
+  align-items: center;    
+  width: 100%;             
+  font-family: "Roboto Mono", monospace;
+  font-weight: 600;
+  color: #ffffff;
+
+}
+
+
+img {
+    max-width: 100%;
+    width: 192px;
+    height: auto;
+    border: 0;
+    -ms-interpolation-mode: bicubic;
 }
