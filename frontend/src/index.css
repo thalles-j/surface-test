@@ -12,9 +12,12 @@ header {
   display: flex;           
   align-items: center;    
   width: 100%;             
-  font-family: "Roboto Mono", monospace;
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
   font-weight: 600;
   color: #ffffff;
+  z-index: 999;
+
 
 }
 

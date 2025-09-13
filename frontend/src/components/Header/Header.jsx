@@ -1,7 +1,7 @@
 import React from "react";
 import { FaSearch, FaShoppingCart, FaUserCircle } from "react-icons/fa"; // ícones corretos
-import styles from "./Header.module.css";
-import logo from "../assets/logo192white.png";
+import styles from "../Header/Header.module.css";
+import logo from "../../assets/logo192white.png"; // caminho correto para o logo
 
 export default function Header() {
   return (
@@ -12,11 +12,11 @@ export default function Header() {
             <ul className={styles.noBreak}>
 
               <li className={styles.navItem}>Home</li>
-              <li className={styles.navItem}>Exclusivo</li>
+              <li className={styles.navItem}>Exclusiv</li>
               <li className={styles.navItem}>Futebol</li>
-              <li className={styles.navItem}>Comunidade</li>
+              <li className={styles.navItem}>Communit</li>
               <li className={styles.navItem}>Sale</li>
-              <li className={styles.navItem}>Sobre</li>
+              <li className={styles.navItem}>about us</li>
 
             </ul>
           </div>
