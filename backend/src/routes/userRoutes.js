@@ -1,7 +1,10 @@
-import express from "express";
-import { cadastrarUsuario, listarUsuarios } from "../controllers/userController.js";
+import { Router } from "express";
+import {
+    cadastrarUsuario,
+    listarUsuarios
+} from "../controllers/userController.js";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/", cadastrarUsuario);
 router.get("/", listarUsuarios);

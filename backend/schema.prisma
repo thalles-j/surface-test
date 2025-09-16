@@ -1,5 +1,5 @@
 datasource db {
-  provider = "mysql" // ou "postgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -46,14 +46,27 @@ model categorias {
 }
 
 model produtos {
-  id_produto   Int        @id @default(autoincrement())
+  id_produto   Int      @id @default(autoincrement())
   nome_produto String
   descricao    String?
-  preco        Decimal
+  preco        Decimal  @db.Decimal(10,2)
   id_categoria Int
   estoque      Int
-  categoria    categorias @relation(fields: [id_categoria], references: [id_categoria])
-  pedidoProdutos pedido_produtos[]
+
+  categoria    categorias        @relation(fields: [id_categoria], references: [id_categoria])
+  fotos        fotos_produtos[]
+  pedidos      pedido_produtos[] // relação inversa
+}
+
+model fotos_produtos {
+  id_foto    Int      @id @default(autoincrement())
+  id_produto Int
+  url        String   @db.VarChar(255)
+  descricao  String?  @db.VarChar(255)
+  
+  produto    produtos @relation(fields: [id_produto], references: [id_produto])
+
+  @@index([id_produto])
 }
 
 model pedidos {
@@ -61,18 +74,20 @@ model pedidos {
   id_usuario  Int
   data_pedido DateTime   @default(now())
   status      String
-  total       Decimal
-  usuario     usuarios @relation(fields: [id_usuario], references: [id_usuario])
+  total       Decimal    @db.Decimal(10,2)
+
+  usuario        usuarios         @relation(fields: [id_usuario], references: [id_usuario])
   pedidoProdutos pedido_produtos[]
 }
 
 model pedido_produtos {
-  id_pedido     Int
-  id_produto    Int
-  quantidade    Int
-  preco_unitario Decimal
-  pedido        pedidos  @relation(fields: [id_pedido], references: [id_pedido])
-  produto       produtos @relation(fields: [id_produto], references: [id_produto])
+  id_pedido      Int
+  id_produto     Int
+  quantidade     Int
+  preco_unitario Decimal @db.Decimal(10,2)
+
+  pedido         pedidos  @relation(fields: [id_pedido], references: [id_pedido])
+  produto        produtos @relation(fields: [id_produto], references: [id_produto])
 
   @@id([id_pedido, id_produto])
 }

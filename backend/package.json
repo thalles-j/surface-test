@@ -4,11 +4,13 @@
   "description": "BackEnd para o site Surface.",
   "license": "ISC",
   "author": "Thalles José",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "dev": "nodemon server.js",
+  "start": "node server.js"
+}
+,
   "dependencies": {
     "@prisma/client": "^6.16.1",
     "bcryptjs": "^3.0.2",
