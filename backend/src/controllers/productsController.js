@@ -1,60 +1,22 @@
-import {
-  createProduct,
-  listProducts,
-  getProductById,
-  updateProduct,
-  deleteProduct
-} from "../services/productsService.js";
+import prisma from "../database/prisma.js";
+import * as crudService from "../services/crudServices.js";
+import * as crudController from "./crudController.js";
 
-// Create
 export const createProductController = async (req, res) => {
   try {
-    const product = await createProduct(req.body);
+    const categoria = await prisma.categorias.findUnique({
+      where: { id_categoria: req.body.id_categoria }
+    });
+    if (!categoria) return res.status(400).json({ error: "Categoria não encontrada" });
+
+    const product = await crudService.createEntity(prisma.produtos, req.body);
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// List all
-export const listProductsController = async (req, res) => {
-  try {
-    const products = await listProducts();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get by ID
-export const getProductController = async (req, res) => {
-  try {
-    const product = await getProductById(Number(req.params.id));
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Update
-export const updateProductController = async (req, res) => {
-  try {
-    const product = await updateProduct(Number(req.params.id), req.body);
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Delete
-export const deleteProductController = async (req, res) => {
-  try {
-    await deleteProduct(Number(req.params.id));
-    res.json({ message: "Product deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+export const listProductsController = crudController.listController(crudService, prisma.produtos, { categoria: true });
+export const getProductController = crudController.getController(crudService, prisma.produtos, "id_produto", { categoria: true });
+export const updateProductController = crudController.updateController(crudService, prisma.produtos, "id_produto");
+export const deleteProductController = crudController.deleteController(crudService, prisma.produtos, "id_produto");

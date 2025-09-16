@@ -1,19 +1,31 @@
-import * as userService from "../services/userService.js";
+import prisma from "../database/prisma.js";
+import * as crudService from "../services/crudServices.js";
+import * as crudController from "./crudController.js";
 
-export const userRegistration = async (req, res) => {
-  try {
-    const usuario = await userService.createUser(req.body);
-    res.status(201).json(usuario);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+// Controllers específicos para Usuário (com hash na criação)
+export const createUserController = crudController.createController(crudService, prisma.usuarios, ["senha"]);
 
-export const userList = async (req, res) => {
-  try {
-    const usuarios = await userService.listUser();
-    res.json(usuarios);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+export const listUserController = crudController.listController(
+  crudService,
+  prisma.usuarios,
+  { role: true, enderecos: true, pedidos: true }
+);
+
+export const getUserController = crudController.getController(
+  crudService,
+  prisma.usuarios,
+  "id_usuario",
+  { role: true, enderecos: true, pedidos: true }
+);
+
+export const updateUserController = crudController.updateController(
+  crudService,
+  prisma.usuarios,
+  "id_usuario"
+);
+
+export const deleteUserController = crudController.deleteController(
+  crudService,
+  prisma.usuarios,
+  "id_usuario"
+);

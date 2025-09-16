@@ -1,55 +1,29 @@
-import prisma from "../models/prismaClient.js";
+import prisma from "../database/prisma.js";
+import * as crudService from "./crudService.js";
 
-export const createProduct = async ({ name, description, price, id_categoria, stock }) => {
+// Criar produto com validação de categoria
+export const createProduct = async (data) => {
   const categoria = await prisma.categorias.findUnique({
-    where: { id_categoria } // agora pega do body
+    where: { id_categoria: data.id_categoria }
   });
 
   if (!categoria) throw new Error("Categoria não encontrada");
 
-  return prisma.produtos.create({
-    data: {
-      nome_produto: name,
-      descricao: description,
-      preco: price,
-      id_categoria,
-      estoque: stock
-    }
-  });
+  return crudService.createEntity(prisma.produtos, data);
 };
 
-// List all products (with category)
 export const listProducts = async () => {
-  return prisma.produtos.findMany({
-    include: { categoria: true }
-  });
+  return crudService.listEntities(prisma.produtos, { categoria: true });
 };
 
-// Get product by ID
 export const getProductById = async (id) => {
-  return prisma.produtos.findUnique({
-    where: { id_produto: id },
-    include: { categoria: true }
-  });
+  return crudService.getEntityById(prisma.produtos, "id_produto", id, { categoria: true });
 };
 
-// Update product
 export const updateProduct = async (id, data) => {
-  return prisma.produtos.update({
-    where: { id_produto: id },
-    data: {
-      nome_produto: data.name,
-      descricao: data.description,
-      preco: data.price,
-      id_categoria: data.categoryId,
-      estoque: data.stock
-    }
-  });
+  return crudService.updateEntity(prisma.produtos, "id_produto", id, data);
 };
 
-// Delete product
 export const deleteProduct = async (id) => {
-  return prisma.produtos.delete({
-    where: { id_produto: id }
-  });
+  return crudService.deleteEntity(prisma.produtos, "id_produto", id);
 };
