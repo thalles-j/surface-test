@@ -1,0 +1,27 @@
+{
+  "name": "surface-test",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+  "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+  "dev:back": "npm run dev --prefix backend",
+  "dev:front": "npm run dev --prefix frontend"
+},
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thalles-j/surface-test.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/thalles-j/surface-test/issues"
+  },
+  "homepage": "https://github.com/thalles-j/surface-test#readme"
+}

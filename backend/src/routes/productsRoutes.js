@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { validateBody } from "../middleware/vaildateBody.js";
 import {
     createProductController,
     listProductsController,
@@ -9,10 +10,10 @@ import {
 
 const router = Router();
 
-router.post("/", createProductController);
-router.get("/", listProductsController);
-router.get("/:id", getProductController);
-router.put("/:id", updateProductController);
-router.delete("/:id", deleteProductController);
+router.post("/produtos/", validateBody, createProductController);
+router.get("/produtos", listProductsController);
+router.get("/produtos/:id", getProductController);
+router.put("/produtos/:id", updateProductController);
+router.delete("/produtos/:id", deleteProductController);
 
 export default router;
