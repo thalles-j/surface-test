@@ -7,7 +7,7 @@ export function updateHeaderCSS(pathname) {
     root.style.setProperty("--header-color", "white"); // CORREÇÃO: branco
     root.style.setProperty("--underline-color", "white");
     root.style.setProperty("--logo-url", "url('/src/assets/logo192white.png')");
-  } else if (pathname === "/shop") {
+  } else if (pathname != "/") {
     // Shop: letras pretas, logo escura
     root.style.setProperty("--header-bg", "white");
     root.style.setProperty("--header-color", "black");

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState} from "react";
 import { useLocation, Link } from "react-router-dom";
 import { FaSearch, FaShoppingCart, FaUserCircle } from "react-icons/fa";
 import styles from "./Header.module.css";
@@ -6,6 +6,8 @@ import { updateHeaderCSS } from "./../../utils/headerTheme";
 
 export default function Header() {
   const location = useLocation();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   // Atualiza as variáveis CSS do header ao mudar de rota
   useEffect(() => {
@@ -53,8 +55,24 @@ export default function Header() {
           <div className={styles.rightMenuWrapper}>
             <div className={styles.rightMenu}>
               <ul>
-                <li>
-                  <button type="button" className={styles.searchIconDesktop}>
+                {searchOpen && (
+                  <li>
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder="Pesquisar..."
+                      autoFocus
+                    />
+                  </li>
+                )}
+                 <li>
+                  <button
+                    type="button"
+                    className={styles.searchButton}
+                    onClick={() => setSearchOpen(prev => !prev)}
+                  >
                     <FaSearch />
                   </button>
                 </li>
