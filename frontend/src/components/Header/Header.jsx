@@ -19,11 +19,21 @@ export default function Header() {
           {/* MENU ESQUERDO */}
           <div className={styles.centeredMenu}>
             <ul className={styles.noBreak}>
-              <li>Home</li>
-              <li>Shop</li>
-              <li>Community</li>
-              <li>Sale</li>
-              <li>About Us</li>
+              <li>
+                <Link to="/" className={styles.menuLink}>Home</Link>
+              </li>
+              <li>
+                <Link to="/shop" className={styles.menuLink}>Shop</Link>
+              </li>
+              <li>
+                <Link to="/community" className={styles.menuLink}>Community</Link>
+              </li>
+              <li>
+                <Link to="/sale" className={styles.menuLink}>Sale</Link>
+              </li>
+              <li>
+                <Link to="/about-us" className={styles.menuLink}>About Us</Link>
+              </li>
             </ul>
           </div>
 
