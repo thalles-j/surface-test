@@ -9,7 +9,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  // Atualiza as variáveis CSS do header ao mudar de rota
   useEffect(() => {
     updateHeaderCSS(location.pathname);
   }, [location.pathname]);

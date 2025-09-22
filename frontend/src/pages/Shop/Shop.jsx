@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import styles from "./Shop.module.css";
+import CategoriasDropdown from "../../components/Categorias/CategoriasDropDown";
 
 export default function Shop() {
   const [produtos, setProdutos] = useState([]);
@@ -12,18 +14,35 @@ export default function Shop() {
   }, []);
 
   return (
-  <div style={{ padding: "20px", backgroundColor: "white" }}>
-    <h1>Loja</h1>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-      {produtos.map(produto => (
-        <div key={produto.id} style={{ border: "1px solid #ddd", padding: "10px" }}>
-          <h3>{produto.nome}</h3>
-          <p>{produto.descricao}</p>
-          <p>R$ {produto.preco}</p>
-          <Link to={`/product/${produto.id}`}>Ver detalhes</Link>
+    <section className={styles.shop_section}>
+      <div className={styles.shop_body}>
+        <div className={styles.shop_container}>
+          <div className={styles.shop_grid}>
+            
+            {/* Cabeçalho com categorias */}
+            <div className={styles.shop_headerWrapper}>
+              <CategoriasDropdown />
+            </div>
+            <div className={styles.produtos_grid}>
+              <ul>
+                <li>a</li>
+                 <li>a</li>
+                  <li>a</li>
+                   <li>a</li>
+                    <li>a</li>
+                     <li>a</li>
+                      <li>a</li>
+                       <li>a</li>
+                        <li>a</li>
+                         <li>a</li>
+                          <li>a</li>
+                           <li>a</li>
+
+              </ul>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-);
+      </div>
+    </section>
+  );
 }

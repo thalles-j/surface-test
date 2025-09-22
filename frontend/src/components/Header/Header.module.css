@@ -9,6 +9,10 @@ header {
   z-index: 999;
   background-color: var(--header-bg);
   color: var(--header-color);
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s 
+  ease-in;
 }
 
 .noBreak {
