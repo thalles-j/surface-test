@@ -1,0 +1,239 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-sans: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+}
+footer {
+    background: #000;
+    color: #fff;
+    padding: 0 0 2.25rem;
+}
+
+div {
+    display: block;
+    unicode-bidi: isolate;
+}
+
+.footer_section {
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.footer_inner{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-bottom: 2.75rem;
+    padding-top: 4rem;
+}
+
+
+@media (min-width: 1200px) {
+    footer .wrap_menu {
+        max-width: 50%;
+        width: unset;
+    }
+}
+
+@media (min-width: 1200px) {
+    footer .wrap_menu .menu {
+        justify-content: flex-start;
+    }
+}
+
+footer .wrap_menu .menu li {
+    text-align: right;
+}
+
+footer .wrap_menu .menu li a {
+    display: block;
+    font-size: .875rem;
+    margin-bottom: 15px;
+    text-decoration: none;
+}
+
+footer .wrap_newsletter .title {
+    border-top: 2px solid #fff;
+    font-size: 1.125rem;
+    font-weight: 400;
+    margin: 0 auto .5rem;
+    max-width: 13.93rem;
+    padding-top: 15px;
+    text-align: center;
+    text-transform: inherit;
+    text-transform: uppercase;
+}
+
+@media (min-width: 1200px) {
+    footer .wrap_newsletter .title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        text-transform: none;
+    }
+}
+
+footer .wrap_newsletter .form {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    line-height: 1.5em;
+    margin: 10px 0;
+}
+
+@media (min-width: 1200px) {
+    footer .wrap_newsletter .form {
+        justify-content: flex-start;
+    }
+}
+
+.footer .wrap-newsletter .form input {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    width: calc(100% - 28px);
+}
+
+.footer .wrap-newsletter .form input, .footer .wrap-newsletter .form input::placeholder {
+    color: #fff;
+}
+
+.form .field {
+    float: left;
+    margin-bottom: 10px;
+    padding-right: 10px;
+    width: 100%;
+}
+
+footer .wrap_newsletter .form .field input{
+    display: flex;
+    min-height: 40px;
+    padding: 0;
+    width: 100%;
+    border: none;
+}
+
+.field{
+    padding-bottom: 5px;
+    border-bottom: 2px solid #fff;
+}
+
+.form .field input, .form .field {
+    border: 1px solid #e2e2e2;
+    color: #333;
+    outline: none;
+    transition: all .3s ease;
+    width: 100%;
+}
+
+input{
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    width: calc(100% - 28px);
+    padding: 5px 0 ;
+}
+input:focus {
+    outline: none;
+    box-shadow: none;
+    background: transparent; 
+}
+.btn_form{
+    margin-left: 3px;
+}
+
+footer .wrap_newsletter .form .btn_form {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+}
+
+
+footer .wrapper_logo {
+    width: 100%;
+    padding-right: 1rem;
+
+}
+
+@media (min-width: 1200px) {
+    footer .wrapper_logo {
+        max-width: 6.25rem;
+        width: unset;
+    }
+}
+
+footer .wrapper_logo .logo {
+    display: none;
+}
+
+@media (min-width: 1200px) {
+    footer .wrapper_logo .logo {
+        display: block;
+    }
+}
+
+img {
+    display: block;
+    width: 100%;
+}
+
+footer .wrap-social {
+    margin: 2rem 0;
+}
+
+@media (min-width: 1200px) {
+    footer .wrap-social {
+        margin: 2rem 0 1.5rem;
+    }
+}
+
+.menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+footer .social .menu {
+    justify-content: center;
+}
+
+footer .wrap_social .menu{
+    display: block;
+    font-size: 18px;
+    height: 28px;
+    text-align: center;
+    width: 28px;
+}
+
+@media (min-width: 992px) {
+    footer .wrap_atendimento {
+        text-align: right;
+    }
+}
+
+footer .footer_bottom {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+footer .wrap_infos_loja {
+    flex-grow: 1;
+}
+
+@media (min-width: 1200px) {
+    footer .wrap_infos_loja .cnpj {
+        margin: 0;
+    }
+}
+
+footer .wrap_infos_loja .cnpj {
+    margin: 0 auto;
+    width: 90%;
+}

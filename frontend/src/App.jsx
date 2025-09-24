@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header/Header.jsx";
+import Footer from "./components/Footer/footer.jsx";
 import LandingPage from "./components/LandingPage/LandingPage.jsx";
 import Shop from "./pages/Shop/Shop.jsx";
 import ProductDetail from "./pages/ProductDetail/ProductCard.jsx";
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/product/:id" element={<ProductDetail />} />
       </Routes>
+      <Footer />
     </Router>
   );
 }
