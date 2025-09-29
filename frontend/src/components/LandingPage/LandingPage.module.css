@@ -56,3 +56,14 @@
     font-weight: bold;
     transform: rotate(15deg);
 }
+
+@media (max-width: 800px) {
+  .text {
+    font-size: 1rem
+  }
+
+  .btn_shop {
+    font-size: 15px;
+    padding: 12px 18px;
+  }
+}

@@ -210,11 +210,7 @@ footer .wrap_social .menu{
     width: 28px;
 }
 
-@media (min-width: 992px) {
-    footer .wrap_atendimento {
-        text-align: right;
-    }
-}
+
 
 footer .footer_bottom {
     align-items: flex-end;
@@ -227,13 +223,64 @@ footer .wrap_infos_loja {
     flex-grow: 1;
 }
 
-@media (min-width: 1200px) {
-    footer .wrap_infos_loja .cnpj {
-        margin: 0;
-    }
-}
+
 
 footer .wrap_infos_loja .cnpj {
     margin: 0 auto;
     width: 90%;
+}
+
+@media (max-width: 1200px) {
+    .footer_inner {
+        flex-direction: column;      
+        align-items: flex-start;               
+        gap: 2rem;                  
+    }
+
+    .logo {
+        display: none;               
+    }
+    .wrap_newsletter{
+        width: 60%; 
+        margin: auto;
+        align-items: center;
+    }
+    .wrap_menu{
+        width: 100%;
+        justify-items: center;
+    }
+
+    .menu li a {
+        justify-content: center;
+        margin: 5px;
+    }
+
+    footer .footer_bottom {
+        flex-direction: column;     
+        align-items: flex-start;            
+        gap: 1rem;
+    }
+
+    footer .wrap_newsletter .form {
+        flex-direction: column;
+        align-items: center;
+    }
+    svg{
+        
+        height: 20px !important;
+    }
+    
+}
+
+@media (max-width: 650px) {
+    footer .wrap_newsletter .title{
+        max-width: 100%;
+    }
+    .wrap_newsletter .form .field{
+        width: 100%;
+    }
+    .btn_form{
+        margin-left: 0;
+        margin-top: 10px;
+    }
 }

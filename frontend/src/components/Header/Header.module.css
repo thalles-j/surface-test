@@ -225,6 +225,9 @@ header {
   .logoWrapper img{
     width: calc(110px + 0.2vw);
   }
+  .rightMenuWrapper {
+    padding-right: 10px;
+  }
   .rightMenuWrapper ul{
     gap: 1.2rem;
     
