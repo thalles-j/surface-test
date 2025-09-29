@@ -10,7 +10,7 @@ export const createController = (service, model, hashFields) => async (req, res)
 
 export const listController = (service, model, include) => async (req, res) => {
     try {
-        const entities = await service.listEntities(model, include);
+        const entities = await service.getAllEntities(model, include);
         res.json(entities);
     } catch (err) {
         res.status(500).json({ error: err.message });
