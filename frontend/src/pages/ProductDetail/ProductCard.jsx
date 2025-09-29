@@ -6,7 +6,7 @@ export default function ProductDetail() {
   const [produto, setProduto] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/produtos/${id}`)
+    fetch(`http://localhost:5000/api/products/${id}`)
       .then(res => res.json())
       .then(data => setProduto(data))
       .catch(err => console.error("Erro ao carregar produto:", err));
