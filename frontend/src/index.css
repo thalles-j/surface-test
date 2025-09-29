@@ -11,7 +11,10 @@ header {
   max-width: 100%;
   display: flex;           
   align-items: center;    
-  width: 100%;             
+  width: 100%;
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;             
   color: #ffffff;
   z-index: 999;
 

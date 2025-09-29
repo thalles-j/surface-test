@@ -146,7 +146,7 @@ header {
   display: none;
 }
 
-@media (max-width: 1399px) {
+@media (max-width: 1400px) {
   .logoWrapper{
     padding-left: 25px;
   }
@@ -215,5 +215,37 @@ header {
   .mobileMenuBottom li a:hover{
     background-color: black;
     color: white;
+  }
+}
+
+@media (max-width: 600px){
+  .logoWrapper{
+    padding-left: 20px;
+  }
+  .logoWrapper img{
+    width: calc(110px + 0.2vw);
+  }
+  .rightMenuWrapper ul{
+    gap: 1.2rem;
+    
+  }
+  .rightMenuWrapper li button{
+    font-size: calc(0.9rem + 0.2vw);
+    
+  }
+}
+
+@media (max-width: 350px){
+  .logoWrapper{
+    padding-left: 20px;
+  }
+  .logoWrapper img{
+    width: calc(100px + 0.2vw);
+  }
+  .rightMenuWrapper {
+    padding-right: 25px;
+  }
+  .rightMenuWrapper li button{
+    font-size: calc(0.8rem + 0.2vw);
   }
 }
