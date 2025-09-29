@@ -10,6 +10,7 @@ body{
   opacity: 1;
   transition: opacity 0.3s 
   ease-in;
+  z-index: 900;
 
 }
 
@@ -53,8 +54,8 @@ div{
 }
 
 
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   .shop_section {
-    margin-top: 6rem;
+    margin-top: 9rem;
   }
 }

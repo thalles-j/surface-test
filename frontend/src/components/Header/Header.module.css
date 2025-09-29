@@ -6,7 +6,7 @@
 }
 
 header {
-  z-index: 999;
+  z-index: 998;
   background-color: var(--header-bg);
   color: var(--header-color);
   visibility: visible;
@@ -82,6 +82,7 @@ header {
   margin-bottom: 9px;
 }
 
+
 .centeredMenu li:hover::after {
   width: 100%;
 }
@@ -131,6 +132,79 @@ header {
   color: var(--header-color);
 }
 
+.searchWrapper {
+  position: absolute;
+  top: 120px; /* logo abaixo do header */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 10px;
+  background-color: var(--header-bg);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+
+.searchInput {
+  width: 70%;
+  padding: 0 25px;
+  border: none;
+  border-bottom: 2px solid var(--header-color);
+  color: var(--header-color);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.searchInput::placeholder {
+  margin-left: 10px;
+  color: var(--header-color);
+  opacity: 0.7;
+}
+
+
+.searchWrapper input:focus {
+  outline: none;
+  border-bottom: 2px solid var(--header-color); 
+}
+
+.searchConfirmButton {
+  background: none;
+  color: var(--header-color);
+  font-size: 1.2rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.searchConfirmButton:hover {
+  transform: scale(1.1);
+  opacity: 0.7;
+}
+
+.searchCloseButton {
+  margin-left: 0.5rem;
+  border: none;
+  color: var(--header-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.searchCloseButton:hover {
+  transform: scale(1.1);
+  opacity: 0.7;
+}
+
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
 @media (min-width: 1201px) {
   .searchIconDesktop {
     font-size: 1.5rem;
@@ -164,15 +238,15 @@ header {
   .mobileMenu {
     display: block;
     position: fixed;
-    top: 0; /* altura do header */
+    top: 15px; /* altura do header */
     left: 0;
     width: 100%;
     height: 100vh;
     background-color: white;
     -webkit-font-smoothing: antialiased;
     padding: 1rem 0;
-    z-index: 998;
-    animation: slideDown 0.3s ease forwards;
+    z-index: 997;
+    animation: fadeIn 0.3s ease-in-out;
   }
 
   .mobileMenu ul {
