@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { validateBody } from "../middleware/vaildateBody.js";
+import { validateBody } from "../middlewares/vaildateBody.js";
 import {
     createProductController,
     listProductsController,
