@@ -7,21 +7,22 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// --- MODELOS DE USUÁRIO E AUTENTICAÇÃO ---
 model roles {
-  id_role   Int        @id @default(autoincrement())
+  id_role   Int      @id @default(autoincrement())
   nome_role String
   usuarios  usuarios[]
 }
 
 model usuarios {
-  id_usuario    Int         @id @default(autoincrement())
+  id_usuario    Int      @id @default(autoincrement())
   nome          String
-  email         String      @unique
+  email         String   @unique
   senha         String
   telefone      String?
-  data_cadastro DateTime    @default(now())
+  data_cadastro DateTime @default(now())
   id_role       Int
-  role          roles       @relation(fields: [id_role], references: [id_role])
+  role          roles    @relation(fields: [id_role], references: [id_role])
   enderecos     enderecos[]
   pedidos       pedidos[]
 }
@@ -38,33 +39,26 @@ model enderecos {
   usuario     usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
+// --- MODELOS DE PRODUTO E CATÁLOGO ---
 model categorias {
-  id_categoria   Int        @id @default(autoincrement())
+  id_categoria    Int      @id @default(autoincrement())
   nome_categoria String
   descricao      String?
-  produtos       produtos[]
+  produtos        produtos[]
 }
 
 model produtos {
-  id_produto      Int               @id @default(autoincrement())
-  nome_produto    String
+  id_produto      Int            @id @default(autoincrement())
+  nome_produto    String         @unique
   descricao       String?
-  preco           Decimal           @db.Decimal(10, 2)
+  preco           Decimal        @db.Decimal(10, 2)
   id_categoria    Int
-  estoque         Int
   tipo            String?
-  categoria       categorias        @relation(fields: [id_categoria], references: [id_categoria])
+  variacoes_estoque Json? // Armazena a lista de todas as variações (cor, tamanho, sku, estoque)
+  categoria       categorias     @relation(fields: [id_categoria], references: [id_categoria])
   fotos           fotos_produtos[]
   pedidos         pedido_produtos[]
-  VariacaoProduto VariacaoProduto[]
-}
-
-model VariacaoProduto {
-  id_variacao Int      @id @default(autoincrement())
-  tamanho     String
-  quantidade  Int
-  id_produto  Int
-  produto     produtos @relation(fields: [id_produto], references: [id_produto])
+  // VariacaoProduto[] FOI REMOVIDO - O modelo VariacaoProduto não existe mais
 }
 
 model fotos_produtos {
@@ -78,20 +72,25 @@ model fotos_produtos {
   @@index([id_produto])
 }
 
+// --- MODELOS DE PEDIDO E CARRINHO ---
 model pedidos {
-  id_pedido   Int      @id @default(autoincrement())
-  id_usuario  Int
-  data_pedido DateTime @default(now())
-  status      String
-  total       Decimal  @db.Decimal(10, 2)
+  id_pedido    Int      @id @default(autoincrement())
+  id_usuario   Int
+  data_pedido  DateTime @default(now())
+  status       String   
+  total        Decimal  @db.Decimal(10, 2)
 
   usuario        usuarios          @relation(fields: [id_usuario], references: [id_usuario])
-  pedidoProdutos pedido_produtos[]
+  pedidoProdutos pedido_produtos[] 
 }
 
 model pedido_produtos {
   id_pedido      Int
   id_produto     Int
+  
+  // *** NOVO CAMPO PARA REGISTRAR A VARIAÇÃO COMPRADA ***
+  sku_variacao   String // Ex: M-AZUL. Garante a imutabilidade do item do pedido.
+
   quantidade     Int
   preco_unitario Decimal @db.Decimal(10, 2)
 
