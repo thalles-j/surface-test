@@ -50,7 +50,7 @@ export const createProductController = async (req, res) => {
   }
 };
 
-export const listProductsController = crudController.listController(crudService, prisma.produtos, { categoria: true });
-export const getProductController = crudController.getController(crudService, prisma.produtos, "id_produto", { categoria: true });
+export const listProductsController = crudController.getAllController(crudService, prisma.produtos, { categoria: true });
+export const getProductController = crudController.getByIdController(crudService, prisma.produtos, "id_produto", { categoria: true });
 export const updateProductController = crudController.updateController(crudService, prisma.produtos, "id_produto");
 export const deleteProductController = crudController.deleteController(crudService, prisma.produtos, "id_produto");

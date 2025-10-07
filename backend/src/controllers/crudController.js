@@ -8,7 +8,7 @@ export const createController = (service, model, hashFields) => async (req, res)
     }
 };
 
-export const listController = (service, model, include) => async (req, res) => {
+export const getAllController = (service, model, include) => async (req, res) => {
     try {
         const entities = await service.getAllEntities(model, include);
         res.json(entities);
@@ -17,7 +17,7 @@ export const listController = (service, model, include) => async (req, res) => {
     }
 };
 
-export const getController = (service, model, idField, include) => async (req, res) => {
+export const getByIdController = (service, model, idField, include) => async (req, res) => {
     try {
         const entity = await service.getEntityById(model, idField, Number(req.params.id), include);
         if (!entity) return res.status(404).json({ error: "Not found" });

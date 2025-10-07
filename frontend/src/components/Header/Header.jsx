@@ -66,18 +66,18 @@ export default function Header() {
             <div className={styles.rightMenu}>
               <ul>
                 {/* Botão pesquisa */}
-<li>
-  <button
-    type="button"
-    className={searchOpen ? styles.activeButton : ""}
-    onClick={() => {
-      setSearchOpen(prev => !prev);
-      if (!searchOpen) setMenuOpen(false);
-    }}
-  >
-    <FaSearch />
-  </button>
-</li>
+                <li>
+                  <button
+                    type="button"
+                    className={searchOpen ? styles.activeButton : ""}
+                    onClick={() => {
+                      setSearchOpen(prev => !prev);
+                      if (!searchOpen) setMenuOpen(false);
+                    }}
+                  >
+                    <FaSearch />
+                  </button>
+                </li>
 
                 <li>
                   <button type="button"><FaShoppingCart /></button>
@@ -110,38 +110,38 @@ export default function Header() {
       </div>
 
       {searchOpen && (
-  <div className={styles.searchWrapper}>
-    <input
-      type="text"
-      className={styles.searchInput}
-      placeholder="Pesquisar..."
-      value={searchValue}
-      onChange={(e) => setSearchValue(e.target.value)}
-      autoFocus
-    />
-    {/* Botão confirmar pesquisa */}
-     {/* Botão confirmar pesquisa */}
-    <button
-      type="button"
-      className={styles.searchConfirmButton}
-      onClick={() => {
-        console.log("Pesquisar:", searchValue); 
-        setSearchValue(""); 
-        setSearchOpen(false); 
-      }}
-    >
-      <FaCheck />
-    </button>
-    {/* Botão de fechar pesquisa */}
-    <button
-      type="button"
-      className={styles.searchCloseButton}
-      onClick={() => setSearchOpen(false)}
-    >
-      <FaTimes />
-    </button>
-  </div>
-)}
+        <div className={styles.searchWrapper}>
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="Pesquisar..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            autoFocus
+          />
+          {/* Botão confirmar pesquisa */}
+          {/* Botão confirmar pesquisa */}
+          <button
+            type="button"
+            className={styles.searchConfirmButton}
+            onClick={() => {
+              console.log("Pesquisar:", searchValue);
+              setSearchValue("");
+              setSearchOpen(false);
+            }}
+          >
+            <FaCheck />
+          </button>
+          {/* Botão de fechar pesquisa */}
+          <button
+            type="button"
+            className={styles.searchCloseButton}
+            onClick={() => setSearchOpen(false)}
+          >
+            <FaTimes />
+          </button>
+        </div>
+      )}
       {/* MENU MOBILE SEPARADO */}
       {menuOpen && (
         <nav className={styles.mobileMenu}>

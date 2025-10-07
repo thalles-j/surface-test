@@ -5,13 +5,13 @@ import * as crudController from "./crudController.js";
 // Controllers específicos para Usuário (com hash na criação)
 export const createUserController = crudController.createController(crudService, prisma.usuarios, ["senha"]);
 
-export const listUserController = crudController.listController(
+export const listUserController = crudController.getAllController(
   crudService,
   prisma.usuarios,
   { role: true, enderecos: true, pedidos: true }
 );
 
-export const getUserController = crudController.getController(
+export const getUserController = crudController.getByIdController(
   crudService,
   prisma.usuarios,
   "id_usuario",
