@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { faInstagram, faXTwitter } from "@fortawesome/free-brands-svg-icons";
 import logoWhite from "../../assets/logotipoWhite.png";
-import styles from "./Footer.module.css";
+import styles from "./style.module.css";
 
 export default function Footer() {
     return (
