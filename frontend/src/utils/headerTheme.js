@@ -25,4 +25,3 @@ export function updateHeaderCSS(pathname) {
     searchInput.style.borderBottomColor = color;
   }
 }
- 

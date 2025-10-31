@@ -83,7 +83,11 @@ export default function Header() {
                   <button type="button"><FaShoppingCart /></button>
                 </li>
                 <li>
-                  <button type="button"><FaUserCircle /></button>
+                  <Link to="/login" target="">
+                    <button type="button">
+                      <FaUserCircle />
+                    </button>
+                  </Link>
                 </li>
 
                 {/* Hamburger só mobile */}

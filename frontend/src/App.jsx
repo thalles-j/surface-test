@@ -1,15 +1,14 @@
 import { useEffect } from "react";
-import { BrowserRouter as Router } from 'react-router-dom'; // 1. Importe o Router aqui
+import { BrowserRouter as Router } from 'react-router-dom'; 
 
-// Seus componentes de layout
 import Header from "./components/Header";
-import Footer from "./components/Footer"; // 2. Você precisa importar o Footer
+import Footer from "./components/Footer"; 
 
-// Seu arquivo de rotas
+
 import AppRoutes from './routes';
 
 export default function App() {
-  // O seu useEffect para o light-mode está ótimo aqui.
+
   useEffect(() => {
     function autoLightMode() {
       const bodyBg = getComputedStyle(document.body).backgroundColor;
@@ -31,12 +30,12 @@ export default function App() {
     return () => observer.disconnect();
   }, []);
 
-  // 3. O return deve ser limpo:
+
   return (
-    <Router> {/* O Router envolve tudo */}
+    <Router> 
       <Header />
-      <main> {/* É uma boa prática ter um <main> */}
-        <AppRoutes /> {/* 4. É AQUI que as páginas (Shop, Page404) serão trocadas */}
+      <main> 
+        <AppRoutes />
       </main>
       <Footer />
     </Router>
