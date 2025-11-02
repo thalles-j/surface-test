@@ -1,0 +1,113 @@
+.loginMain {
+    background-color: #f9f9f9;
+    margin-top: 9.5rem;
+    border: solid 2px #ff0000;
+}
+.loginHeader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+    width: 100%;
+    
+}
+
+.loginTitle{
+    color: #3f3f3f;
+    opacity: 0.87;
+    text-align: center;
+    font-size: 2.12rem;
+    
+}
+
+.loginBody {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 60.5rem;
+    padding: 0 2.5rem 5rem;
+}
+
+.loginBody .box_login, .loginBody .box_register {
+    width: calc(50% - 2rem);
+}
+
+.loginBody .box_login .form, .loginBody .box_register .form {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.loginBody .box_login .title_form, .loginBody .box_register .title_form {
+    color: #07090d;
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+.form .field input, .form .field textarea {
+    border: 1px solid #e2e2e2;
+    color: #333;
+    outline: none;
+    transition: all .3s ease;
+    width: 100%;
+}
+
+.loginBody .box_login .field input, .loginBody .box_register .field input {
+    border: 1px solid #707070;
+    font-size: 14px;
+    font-style: normal;
+    height: 2.75rem;
+    text-align: left;
+    text-indent: 1.1rem;
+    width: calc(100% - 2px);
+}
+
+.form .field {
+    float: left;
+    margin-bottom: 10px;
+    padding-right: 10px;
+    width: 100%;
+    
+}
+
+.field{
+    margin-bottom: 1.15rem;
+    padding-right: 0;
+    width: 100%;
+
+}
+
+.field_forget_password{
+    margin-bottom: 11px;
+}
+
+.forget_password{
+    color: rgba(63, 63, 63, .57);
+    display: block;
+    font-size: 14px;
+    margin-top: -.57rem;
+    text-align: left;
+}
+
+.btn_submit{
+    align-items: center;
+    background: #000;
+    border: 1px solid #000;
+    color: #f5f5fb;
+    display: flex;
+    font-size: .875rem;
+    height: 45px;
+    justify-content: center;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    width: 100%;
+    font-weight: 500;
+}
+.btn_submit:hover{
+    background: #ffffff;
+    color: #000000;
+}

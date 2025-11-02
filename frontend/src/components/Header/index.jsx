@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { FaSearch, FaCheck, FaShoppingCart, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
-import styles from "./Header.module.css";
-import { updateHeaderCSS } from "./../../utils/headerTheme";
+import styles from "./style.module.css";
+import { updateHeaderCSS } from "../../utils/headerTheme";
 
 export default function Header() {
   const location = useLocation();
@@ -83,7 +83,11 @@ export default function Header() {
                   <button type="button"><FaShoppingCart /></button>
                 </li>
                 <li>
-                  <button type="button"><FaUserCircle /></button>
+                  <Link to="/login" target="">
+                    <button type="button">
+                      <FaUserCircle />
+                    </button>
+                  </Link>
                 </li>
 
                 {/* Hamburger só mobile */}

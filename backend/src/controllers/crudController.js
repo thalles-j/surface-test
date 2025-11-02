@@ -4,7 +4,7 @@ export const createController = (service, model, hashFields) => async (req, res)
         const entity = await service.createEntity(model, req.body, hashFields);
         res.status(201).json(entity);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(400).json({ error: err });
     }
 };
 

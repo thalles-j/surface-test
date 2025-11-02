@@ -1,9 +1,7 @@
-import ErroBase from "/ErroBase.js";
+import ErroBase from "./ErroBase.js";
 
-class RequestFail extends ErroBase {
-  constructor(mensagem = "Um ou mais dados fornecidos estão incorretos") {
-    super(mensagem, 400);
-  }
+class ErroValidacao extends ErroBase {
+    constructor(mensagem = "Um ou mais dados fornecidos estão incorretos") {
+        super(mensagem, 400); // 400 = Bad Request
+    }
 }
-
-export default RequestFail;

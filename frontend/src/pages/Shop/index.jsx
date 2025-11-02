@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import styles from "./Shop.module.css";
-import CategoriasDropdown from "../../components/Categorias/CategoriasDropDown";
+import styles from "./style.module.css";
+import CategoriasDropdown from "../../components/Categorias/";
 
 export default function Shop() {
   const [produtos, setProdutos] = useState([]);
