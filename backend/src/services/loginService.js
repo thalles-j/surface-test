@@ -1,36 +1,30 @@
-// services/loginService.js
-import prisma from "../database/prisma.js";
+import { PrismaClient } from "@prisma/client";
+import ErroBase  from "../errors/ErroBase.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+const prisma = new PrismaClient();
+
 export const loginService = async (email, senha) => {
-  const user = await prisma.user.findUnique({
+  const usuario = await prisma.usuarios.findUnique({
     where: { email },
   });
 
-  if (!user) {
-    throw new Error("Usuário não encontrado.");
+  if (!usuario) {
+    throw new ErroBase("Usuário não encontrado", 404);
   }
 
-  const senhaCorreta = await bcrypt.compare(senha, user.senha);
-  if (!senhaCorreta) {
-    throw new Error("Senha incorreta.");
+  const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+  if (!senhaValida) {
+    throw new ErroBase("Senha incorreta", 401);
   }
 
   const token = jwt.sign(
-    { id: user.id, role: user.role },
+    { id: usuario.id_usuario, email: usuario.email, role: usuario.role },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "1h" }
   );
 
-  return {
-    message: "Login realizado com sucesso!",
-    token,
-    user: {
-      id: user.id,
-      nome: user.nome,
-      email: user.email,
-      role: user.role,
-    },
-  };
+  return { token, usuario };
 };

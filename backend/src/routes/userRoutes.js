@@ -7,31 +7,22 @@ import {
     deleteUserController
 } from "../controllers/userController.js";
 
-import { authMiddleware, adminMiddleware } from "../middlewares/auth.js";
+import { authMiddleware, adminMiddleware, isOwnerOrAdmin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 // Criar usuário (público)
 router.post("/", createUserController);
 
+router.get("/", authMiddleware, adminMiddleware, listUserController);
+
 // Listar todos usuários (apenas admin)
 router.get("/", authMiddleware, adminMiddleware, listUserController);
 
 // Buscar usuário por ID
-router.get("/:id", authMiddleware, (req, res, next) => {
-    // só permite acessar se for o próprio usuário ou admin
-    if (req.user.id !== req.params.id && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado.' });
-    }
-    next();
-}, getUserController);
+router.get("/:id", authMiddleware, isOwnerOrAdmin, getUserController);
 
 // Atualizar usuário
-router.put("/:id", authMiddleware, (req, res, next) => {
-    if (req.user.id !== req.params.id && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado.' });
-    }
-    next();
-}, updateUserController);
+router.put("/:id", authMiddleware, isOwnerOrAdmin, updateUserController);
 
 // Deletar usuário (apenas admin)
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUserController);
