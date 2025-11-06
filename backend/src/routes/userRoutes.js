@@ -1,32 +1,25 @@
 import { Router } from "express";
 import {
-    createUserController,
-    listUserController,
-    getUserController,
-    updateUserController,
-    deleteUserController
+  listUserController,
+  getUserController,
+  updateUserController,
+  deleteUserController
 } from "../controllers/userController.js";
 
 import { authMiddleware, adminMiddleware, isOwnerOrAdmin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
-// Criar usuário (público)
-router.post("/", createUserController);
 
+// somente admin
 router.get("/", authMiddleware, adminMiddleware, listUserController);
 
-// Listar todos usuários (apenas admin)
-router.get("/", authMiddleware, adminMiddleware, listUserController);
-
-// Buscar usuário por ID
+// dono ou admin
 router.get("/:id", authMiddleware, isOwnerOrAdmin, getUserController);
 
-// Atualizar usuário
+// dono ou admin
 router.put("/:id", authMiddleware, isOwnerOrAdmin, updateUserController);
 
-// Deletar usuário (apenas admin)
+// somente admin
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUserController);
-
-
 
 export default router;
