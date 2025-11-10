@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { ErroTokenInvalido, ErroTokenExpirado, ErroSemToken } from "../errors/ErroAuth.js";
+import {
+    ErroTokenInvalido,
+    ErroTokenExpirado,
+    ErroSemToken,
+} from "../errors/ErroAuth.js";
 
 dotenv.config();
 
@@ -17,41 +21,49 @@ export const authMiddleware = (req, res, next) => {
 
         if (!token) throw new ErroSemToken();
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
             if (err) {
                 if (err.name === "TokenExpiredError") throw new ErroTokenExpirado();
                 throw new ErroTokenInvalido();
             }
 
             req.user = {
-                id: user.id,
-                email: user.email,
-                role: user.id_role,
+                id: payload.id,
+                email: payload.email,
+                id_role: payload.id_role,
             };
 
             next();
         });
     } catch (error) {
-        if (error.status) error.enviarResposta(res);
-        else res.status(500).json({ message: "Erro interno do servidor." });
+        if (error.status) return error.enviarResposta(res);
+        return res.status(500).json({ message: "Erro interno do servidor." });
     }
 };
 
 export const adminMiddleware = (req, res, next) => {
-    if (!req.user || !req.user.role) {
+    if (!req.user) {
         return res.status(401).json({ message: "Usuário não autenticado" });
     }
 
-    if (req.user.role.toLowerCase() === "admin") {
+    // ✅ apenas ID
+    if (req.user.id_role === 1) {
         return next();
     }
 
-    return res.status(403).json({ message: "Acesso negado. Apenas administradores podem acessar." });
+    return res.status(403).json({
+        message: "Acesso negado. Apenas administradores podem acessar.",
+    });
 };
+export function isOwnerOrAdmin(req, res, next) {
+    const userId = req.user.id;
+    const targetId = Number(req.params.id);
 
-export const isOwnerOrAdmin = (req, res, next) => {
-    if (req.user.id !== req.params.id && req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Acesso negado. Requer ser proprietário ou administrador.' });
-    }
-    next();
-};
+    // ✅ admin é quem tem id_role === 1
+    if (req.user.id_role === 1) return next();
+    if (userId === targetId) return next();
+
+    return res.status(403).json({
+        mensagem: "Acesso negado: você não pode alterar outro usuário.",
+    });
+}

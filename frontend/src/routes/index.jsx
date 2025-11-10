@@ -4,8 +4,9 @@ import { Routes, Route } from 'react-router-dom';
 import LandingPage from '../pages/LandingPage';
 import Shop from '../pages/Shop';
 import ProductDetail from '../pages/ProductDetail';
-import Login from '../pages/Login';
+import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
+import Profile from '../pages/Profile';
 
 export default function AppRoutes() {
   return (
@@ -13,8 +14,8 @@ export default function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:id" element={<ProductDetail />} />
-      <Route path="/login" element={<Login />} />
-      
+      <Route path="/entrar" element={<Entrar />} />
+      <Route path="/conta" element={<Profile />} />
 
       <Route path="*" element={<Page404 />} />
     </Routes>

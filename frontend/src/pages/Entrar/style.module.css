@@ -5,21 +5,22 @@
     margin-bottom: 9.5rem;
     font-sans: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
 }
+
 .loginHeader {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 2rem 0;
     width: 100%;
-    
+
 }
 
-.loginTitle{
+.loginTitle {
     color: #3f3f3f;
     opacity: 0.87;
     text-align: center;
     font-size: 2.12rem;
-    
+
 }
 
 @media (min-width: 1025px) {
@@ -37,12 +38,14 @@
     gap: 5rem;
 }
 
-.loginBody .box_login, .loginBody .box_register {
+.loginBody .box_login,
+.loginBody .box_register {
     width: calc(60% - 2rem);
-    
+
 }
 
-.loginBody .box_login .form, .loginBody .box_register .form {
+.loginBody .box_login .form,
+.loginBody .box_register .form {
     align-items: center;
     display: flex;
     flex-wrap: wrap;
@@ -51,14 +54,17 @@
     width: 100%;
 }
 
-.loginBody .box_login .title_form, .loginBody .box_register .title_form {
+.loginBody .box_login .title_form,
+.loginBody .box_register .title_form {
     color: #07090d;
     font-size: 1.25rem;
     font-weight: 400;
     margin-bottom: 2rem;
     text-align: left;
 }
-.form .field input, .form .field textarea {
+
+.form .field input,
+.form .field textarea {
     border: 1px solid #e2e2e2;
     color: #333;
     outline: none;
@@ -66,7 +72,8 @@
     width: 100%;
 }
 
-.loginBody .box_login .field input, .loginBody .box_register .field input {
+.loginBody .box_login .field input,
+.loginBody .box_register .field input {
     border: 1px solid #707070;
     font-size: 14px;
     font-style: normal;
@@ -82,25 +89,25 @@
     margin-bottom: 10px;
     padding-right: 10px;
     width: 100%;
-    
+
 }
 
-.field.field_half{
+.field.field_half {
     width: calc(50% - 5px);
 }
 
-.field{
+.field {
     margin-bottom: 1.15rem;
     padding-right: 0;
     width: 100%;
 
 }
 
-.field_forget_password{
+.field_forget_password {
     margin-bottom: 11px;
 }
 
-.forget_password{
+.forget_password {
     color: rgba(63, 63, 63, .57);
     display: block;
     font-size: 14px;
@@ -108,7 +115,7 @@
     text-align: left;
 }
 
-.btn_submit{
+.btn_submit {
     align-items: center;
     background: #000;
     border: 1px solid #000;
@@ -121,30 +128,60 @@
     width: 100%;
     font-weight: 500;
 }
-.btn_submit:hover{
+
+.btn_submit:hover {
     background: #ffffff;
     color: #000000;
 }
 
-.msg_retorno > div {
+.msg_retorno>div {
     display: none;
 }
 
 .msg_retorno {
+    opacity: 0.9;
     width: 100%;
+    
+}
+
+.passwordField {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordField button {
+    flex: 1;
+    padding-right: 5px;
+    
+}
+
+.eyeButton {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 1.1rem;
 }
 
 @media (max-width: 1024px) {
-    
+
     .loginBody {
         display: block;
         flex-direction: column;
         padding: 1rem 8rem 0;
-        
+
     }
-    .loginBody .box_login, .loginBody .box_register {
-    width: 100%;
-}
+
+    .loginBody .box_login,
+    .loginBody .box_register {
+        width: 100%;
+    }
+    .box_register{
+        margin-top: 5rem;
+    }
 }
 
 @media (max-width: 991px) {

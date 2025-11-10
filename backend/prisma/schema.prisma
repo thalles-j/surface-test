@@ -58,7 +58,6 @@ model produtos {
   categoria       categorias     @relation(fields: [id_categoria], references: [id_categoria])
   fotos           fotos_produtos[]
   pedidos         pedido_produtos[]
-  // VariacaoProduto[] FOI REMOVIDO - O modelo VariacaoProduto não existe mais
 }
 
 model fotos_produtos {

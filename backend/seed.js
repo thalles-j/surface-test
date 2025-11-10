@@ -2,10 +2,14 @@
 import prisma from "./src/database/prisma.js";
 import bcrypt from "bcryptjs";
 
-// Função auxiliar para gerar o SKU da variação
+// Função para gerar SKU a partir do nome do produto e tamanho
 const gerarSku = (nome, tamanho) => {
-    // Ex: "Camiseta Exclusiva Branca" -> "CAMISETA-EXC-BRANCA"
-    const nomeBase = nome.toUpperCase().replace(/[^A-Z0-9\s]/g, '').trim().split(/\s+/).slice(0, 3).join('-');
+    const nomeBase = nome.toUpperCase()
+        .replace(/[^A-Z0-9\s]/g, '')
+        .trim()
+        .split(/\s+/)
+        .slice(0, 4) // pegar até 4 palavras
+        .join('-');
     return `${nomeBase}-${tamanho}`;
 };
 
@@ -47,13 +51,13 @@ async function main() {
         {
             nome: "Thalles José",
             email: "thalles@example.com",
-            senha: await bcrypt.hash("123456", 10),
+            senha: await bcrypt.hash("1234567", 10),
             id_role: 1,
         },
         {
             nome: "Teste da Silva",
             email: "teste@example.com",
-            senha: await bcrypt.hash("abcdef", 10),
+            senha: await bcrypt.hash("abcdefg", 10),
             id_role: 2,
         },
     ];
@@ -61,68 +65,51 @@ async function main() {
     for (const user of usersData) {
         await prisma.usuarios.upsert({
             where: { email: user.email },
-            update: { id_role: user.id_role }, // Pode ser útil atualizar a role se o usuário já existir
+            update: { id_role: user.id_role },
             create: user,
         });
     }
     console.log("✅ Usuários criados!");
 
-    // 4️⃣ Criar produtos exemplo
-    
-    // Define a lista de variações de tamanho para os produtos
-    const variacoesExclusivo = [
-        { tamanho: "P", quantidade: 10 },
-        { tamanho: "M", quantidade: 25 },
-        { tamanho: "G", quantidade: 10 },
-        { tamanho: "GG", quantidade: 10 },
-    ];
-    
-    // Para o Produto 2
-    const variacoesTime = [
-        { tamanho: "P", quantidade: 15 },
-        { tamanho: "M", quantidade: 20 },
-        { tamanho: "G", quantidade: 20 },
-        { tamanho: "GG", quantidade: 15 },
-    ];
-
-
+    // 4️⃣ Criar produtos DROP 0 SURFACE
     const produtosData = [
         {
-            nome_produto: "Camiseta Exclusiva Branca",
-            descricao: "Camiseta edição limitada branca",
-            preco: 199.0,
-            id_categoria: 1,
-            
-            
-            // NOVO CAMPO: variacoes_estoque (JSONB)
-            variacoes_estoque: variacoesExclusivo.map(v => ({
-                sku: gerarSku("Camiseta Exclusiva Branca", v.tamanho),
-                tamanho: v.tamanho,
-                estoque: v.quantidade,
-                preco: 199.00 
-            })),
-            
-            fotos: { create: [{ url: "https://meusite.com/imagens/exclusiva_branca.png", descricao: "Frente da camiseta" }] },
-            
-            
+            nome_produto: "T-Shirt DROP 0 SURFACE - OFF WHITE",
+            descricao: "Camiseta edição limitada DROP 0 SURFACE cor Off White",
+            preco: 159.99,
+            id_categoria: 2,
+            tipo: "Camiseta",
+            variacoes_estoque: [
+                { tamanho: "P", sku: gerarSku("T-Shirt DROP 0 SURFACE - OFF WHITE", "P"), estoque: 10, preco: 159.99 },
+                { tamanho: "M", sku: gerarSku("T-Shirt DROP 0 SURFACE - OFF WHITE", "M"), estoque: 25, preco: 159.99 },
+                { tamanho: "G", sku: gerarSku("T-Shirt DROP 0 SURFACE - OFF WHITE", "G"), estoque: 10, preco: 159.99 },
+                { tamanho: "GG", sku: gerarSku("T-Shirt DROP 0 SURFACE - OFF WHITE", "GG"), estoque: 10, preco: 159.99 },
+            ],
+            fotos: {
+                create: [
+                    { url: "/uploads/drop0_t-shirt_offwhite_front.png", descricao: "Frente" },
+                    { url: "/uploads/drop0_t-shirt_offwhite_back.png", descricao: "Costas" },
+                ],
+            },
         },
         {
-            nome_produto: "Camisa Oficial Time A",
-            descricao: "Camisa oficial do Time A - temporada 2025",
-            preco: 159.9,
-            id_categoria: 2,
-            
-
-            variacoes_estoque: variacoesTime.map(v => ({
-                sku: gerarSku("Camisa Oficial Time A", v.tamanho),
-                tamanho: v.tamanho,
-                estoque: v.quantidade,
-                preco: 159.90
-            })),
-
-            fotos: { create: [{ url: "https://meusite.com/imagens/time_a.png", descricao: "Camisa vista frontal" }] },
-            
-            
+            nome_produto: "T-Shirt DROP 0 SURFACE - BLACK",
+            descricao: "Camiseta edição limitada DROP 0 SURFACE cor Black",
+            preco: 159.99,
+            id_categoria: 1,
+            tipo: "Camiseta",
+            variacoes_estoque: [
+                { tamanho: "P", sku: gerarSku("T-Shirt DROP 0 SURFACE - BLACK", "P"), estoque: 10, preco: 159.99 },
+                { tamanho: "M", sku: gerarSku("T-Shirt DROP 0 SURFACE - BLACK", "M"), estoque: 25, preco: 159.99 },
+                { tamanho: "G", sku: gerarSku("T-Shirt DROP 0 SURFACE - BLACK", "G"), estoque: 10, preco: 159.99 },
+                { tamanho: "GG", sku: gerarSku("T-Shirt DROP 0 SURFACE - BLACK", "GG"), estoque: 10, preco: 159.99 },
+            ],
+            fotos: {
+                create: [
+                    { url: "/uploads/drop0_t-shirt_black_front.png", descricao: "Frente" },
+                    { url: "/uploads/drop0_t-shirt_black_back.png", descricao: "Costas" },
+                ],
+            },
         },
     ];
 
@@ -133,7 +120,7 @@ async function main() {
             create: produto,
         });
     }
-    console.log("✅ Produtos criados!");
+    console.log("✅ Produtos DROP 0 SURFACE criados!");
 }
 
 main()

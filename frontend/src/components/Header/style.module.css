@@ -197,7 +197,12 @@ header {
   opacity: 0.7;
 }
 
-
+/*
+.btn_login > svg{
+  color: rgb(84, 83, 94);
+  font-size: 1.5rem;
+}
+*/
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }

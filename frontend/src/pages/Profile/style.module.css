@@ -1,0 +1,11 @@
+.profile { max-width: 760px; margin: 3px auto; padding: 0 16px; }
+.title { font-size: 28px; margin-bottom: 16px; }
+.box { background: var(--card, #f8f8f8); padding: 16px; border-radius: 12px; margin-bottom: 24px; }
+.form { display: grid; gap: 12px; background: var(--card, #afafaf); padding: 16px; border-radius: 12px; }
+.form label { font-weight: 600; }
+.form input { padding: 10px; border-radius: 8px; border: 1px solid #f80000; background: #1a1a1a; color: #fff; }
+.hr { height: 1px; background: #333; margin: 12px 0; }
+.btn { margin-top: 8px; padding: 12px; border: 0; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.loading { text-align: center; padding: 40px; }
+.msgError { color: #ff5b5b; font-weight: 600; }
+.msgSuccess { color: #36d399; font-weight: 600; }

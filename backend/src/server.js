@@ -15,6 +15,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 routes(app);
 
 // Teste de conexão com o banco

@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import styles from "./style.module.css";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  // Estados de login
+  // Estados login
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginMsg, setLoginMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Estados de cadastro
+  // Estados registro
   const [registerData, setRegisterData] = useState({
     nome: "",
     sobrenome: "",
@@ -18,11 +20,27 @@ export default function Login() {
     confirmarSenha: "",
   });
   const [registerMsg, setRegisterMsg] = useState("");
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [senhaConfere, setSenhaConfere] = useState(true);
 
-  // Função para login
+  // Funções de validação
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePassword = (senha) => senha.trim().length >= 7;
+
+  // Função de login
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMsg("");
+
+    if (!validateEmail(loginData.email)) {
+      setLoginMsg("Email inválido.");
+      return;
+    }
+
+    if (!validatePassword(loginData.senha)) {
+      setLoginMsg("Senha deve ter no mínimo 7 caracteres.");
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
@@ -38,32 +56,56 @@ export default function Login() {
         return;
       }
 
-      // Salva token e redireciona
       localStorage.setItem("token", result.token);
       setLoginMsg("Login realizado com sucesso!");
-      navigate("/home"); // muda conforme sua rota
-
+      navigate("/conta");
     } catch (error) {
-      console.error("Erro no login:", error);
       setLoginMsg("Erro de conexão com o servidor.");
     }
   };
 
-  // Função para cadastro
+  // Função de registro
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterMsg("");
 
-    if (registerData.senha !== registerData.confirmarSenha) {
+    if (!registerData.nome.trim()) {
+      setRegisterMsg("Nome obrigatório.");
+      return;
+    }
+
+    if (!registerData.sobrenome.trim()) {
+      setRegisterMsg("Sobrenome obrigatório.");
+      return;
+    }
+
+    if (!validateEmail(registerData.email)) {
+      setRegisterMsg("Email inválido.");
+      return;
+    }
+
+    if (!validatePassword(registerData.senha)) {
+      setRegisterMsg("Senha deve ter no mínimo 7 caracteres.");
+      return;
+    }
+
+    if (!senhaConfere) {
       setRegisterMsg("As senhas não conferem.");
       return;
     }
 
+    const nomeCompleto = `${registerData.nome.trim()} ${registerData.sobrenome.trim()}`.trim();
+
     try {
-      const response = await fetch("http://localhost:5000/api/users/register", {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registerData),
+        body: JSON.stringify({
+          nome: nomeCompleto,
+          email: registerData.email.trim(),
+          senha: registerData.senha,
+          telefone: "00000000000",
+        }),
       });
 
       const result = await response.json();
@@ -81,12 +123,19 @@ export default function Login() {
         senha: "",
         confirmarSenha: "",
       });
-
+      setSenhaConfere(true);
     } catch (error) {
-      console.error("Erro no cadastro:", error);
       setRegisterMsg("Erro de conexão com o servidor.");
     }
   };
+
+  // Validação do formulário de registro para habilitar botão
+  const registroValido =
+    registerData.nome.trim() &&
+    registerData.sobrenome.trim() &&
+    validateEmail(registerData.email) &&
+    validatePassword(registerData.senha) &&
+    senhaConfere;
 
   return (
     <section>
@@ -96,7 +145,7 @@ export default function Login() {
         </div>
 
         <div className={styles.loginBody}>
-          {/* BOX LOGIN */}
+          {/* Login */}
           <div className={styles.box_login}>
             <h4 className={styles.title_form}>Faça Login</h4>
             <form onSubmit={handleLogin} className={styles.form}>
@@ -115,29 +164,34 @@ export default function Login() {
 
               <div className={styles.field}>
                 <label htmlFor="login-senha">Senha</label>
-                <input
-                  type="password"
-                  id="login-senha"
-                  placeholder="Digite aqui"
-                  value={loginData.senha}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, senha: e.target.value })
-                  }
-                />
+                <div className={styles.passwordField}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="login-senha"
+                    placeholder="Digite aqui"
+                    value={loginData.senha}
+                    onChange={(e) =>
+                      setLoginData({ ...loginData, senha: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={styles.eyeButton}
+                  >
+                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                  </button>
+                </div>
               </div>
 
-              <div className={styles.field}>
-                {loginMsg && (
-                  <div
-                    className={styles.msg_retorno}
-                    data-msg={
-                      loginMsg.includes("sucesso") ? "success" : "error"
-                    }
-                  >
-                    {loginMsg}
-                  </div>
-                )}
-              </div>
+              {loginMsg && (
+                <div
+                  className={styles.msg_retorno}
+                  data-msg={loginMsg.includes("sucesso") ? "success" : "error"}
+                >
+                  {loginMsg}
+                </div>
+              )}
 
               <div className={`${styles.field} ${styles.fieldsubmit}`}>
                 <button className={styles.btn_submit} type="submit">
@@ -147,7 +201,7 @@ export default function Login() {
             </form>
           </div>
 
-          {/* BOX REGISTRO */}
+          {/* Registro */}
           <div className={styles.box_register}>
             <h4 className={styles.title_form}>Criar Conta</h4>
             <form onSubmit={handleRegister} className={styles.form}>
@@ -188,63 +242,76 @@ export default function Login() {
                   placeholder="Digite aqui"
                   value={registerData.email}
                   onChange={(e) =>
-                    setRegisterData({
-                      ...registerData,
-                      email: e.target.value,
-                    })
+                    setRegisterData({ ...registerData, email: e.target.value })
                   }
                 />
               </div>
 
               <div className={`${styles.field} ${styles.field_half}`}>
                 <label htmlFor="register-password">Senha</label>
-                <input
-                  type="password"
-                  id="register-password"
-                  placeholder="Digite aqui"
-                  value={registerData.senha}
-                  onChange={(e) =>
-                    setRegisterData({
-                      ...registerData,
-                      senha: e.target.value,
-                    })
-                  }
-                />
+                <div className={styles.passwordField}>
+                  <input
+                    type={showRegisterPassword ? "text" : "password"}
+                    id="register-password"
+                    placeholder="Digite aqui"
+                    value={registerData.senha}
+                    onChange={(e) => {
+                      const novaSenha = e.target.value;
+                      setRegisterData({ ...registerData, senha: novaSenha });
+                      setSenhaConfere(novaSenha === registerData.confirmarSenha);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                    className={styles.eyeButton}
+                  >
+                    {showRegisterPassword ? <FaEye /> : <FaEyeSlash />}
+                  </button>
+                </div>
               </div>
 
               <div className={`${styles.field} ${styles.field_half}`}>
-                <label htmlFor="register-password-confirm">
-                  Confirmar Senha
-                </label>
+                <label htmlFor="register-password-confirm">Confirmar Senha</label>
                 <input
-                  type="password"
+                  type={showRegisterPassword ? "text" : "password"}
                   id="register-password-confirm"
                   placeholder="Digite aqui"
                   value={registerData.confirmarSenha}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const confirmar = e.target.value;
                     setRegisterData({
                       ...registerData,
-                      confirmarSenha: e.target.value,
-                    })
-                  }
+                      confirmarSenha: confirmar,
+                    });
+                    setSenhaConfere(registerData.senha === confirmar);
+                  }}
                 />
               </div>
 
-              <div className={styles.field}>
-                {registerMsg && (
-                  <div
-                    className={styles.msg_retorno}
-                    data-msg={
-                      registerMsg.includes("sucesso") ? "success" : "error"
-                    }
-                  >
-                    {registerMsg}
-                  </div>
-                )}
-              </div>
+              {!senhaConfere && (
+                <p className={styles.msg_retorno} data-msg="error">
+                  As senhas não conferem.
+                </p>
+              )}
+
+              {registerMsg && (
+                <div
+                  className={styles.msg_retorno}
+                  data-msg={
+                    registerMsg.includes("sucesso") ? "success" : "error"
+                  }
+                >
+                  {registerMsg}
+                </div>
+              )}
 
               <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                <button className={styles.btn_submit} type="submit">
+                <button
+                  className={styles.btn_submit}
+                  type="submit"
+                  
+                >
                   Cadastrar
                 </button>
               </div>

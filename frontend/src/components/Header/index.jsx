@@ -10,13 +10,11 @@ export default function Header() {
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Atualiza cores ao mudar de rota e fecha menu
   useEffect(() => {
     updateHeaderCSS(location.pathname);
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Reseta header se o botão de menu desaparecer (largura > 1400)
   useEffect(() => {
     const handleResize = () => {
       const menuButton = document.querySelector(`.${styles.menuToggleWrapper}`);
@@ -33,29 +31,28 @@ export default function Header() {
     return () => window.removeEventListener("resize", handleResize);
   }, [location.pathname, menuOpen]);
 
-
-
   return (
     <header className={styles.header}>
       <div className={styles.navbarWrapper}>
         <div className={styles.nav}>
+
           {/* MENU DESKTOP */}
           <div className={styles.centeredMenu}>
             <ul className={styles.noBreak}>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/shop">Shop</Link></li>
-              <li><Link to="/community">Community</Link></li>
-              <li><Link to="/sale">Sale</Link></li>
-              <li><Link to="/about-us">About Us</Link></li>
+              <li><Link to="/" title="Ir para Home">Home</Link></li>
+              <li><Link to="/shop" title="Ir para Shop">Shop</Link></li>
+              <li><Link to="/community" title="Ir para Community">Community</Link></li>
+              <li><Link to="/sale" title="Ir para Sale">Sale</Link></li>
+              <li><Link to="/about-us" title="Ir para Sobre nós">About Us</Link></li>
             </ul>
           </div>
 
           {/* LOGO */}
-          <div className={styles.logoWrapper}>
-            <Link to="/">
+          <div className={styles.logoWrapper} title="Logo Surface">
+            <Link to="/" title="Voltar para Home">
               <img
                 src={`var(--logo-url)`}
-                alt="Logo"
+                alt="Logo da marca"
                 className={styles.logoImage}
               />
             </Link>
@@ -65,10 +62,11 @@ export default function Header() {
           <div className={styles.rightMenuWrapper}>
             <div className={styles.rightMenu}>
               <ul>
-                {/* Botão pesquisa */}
+                {/* Botão de pesquisa */}
                 <li>
                   <button
                     type="button"
+                    title="Pesquisar"
                     className={searchOpen ? styles.activeButton : ""}
                     onClick={() => {
                       setSearchOpen(prev => !prev);
@@ -79,25 +77,35 @@ export default function Header() {
                   </button>
                 </li>
 
+                {/* Carrinho */}
                 <li>
-                  <button type="button"><FaShoppingCart /></button>
+                  <button type="button" title="Carrinho de compras">
+                    <FaShoppingCart />
+                  </button>
                 </li>
+
+                {/* Login */}
                 <li>
-                  <Link to="/login" target="">
-                    <button type="button">
+                  <Link to="/entrar" title="Ir para login">
+                    <button
+                      type="button"
+                      className={styles.btn_login}
+                      name="loginButton"
+                    >
                       <FaUserCircle />
                     </button>
                   </Link>
                 </li>
 
-                {/* Hamburger só mobile */}
+                {/* Botão mobile - menu hamburguer */}
                 <li className={styles.menuToggleWrapper}>
                   <button
                     type="button"
+                    title={menuOpen ? "Fechar menu" : "Abrir menu"}
                     onClick={() => {
                       setMenuOpen(prev => {
                         const newState = !prev;
-                        if (newState) setSearchOpen(false); // fecha pesquisa se menu abrir
+                        if (newState) setSearchOpen(false);
                         if (newState) updateHeaderCSS("/shop");
                         else updateHeaderCSS(location.pathname);
                         return newState;
@@ -110,24 +118,29 @@ export default function Header() {
               </ul>
             </div>
           </div>
+
         </div>
       </div>
 
+      {/* BARRA DE PESQUISA */}
       {searchOpen && (
         <div className={styles.searchWrapper}>
           <input
             type="text"
+            name="searchInput"
             className={styles.searchInput}
             placeholder="Pesquisar..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             autoFocus
+            title="Campo de pesquisa"
           />
-          {/* Botão confirmar pesquisa */}
-          {/* Botão confirmar pesquisa */}
+
+          {/* Confirmar pesquisa */}
           <button
             type="button"
             className={styles.searchConfirmButton}
+            title="Confirmar pesquisa"
             onClick={() => {
               console.log("Pesquisar:", searchValue);
               setSearchValue("");
@@ -136,19 +149,22 @@ export default function Header() {
           >
             <FaCheck />
           </button>
-          {/* Botão de fechar pesquisa */}
+
+          {/* Fechar pesquisa */}
           <button
             type="button"
             className={styles.searchCloseButton}
+            title="Fechar pesquisa"
             onClick={() => setSearchOpen(false)}
           >
             <FaTimes />
           </button>
         </div>
       )}
-      {/* MENU MOBILE SEPARADO */}
+
+      {/* MENU MOBILE */}
       {menuOpen && (
-        <nav className={styles.mobileMenu}>
+        <nav className={styles.mobileMenu} title="Menu mobile">
           <ul className={styles.mobileMenuTop}>
             <li><Link to="/" onClick={() => { setMenuOpen(false); updateHeaderCSS("/"); }}>Home</Link></li>
             <li><Link to="/shop" onClick={() => { setMenuOpen(false); updateHeaderCSS("/shop"); }}>Shop</Link></li>
@@ -156,6 +172,7 @@ export default function Header() {
             <li><Link to="/sale" onClick={() => { setMenuOpen(false); updateHeaderCSS("/sale"); }}>Sale</Link></li>
             <li><Link to="/about-us" onClick={() => { setMenuOpen(false); updateHeaderCSS("/about-us"); }}>About Us</Link></li>
           </ul>
+
           <ul className={styles.mobileMenuBottom}>
             <li><Link to="/atendimento" onClick={() => { setMenuOpen(false); updateHeaderCSS("/atendimento"); }}>Atendimento</Link></li>
           </ul>

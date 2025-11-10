@@ -3,7 +3,7 @@ import { loginController, registerController } from "../controllers/authControll
 
 const router = Router();
 
-router.post("/login", loginController);       // público
-router.post("/register", registerController); // público
+router.post("/login", loginController);
+router.post("/register", registerController);
 
 export default router;
