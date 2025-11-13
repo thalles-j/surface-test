@@ -7,8 +7,9 @@ export const getProductController = async (req, res) => {
   try {
     const produtos = await prisma.produtos.findMany({
       include: {
-        fotos: { // Garante que as fotos sejam incluídas
+        fotos: {
           select: { 
+            id_foto: true,
             url: true,
             descricao: true,
           },

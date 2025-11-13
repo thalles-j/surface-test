@@ -1,11 +1,334 @@
-.profile { max-width: 760px; margin: 3px auto; padding: 0 16px; }
-.title { font-size: 28px; margin-bottom: 16px; }
-.box { background: var(--card, #f8f8f8); padding: 16px; border-radius: 12px; margin-bottom: 24px; }
-.form { display: grid; gap: 12px; background: var(--card, #afafaf); padding: 16px; border-radius: 12px; }
-.form label { font-weight: 600; }
-.form input { padding: 10px; border-radius: 8px; border: 1px solid #f80000; background: #1a1a1a; color: #fff; }
-.hr { height: 1px; background: #333; margin: 12px 0; }
-.btn { margin-top: 8px; padding: 12px; border: 0; border-radius: 10px; font-weight: 700; cursor: pointer; }
-.loading { text-align: center; padding: 40px; }
-.msgError { color: #ff5b5b; font-weight: 600; }
-.msgSuccess { color: #36d399; font-weight: 600; }
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&display=swap');
+
+.profileMain {
+    background-color: #fff;
+    margin-top: 9.5rem;
+    margin-bottom: 9.5rem;
+    font-family: "Stack Sans Headline", sans-serif;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.profileContainer {
+    width: 60%;
+    margin: 0 auto;
+}
+
+.fieldRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.field.field_half {
+    width: calc(50% - 5px);
+}
+
+.profileText {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-block;
+    transition: 0.3s;
+}
+
+.profileText:hover {
+    border: 1px solid #d3d3d3;
+    background: #fafafa;
+}
+
+
+.btn_tab {
+    background: #b4b4b4;
+    border: 1px solid #ccc;
+    padding: 0.7rem 1.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+    text-transform: uppercase;
+
+}
+
+.btn_tab:hover {
+    background: #ffffff;
+}
+
+.btn_tab.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.btn_tab.active:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+.profileBody {
+    padding: 0 2rem;
+    border: 1px solid #e2e2e2;
+}
+
+.box_section {
+    display: none;
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    margin: 1.5rem 0;
+    color: #07090d;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.8rem;
+    color: #333;
+}
+
+.form .field {
+    margin-bottom: 1.2rem;
+}
+
+.form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.form input {
+    width: 100%;
+    height: 2.5rem;
+    padding-left: 1rem;
+    border: 1px solid #707070;
+    font-size: 14px;
+}
+
+
+.btn_addEndereco {
+    background: none;
+    border: none;
+    color: #000;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.fieldsubmit {
+    margin-top: 2rem;
+}
+
+.btn_submit {
+    width: 100%;
+    height: 45px;
+    background: #000;
+    color: #fff;
+    border: 1px solid #000;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.btn_submit:hover {
+    background: #fff;
+    color: #000;
+}
+.enderecoItem {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.enderecoPrincipal {
+  border-color: #007bff;
+  background: #f3f9ff;
+}
+
+.enderecoActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn_setPrincipal {
+  background: transparent;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn_setPrincipal:hover {
+  background: #007bff;
+  color: #fff;
+}
+
+.btn_excluir {
+  background: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn_excluir:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.badge {
+  background: #007bff;
+  color: white;
+  padding: 3px 7px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+}
+
+.btn_addEndereco {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn_addEndereco:hover {
+  background: #0056b3;
+}
+
+
+@media (max-width: 1040px) {
+    .profileContainer {
+        width: 90%;
+        margin: 0 auto;
+    }
+}
+.pedido {
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    width: 100%;
+}
+
+.pedidoItem {
+    box-sizing: border-box;
+}
+.pedidoStatus {
+    margin: 0 1rem;
+}
+
+.pedidoItemInfo {
+    box-sizing: border-box;
+    margin: 0 1rem;
+}
+
+.pedidoProductsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.pedidoProductItem {
+    margin: 0.5rem 1rem;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.pedidoProductItem.withWrap {
+    min-width: 200px;
+}
+
+.pedidoProductItem.noWrap {
+    flex-basis: auto;
+    min-width: auto;
+}
+
+.pedidoImageContainer {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.pedidoImagemPlaceholder {
+    width: 72px;
+    height: 72px;
+    background: #eee;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+.pedidoProductDetails {
+    flex: 1;
+    min-width: 0;
+}
+
+.pedidoProductDetails p {
+    font-family: "Stack Sans Headline", sans-serif;
+    text-transform: uppercase;
+    margin: 0;
+    font-size:1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-optical-sizing: auto;
+    }
+
+.pedidoTotalContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    font-weight: 600;
+}
+.pedidoInfoContainer{
+    width: 100%;
+    display: block;
+}
+
+.pedidoImagem {
+    width: 100px;
+    height: auto;
+    margin-top: 0.5rem;
+    border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+    .profileBody {
+        padding: 1rem;
+    }
+
+    .pedidoImagem {
+        width: 80px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profileContainer { width: 100%; margin: 0 auto; }
+
+    .sectionTitle { font-size: 1.1rem; }
+    .subtitle { font-size: 0.95rem; }
+    .form input { height: 2rem; font-size: 13px; }
+    .btn_tab { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+    .pedidoProductDetails p { font-size: 0.7rem; }
+    .pedidoTotalContainer { font-size: 0.95rem; }
+
+    /* Make product images smaller on very small screens */
+    .pedidoImageContainer, .pedidoImagem { width: 60px; height: auto; }
+}
