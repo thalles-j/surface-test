@@ -12,8 +12,13 @@ export async function apiLogin(payload) {
         body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensagem);
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        throw new Error("Erro de conexão com o servidor");
+    }
+    if (!res.ok) throw new Error(data.mensagem || "Erro ao fazer login");
     return data;
 }
 
@@ -24,8 +29,13 @@ export async function apiRegister(payload) {
         body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensagem);
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        throw new Error("Erro de conexão com o servidor");
+    }
+    if (!res.ok) throw new Error(data.mensagem || "Erro ao registrar");
     return data;
 }
 
@@ -34,8 +44,13 @@ export async function apiMe() {
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensagem);
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        throw new Error("Erro de conexão com o servidor");
+    }
+    if (!res.ok) throw new Error(data.mensagem || "Erro ao carregar perfil");
     return data;
 }
 
@@ -46,8 +61,13 @@ export async function apiUpdateMe(payload) {
         body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensagem);
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        throw new Error("Erro de conexão com o servidor");
+    }
+    if (!res.ok) throw new Error(data.mensagem || "Erro ao atualizar perfil");
     return data;
 }
 

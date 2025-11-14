@@ -55,7 +55,6 @@ header {
 .centeredMenu ul {
   display: inline-flex;
   list-style: none;
-  height: 3rem;
   align-items: top;
   gap: 1.7rem;
 }
@@ -71,15 +70,17 @@ header {
 }
 
 .centeredMenu li::after {
+  display: flex;
+  justify-items: baseline;
   content: "";
   position: absolute;
   left: 0;
   bottom: 0;
   width: 0%;
-  height: 2px;
+  height:2px;
   background-color: var(--underline-color);
   transition: width 0.2s ease-in-out;
-  margin-bottom: 9px;
+  margin-bottom: 20px;
 }
 
 
