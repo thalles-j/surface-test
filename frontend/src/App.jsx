@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { BrowserRouter as Router } from 'react-router-dom'; 
-
+import { AuthProvider } from './context/AuthContext.jsx'; 
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
-
-
 import AppRoutes from './routes';
 
 export default function App() {
@@ -30,14 +28,15 @@ export default function App() {
     return () => observer.disconnect();
   }, []);
 
-
   return (
-    <Router> 
-      <Header />
-      <main> 
-        <AppRoutes />
-      </main>
-      <Footer />
-    </Router>
+    <AuthProvider>
+      <Router> 
+        <Header />
+        <main> 
+          <AppRoutes />
+        </main>
+        <Footer />
+      </Router>
+    </AuthProvider>
   );
 }

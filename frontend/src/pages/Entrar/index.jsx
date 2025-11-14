@@ -2,16 +2,20 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import styles from "./style.module.css";
+import useAuth from "../../hooks/useAuth.js";
+
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
 
   // Estados login
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginMsg, setLoginMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estados registro
+  // Estados registro (não alterado)
   const [registerData, setRegisterData] = useState({
     nome: "",
     sobrenome: "",
@@ -23,11 +27,11 @@ export default function Login() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [senhaConfere, setSenhaConfere] = useState(true);
 
-  // Funções de validação
+  // Funções de validação (não alterado)
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (senha) => senha.trim().length >= 7;
 
-  // Função de login
+  // 👇 3. FUNÇÃO DE LOGIN MODIFICADA
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMsg("");
@@ -43,28 +47,15 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setLoginMsg(result.mensagem || "Erro ao fazer login");
-        return;
-      }
-
-      localStorage.setItem("token", result.token);
+      await login(loginData);
       setLoginMsg("Login realizado com sucesso!");
       navigate("/conta");
     } catch (error) {
-      setLoginMsg("Erro de conexão com o servidor.");
+      setLoginMsg(error?.message || "Email ou senha inválidos.");
     }
   };
 
-  // Função de registro
+  // Função de registro (não alterado)
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterMsg("");
@@ -129,9 +120,8 @@ export default function Login() {
     }
   };
 
-  // Validação do formulário de registro para habilitar botão
-  const registroValido =
-    registerData.nome.trim() &&
+  // Validação do formulário de registro (não alterado)
+  const registroValido = registerData.nome.trim() &&
     registerData.sobrenome.trim() &&
     validateEmail(registerData.email) &&
     validatePassword(registerData.senha) &&

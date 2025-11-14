@@ -63,7 +63,7 @@ export const getMeController = async (req, res, next) => {
       })),
     };
 
-    res.json(resposta);
+    res.json({ usuario: resposta });
   } catch (error) {
     next(error);
   }

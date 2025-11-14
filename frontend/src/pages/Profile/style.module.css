@@ -14,6 +14,26 @@
     width: 60%;
     margin: 0 auto;
 }
+.profileHeader{
+    width: 100%;
+    display: inline-flex;
+    justify-content: space-between;
+}
+
+.logout {
+    display: flex;
+    align-items: flex-end;
+    color: #dc3545;
+    transition: ease 0.3s;
+}
+.logout:hover {
+    transform: scale(1.01);
+    opacity: 0.8;
+    
+    cursor: pointer;
+}
+
+
 
 .fieldRow {
     display: flex;

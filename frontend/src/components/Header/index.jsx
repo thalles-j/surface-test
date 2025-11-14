@@ -3,9 +3,11 @@ import { useLocation, Link } from "react-router-dom";
 import { FaSearch, FaCheck, FaShoppingCart, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import styles from "./style.module.css";
 import { updateHeaderCSS } from "../../utils/headerTheme";
+import useAuth from "../../hooks/useAuth";
 
 export default function Header() {
   const location = useLocation();
+  const auth = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -84,12 +86,12 @@ export default function Header() {
                   </button>
                 </li>
 
-                {/* Login */}
+                {/* Login / Conta */}
                 <li>
-                  <Link to="/entrar" title="Ir para login">
+                  <Link to={auth?.initialized && auth?.user ? "/conta" : "/entrar"} title={auth?.initialized && auth?.user ? "Ir para minha conta" : "Ir para login"}>
                     <button
                       type="button"
-                      className={styles.btn_login}
+                      className={`${styles.btn_login} ${auth?.initialized && auth?.user ? styles.btn_login_active : ""}`}
                       name="loginButton"
                     >
                       <FaUserCircle />

@@ -132,6 +132,11 @@ header {
   color: var(--header-color);
 }
 
+/* Classe para quando usuário está logado */
+.btn_login_active {
+  filter: drop-shadow(0 1px 1px #00ff40);  /* Glow effect */
+}
+
 .searchWrapper {
   position: absolute;
   top: 120px; /* logo abaixo do header */
