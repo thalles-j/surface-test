@@ -12,13 +12,8 @@ export async function apiLogin(payload) {
         body: JSON.stringify(payload),
     });
 
-    let data;
-    try {
-        data = await res.json();
-    } catch (e) {
-        throw new Error("Erro de conexão com o servidor");
-    }
-    if (!res.ok) throw new Error(data.mensagem || "Erro ao fazer login");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensagem || "Erro no login");
     return data;
 }
 
@@ -29,45 +24,40 @@ export async function apiRegister(payload) {
         body: JSON.stringify(payload),
     });
 
-    let data;
-    try {
-        data = await res.json();
-    } catch (e) {
-        throw new Error("Erro de conexão com o servidor");
-    }
-    if (!res.ok) throw new Error(data.mensagem || "Erro ao registrar");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensagem || "Erro no registro");
     return data;
 }
 
 export async function apiMe() {
     const res = await fetch(`${API}/conta`, {
-        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        headers: getAuthHeaders()
     });
 
-    let data;
-    try {
-        data = await res.json();
-    } catch (e) {
-        throw new Error("Erro de conexão com o servidor");
+    // Se o backend devolver HTML (token inválido), não tente parsear JSON
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Resposta não é JSON. Token inválido ou sessão expirada.");
     }
-    if (!res.ok) throw new Error(data.mensagem || "Erro ao carregar perfil");
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data.mensagem || "Erro ao carregar conta");
+    }
+
     return data;
 }
 
 export async function apiUpdateMe(payload) {
-    const res = await fetch(`${API}/conta`, {
+    const res = await fetch(`${API}/conta/`, {
         method: "PUT",
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     });
 
-    let data;
-    try {
-        data = await res.json();
-    } catch (e) {
-        throw new Error("Erro de conexão com o servidor");
-    }
-    if (!res.ok) throw new Error(data.mensagem || "Erro ao atualizar perfil");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensagem || "Erro ao atualizar");
     return data;
 }
 

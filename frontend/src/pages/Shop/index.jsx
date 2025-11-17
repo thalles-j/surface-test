@@ -79,7 +79,11 @@ export default function Shop() {
         <div className={styles.shop_container}>
 
           <div className={styles.shop_headerWrapper}>
-            <CategoriasDropdown />
+            <CategoriasDropdown
+              categories={categories}
+              selected={selectedCategory}
+              onSelect={(c) => setSelectedCategory(c)}
+            />
 
             <div className={styles.shop_filters}>
               <div className={styles.filter_group}>

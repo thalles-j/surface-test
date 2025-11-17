@@ -1,80 +1,76 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { apiMe, apiLogin, apiRegister, apiLogout } from "../services/auth.js";
+import { createContext, useContext, useState, useEffect } from "react";
+import { apiMe, apiLogin, apiLogout } from "../services/auth.js";
 
 export const AuthContext = createContext(null);
 
-export const useAuth = () => useContext(AuthContext);
-
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [initialized, setInitialized] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        
-        if (!token) {
-            setLoading(false);
-            setInitialized(true);
-            return;
-        }
+  // Carrega usuário ao iniciar (useEffect)
+  // Esta parte continua a mesma e é crucial
+  useEffect(() => {
+    async function loadUser() {
+      const token = localStorage.getItem("token");
 
-        (async () => {
-            try {
-                const { usuario } = await apiMe();
-                setUser(usuario);
-            } catch {
-                localStorage.removeItem("token");
-                setUser(null);
-            } finally {
-                setLoading(false);
-                setInitialized(true);
-            }
-        })();
-    }, []);
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-    const value = useMemo(() => ({
-        user,
-        loading,
-        initialized,
-        login: async (data) => {
-            setLoading(true);
-            try {
-                const res = await apiLogin(data);
-                
-                if (!res?.token) {
-                    throw new Error("No token in response: " + JSON.stringify(res));
-                }
-                
-                localStorage.setItem("token", res.token);
-                
-                const me = await apiMe();
-                const usuario = me?.usuario || me;
-                setUser(usuario);
-                setLoading(false);
-                return res;
-            } catch (error) {
-                localStorage.removeItem("token");
-                setUser(null);
-                setLoading(false);
-                throw error;
-            }
-        },
-        register: async (payload) => apiRegister(payload),
-        logout: async () => {
-            setLoading(true);
-            await apiLogout();
-            localStorage.removeItem("token");
-            setUser(null);
-            setLoading(false);
-        },
-        refreshMe: async () => {
-            setLoading(true);
-            const { usuario } = await apiMe();
-            setUser(usuario);
-            setLoading(false);
-        },
-    }), [user, loading, initialized]);
+      try {
+        // A apiMe é chamada AQUI, no carregamento da página
+        const data = await apiMe();
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+        // Se a sua apiMe retorna { usuario: {...} }, mantenha como está
+        // Se ela retorna o usuário direto, mude para: setUser(data);
+        setUser(data.usuario || data);
+
+      } catch (err) {
+        console.error("Erro ao carregar usuário:", err);
+        localStorage.removeItem("token");
+      }
+
+      setLoading(false);
+    }
+
+    loadUser();
+  }, []);
+
+  // LOGIN (Função Corrigida)
+  async function login(payload) {
+    // 1. Chama a apiLogin, que retorna { token, usuario: { ... com role } }
+    const res = await apiLogin(payload);
+
+    if (!res.token) throw new Error("Token não recebido");
+    if (!res.usuario) throw new Error("API de login não retornou o usuário");
+
+    // 2. Salva o token
+    localStorage.setItem("token", res.token);
+
+    // 3. Pega o usuário que veio da RESPOSTA DO LOGIN (que tem a 'role')
+    const usuario = res.usuario;
+
+    // 4. Define o usuário no estado
+    setUser(usuario);
+    return usuario;
+  }
+
+  // LOGOUT
+  async function logout() {
+    await apiLogout();
+    localStorage.removeItem("token");
+    setUser(null);
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Hook customizado
+export function useAuth() {
+  return useContext(AuthContext);
 }

@@ -3,6 +3,8 @@ import productsRoutes from "./productsRoutes.js";
 import userRoutes from "./userRoutes.js";
 import authRoutes from "./authRoutes.js";
 import profileRoutes from "./profileRoutes.js";
+import uploadRoutes from "./uploadRoutes.js";
+import categoriesRoutes from "./categoriesRoutes.js";
 
 const routes = (app) => {
     app.route("/").get((req, res) => res.status(200).send("API Funcionando!"));
@@ -12,6 +14,8 @@ const routes = (app) => {
     app.use("/api/products", productsRoutes); 
     app.use("/api/auth", authRoutes);
     app.use("/api/conta", profileRoutes);
+    app.use("/api/upload", uploadRoutes);
+    app.use("/api/categories", categoriesRoutes);
 };
 
 export default routes;

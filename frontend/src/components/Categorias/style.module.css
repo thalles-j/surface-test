@@ -4,27 +4,86 @@
     font-weight: bold;
     font-size: 16px;
     text-transform: uppercase;
-    cursor: pointer;
 }
 
-.dropdown-toggle {
-    display: flex
-;
+.dropdown_toggle {
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     user-select: none;
     font-family: "Halis GR", sans-serif;
     margin-top: 0 !important;
     text-transform: uppercase;
     font-weight: 800;
-    font-size: 20px;
-    color: #787878;
-    transition: all 0.5s 
-ease;
+    font-size: 18px;
+    color: #222;
+    background: transparent;
+    border: none;
+    padding: 6px 8px;
+    cursor: pointer;
 }
 
-.dropdown-toggle:hover {
-    color: #444444;
-    transition: all 0.5s 
-ease;
+.dropdown_toggle:hover {
+    color: #111;
+}
+
+.toggle_label {
+    display: inline-block;
+}
+
+.chevron {
+    display: inline-block;
+    color: #444;
+    transition: transform 180ms ease;
+}
+
+.chevron_open {
+    transform: rotate(180deg);
+}
+
+.categorias_list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    padding: 8px 10px;
+    list-style: none;
+    min-width: 160px;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 40;
+}
+
+.categorias_list.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.categorias_list li {
+    margin: 6px 0;
+}
+
+.categorias_list button {
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: #111;
+}
+
+.categorias_list button:hover {
+    background: rgba(0,0,0,0.04);
+    border-radius: 6px;
+}
+
+.active {
+    font-weight: 800;
+    color: #000;
 }

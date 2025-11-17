@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import styles from "./style.module.css";
-import useAuth from "../../hooks/useAuth.js";
+import { useAuth } from "../../context/AuthContext";
 
 
 export default function Login() {
@@ -31,29 +31,38 @@ export default function Login() {
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (senha) => senha.trim().length >= 7;
 
-  // 👇 3. FUNÇÃO DE LOGIN MODIFICADA
+  // Função de login
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginMsg("");
+  e.preventDefault();
+  setLoginMsg("");
 
-    if (!validateEmail(loginData.email)) {
-      setLoginMsg("Email inválido.");
-      return;
+  if (!validateEmail(loginData.email)) {
+    setLoginMsg("Email inválido.");
+    return;
+  }
+
+  if (!validatePassword(loginData.senha)) {
+    setLoginMsg("Senha deve ter no mínimo 7 caracteres.");
+    return;
+  }
+
+  try {
+    const user = await login(loginData);
+
+    console.log("Role:", user.role);
+
+    setLoginMsg("Login realizado com sucesso!");
+
+    if (user.role === 1) {
+      navigate("/admin");   // <-- admin
+    } else {
+      navigate("/conta"); // <-- usuário comum
     }
 
-    if (!validatePassword(loginData.senha)) {
-      setLoginMsg("Senha deve ter no mínimo 7 caracteres.");
-      return;
-    }
-
-    try {
-      await login(loginData);
-      setLoginMsg("Login realizado com sucesso!");
-      navigate("/conta");
-    } catch (error) {
-      setLoginMsg(error?.message || "Email ou senha inválidos.");
-    }
-  };
+  } catch (error) {
+    setLoginMsg(error?.message || "Email ou senha inválidos.");
+  }
+};
 
   // Função de registro (não alterado)
   const handleRegister = async (e) => {

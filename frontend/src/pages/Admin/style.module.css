@@ -1,0 +1,27 @@
+.container {
+  max-width: 920px;
+  margin: 24px auto;
+  padding: 18px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.variacoes {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px dashed #ddd;
+  border-radius: 6px;
+}
+.varRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.varRow input { flex: 1 }
+.actions { margin-top: 12px }
+.message { margin-top: 12px; padding: 8px; background: #f7f7f7; border-radius: 6px }

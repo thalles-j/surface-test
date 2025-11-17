@@ -15,7 +15,7 @@ export default function Profile() {
   const [editedData, setEditedData] = useState(user);
   
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [editName, setEditName] = useState(false); // Adicionado 'editName' que faltava
 
   // Este useEffect de proteção agora vai funcionar,

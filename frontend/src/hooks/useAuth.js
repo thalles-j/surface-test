@@ -1,1 +1,5 @@
-export { useAuth as default, useAuth } from "../context/AuthContext.jsx";
+import { useAuth as useAuthContext } from "../context/AuthContext.jsx";
+
+export default function useAuth() {
+  return useAuthContext();
+}

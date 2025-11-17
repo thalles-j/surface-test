@@ -2,7 +2,6 @@ import prisma from "../database/prisma.js";
 import * as crudService from "../services/crudServices.js";
 import * as crudController from "./crudController.js";
 
-// Endpoint de LISTAGEM (GET /api/products) - JÁ CORRIGIDO COM INCLUDE
 export const getProductController = async (req, res) => {
   try {
     const produtos = await prisma.produtos.findMany({
@@ -27,7 +26,6 @@ export const getProductController = async (req, res) => {
   }
 };
 
-// Endpoint de CRIAÇÃO (POST /api/products) - FOCO NA CORREÇÃO
 export const createProductController = async (req, res) => {
   const data = req.body;
   const produtos = Array.isArray(data) ? data : [data];
@@ -43,7 +41,6 @@ export const createProductController = async (req, res) => {
       if (!p.id_categoria) {
         return res.status(400).json({ error: "id_categoria é obrigatório para todos os produtos" });
       }
-
       // 1. Verifica se a categoria existe
       const categoria = await prisma.categorias.findUnique({
         where: { id_categoria: Number(p.id_categoria) },
