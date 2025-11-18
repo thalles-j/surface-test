@@ -11,6 +11,7 @@ body{
   transition: opacity 0.3s 
   ease-in;
   z-index: 900;
+  background-color: #ffffff;
 
 }
 

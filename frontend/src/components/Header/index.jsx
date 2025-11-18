@@ -88,7 +88,10 @@ export default function Header() {
 
                 {/* Login / Conta */}
                 <li>
-                  <Link to={auth?.initialized && auth?.user ? "/conta" : "/entrar"} title={auth?.initialized && auth?.user ? "Ir para minha conta" : "Ir para login"}>
+                  <Link 
+                    to={auth?.initialized && auth?.user ? (auth.user.role === 2 ? "/admin" : "/conta") : "/entrar"} 
+                    title={auth?.initialized && auth?.user ? (auth.user.role === 1 ? "Painel de Admin" : "Ir para minha conta") : "Ir para login"}
+                  >
                     <button
                       type="button"
                       className={`${styles.btn_login} ${auth?.initialized && auth?.user ? styles.btn_login_active : ""}`}

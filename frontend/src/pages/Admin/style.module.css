@@ -1,27 +1,454 @@
-.container {
-  max-width: 920px;
-  margin: 24px auto;
-  padding: 18px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&display=swap');
+
+
+
+.profileBody input, select, textarea {
+  font-family: inherit;
+  box-sizing: border-box; /* Garante que o padding não quebre o layout */
 }
-.form {
+
+/* Estilos do CSS Fornecido */
+.profileMain {
+  background-color: #fff;
+  margin-top: 9.5rem;
+  margin-bottom: 9.5rem;
+  font-family: "Stack Sans Headline", sans-serif;
+  width: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.profileContainer {
+  width: 60%;
+  margin: 0 auto;
+}
+
+.loadingContainer {
+  width: 60%;
+  margin: 9.5rem auto;
+  padding: 4rem;
+  background-color: #fff;
+  text-align: center;
+  font-family: "Stack Sans Headline", sans-serif;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.profileHeader {
+  width: 100%;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: flex-end; /* Alinha os botões e o link de sair */
+  border-bottom: 1px solid #e2e2e2; /* Adiciona um separador */
+  padding-bottom: 1rem;
+}
+
+/* Estilo para o botão "Sair da Conta" */
+.btn_logout {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1rem;
+  font-family: "Stack Sans Headline", sans-serif;
+  transition: ease 0.3s;
+}
+.btn_logout:hover {
+  transform: scale(1.01);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.fieldRow {
+  display: flex;
+  justify-content: space-between;
   gap: 10px;
 }
-.variacoes {
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px dashed #ddd;
-  border-radius: 6px;
+
+.field.field_half {
+  width: calc(50% - 5px);
 }
+
+.field.field_third {
+  width: calc(33.33% - 7px);
+}
+
+.field.field_quarter {
+   width: calc(25% - 8px);
+}
+
+.btn_tab {
+  background: #b4b4b4;
+  border: 1px solid #ccc;
+  padding: 0.7rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+  text-transform: uppercase;
+  font-family: "Stack Sans Headline", sans-serif;
+  font-size: 0.9rem;
+}
+
+.btn_tab:hover {
+  background: #ffffff;
+}
+
+.btn_tab.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.btn_tab.active:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+.profileBody {
+  padding: 0 2rem;
+  border: 1px solid #e2e2e2;
+  border-top: none; /* A borda superior já está no header */
+}
+
+.box_section {
+  display: none; /* O JS vai controlar a exibição */
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin: 1.5rem 0;
+  color: #07090d;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.8rem;
+  color: #333;
+}
+
+.form .field {
+  margin-bottom: 1.2rem;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.form input[type="text"],
+.form input[type="email"],
+.form input[type="number"],
+.form input[type="file"],
+.form select {
+  width: 100%;
+  height: 2.5rem;
+  padding-left: 1rem;
+  border: 1px solid #707070;
+  font-size: 14px;
+  border-radius: 4px; /* Cantos arredondados leves */
+  background-color: #fff; /* Garante fundo branco em selects */
+}
+
+.form input[type="file"] {
+  padding-left: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.form textarea {
+  width: 100%;
+  height: 6rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #707070;
+  font-size: 14px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.fieldsubmit {
+  margin-top: 2rem;
+  margin-bottom: 2rem; /* Espaçamento inferior */
+}
+
+.btn_submit {
+  width: 100%;
+  height: 45px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: 0.3s;
+  font-family: "Stack Sans Headline", sans-serif;
+  font-size: 1rem;
+  border-radius: 4px;
+}
+
+.btn_submit:disabled {
+  background: #b4b4b4;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn_submit:hover:not(:disabled) {
+  background: #fff;
+  color: #000;
+}
+
+/* === NOVOS ESTILOS PARA ADMIN === */
+
+.adminForm {
+  background: #fdfdfd;
+  border: 1px solid #e2e2e2;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.variationsContainer {
+  border-top: 1px dashed #ccc;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+}
+
 .varRow {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
-.varRow input { flex: 1 }
-.actions { margin-top: 12px }
-.message { margin-top: 12px; padding: 8px; background: #f7f7f7; border-radius: 6px }
+
+.varRow input {
+  height: 2.2rem;
+  padding-left: 0.5rem;
+  font-size: 13px;
+}
+
+.varRow .field_tamanho { width: 15%; }
+.varRow .field_sku { width: 30%; }
+.varRow .field_estoque { width: 20%; }
+.varRow .field_preco { width: 20%; }
+
+.btn_removeVar {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.btn_addVar {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+.adminTable th, .adminTable td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+.adminTable th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.adminTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.adminTable tr:hover {
+  background-color: #f1f1f1;
+}
+.adminTable td .btn_action {
+  background: transparent;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 0.8rem;
+  margin-right: 5px;
+}
+.adminTable td .btn_action.delete {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+.adminTable td .btn_action:hover {
+  background: #007bff;
+  color: #fff;
+}
+.adminTable td .btn_action.delete:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.adminTable select {
+  height: 2rem;
+  padding-left: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* === FIM DOS NOVOS ESTILOS === */
+
+/* Responsividade */
+@media (max-width: 1040px) {
+  .profileContainer {
+    width: 90%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .profileBody {
+    padding: 1rem;
+  }
+  .fieldRow {
+    flex-direction: column; /* Empilha os campos */
+    gap: 0;
+  }
+  .field.field_half,
+  .field.field_third,
+  .field.field_quarter {
+    width: 100%; /* Ocupa 100% em telas menores */
+    margin-bottom: 1.2rem; /* Adiciona margem quando empilhado */
+  }
+  .fieldRow .field:last-child {
+    margin-bottom: 0;
+  }
+  
+  .varRow {
+    flex-wrap: wrap;
+  }
+  .varRow .field_tamanho,
+  .varRow .field_sku,
+  .varRow .field_estoque,
+  .varRow .field_preco {
+    width: calc(50% - 5px);
+    margin-bottom: 10px;
+  }
+  .btn_removeVar {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .profileContainer {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .profileMain {
+    margin-top: 6rem;
+    margin-bottom: 6rem;
+  }
+  .profileHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .profileBody {
+    padding: 0.5rem;
+    border-left: none;
+    border-right: none;
+  }
+
+  .sectionTitle { font-size: 1.1rem; }
+  .subtitle { font-size: 0.95rem; }
+  .form input, .form select { height: 2.2rem; font-size: 13px; }
+  .btn_tab { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+  
+  /* Ajusta tabela para telas pequenas */
+  .adminTable, .adminTable thead, .adminTable tbody, .adminTable th, .adminTable td, .adminTable tr {
+    display: block;
+  }
+  .adminTable thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .adminTable tr { 
+    border: 1px solid #ccc; 
+    margin-bottom: 0.5rem;
+  }
+  .adminTable td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 50%;
+  }
+  .adminTable td:before {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    content: attr(data-label); /* Rótulo para tabela responsiva */
+    font-weight: 600;
+  }
+}
+
+/* CSS para a Caixa de Mensagem Customizada */
+.messageOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none; /* Começa escondido */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.messageOverlay.show {
+  display: flex;
+}
+
+.messageBox {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  font-family: "Stack Sans Headline", sans-serif;
+}
+
+.messageBox p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.messageBox button {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.messageBox button:hover {
+  background: #333;
+}

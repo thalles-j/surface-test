@@ -8,7 +8,7 @@ import ProductDetail from '../pages/ProductDetail';
 import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
 import Profile from '../pages/Profile';
-import AdminDestop from '../pages/Admin';
+import AdminPainel from '../pages/Admin';
 
 // ======================
 // ProtectedRoute
@@ -28,10 +28,26 @@ function ProtectedRoute({ element }) {
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
-  if (!user) return <Navigate to="/entrar" replace />;
+  if (loading) {
+    // Substitua o null por algo visual para você saber que está carregando
+    return <div>Carregando verificação de admin...</div>; 
+  }
 
-  if (user.role !== 1) return <Navigate to="/" replace />;
+  if (!user) {
+    console.log("AdminRoute: Usuário não logado.");
+    return <Navigate to="/entrar" replace />;
+  }
+
+  // --- AQUI ESTÁ O DEBUG ---
+  console.log("AdminRoute: Usuário carregado:", user);
+  console.log("Role do usuário:", user.role, "| Tipo:", typeof user.role);
+  
+  // Verifique se role é 1 (number) ou "1" (string)
+  // Use != (dois iguais) para aceitar string "1" ou number 1, se preferir
+  if (user.role != 1) { 
+    console.log("AdminRoute: Acesso negado. Role incorreto.");
+    return <Navigate to="/" replace />;
+  }
 
   return children;
 }
@@ -58,7 +74,7 @@ export default function AppRoutes() {
         path="/admin"
         element={
           <AdminRoute>
-            <AdminDestop />
+            <AdminPainel />
           </AdminRoute>
         }
       />
