@@ -1,31 +1,27 @@
 import { useEffect, useState } from "react";
 import styles from "./style.module.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
-// Não precisamos mais do apiMe aqui
+import useAuth from "../../hooks/useAuth";
+import { api } from "../../services/api"; 
 
 export default function Profile() {
   const [activeSection, setActiveSection] = useState("dados");
-  // Pegue 'refreshMe' do contexto também
-  const { user, loading, logout, refreshMe } = useAuth(); 
+  const { user, loading, logout } = useAuth(); 
   const navigate = useNavigate();
 
-  // Use o 'user' do contexto para iniciar seus estados locais
+  // Estados locais
   const [userData, setUserData] = useState(user);
   const [editedData, setEditedData] = useState(user);
   
   const [saving, setSaving] = useState(false);
-  const [error] = useState(null);
-  const [editName, setEditName] = useState(false); // Adicionado 'editName' que faltava
+  const [editName, setEditName] = useState(false);
 
-  // Este useEffect de proteção agora vai funcionar,
-  // pois ele vai esperar o 'loading' do login (da Correção 1) ficar 'false'
+  // 1. Proteção de Rota
   useEffect(() => {
     if (!loading && !user) navigate("/entrar");
   }, [user, loading, navigate]);
 
-  // Este useEffect sincroniza o estado local se o 'user' do contexto mudar
-  // (Isso substitui seu antigo useEffect que chamava apiMe)
+  // 2. Sincroniza dados quando o usuário carrega
   useEffect(() => {
     if (user) {
       setUserData(user);
@@ -37,30 +33,23 @@ export default function Profile() {
     setEditedData(prev => ({ ...prev, [field]: value }));
   };
 
+  // --- FUNÇÃO SALVAR (Com Axios) ---
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
+
     try {
-      setSaving(true);
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/conta", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(editedData),
-      });
-      if (!res.ok) throw new Error("Falha ao atualizar perfil");
+      const response = await api.put("/conta", editedData);
       
-      // Em vez de atualizar o estado local,
-      // peça ao contexto para atualizar o estado global
-      await refreshMe(); 
-      
+      setUserData(response.data.usuario);
       setEditName(false);
+      
       alert("Perfil atualizado com sucesso!");
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar alterações.");
+      // Pega a mensagem de erro do backend se existir
+      const errorMsg = err.response?.data?.mensagem || "Erro ao salvar alterações.";
+      alert(errorMsg);
     } finally {
       setSaving(false);
     }
@@ -75,6 +64,7 @@ export default function Profile() {
     }
   };
 
+  // --- Lógica de Endereços (Front-only por enquanto) ---
   const handleAddEndereco = () => {
     if (editedData.enderecos?.length >= 5) return;
     const novo = { logradouro: "", numero: "", cidade: "", estado: "", cep: "", principal: false };
@@ -100,21 +90,16 @@ export default function Profile() {
 
   const formatCurrency = (value) => `R$ ${(Number(value) || 0).toFixed(2)}`;
 
-  // Esta lógica agora funciona:
-  // 1. 'loading' será true durante o login
-  if (loading) return <p>Carregando...</p>;
-  
-  if (error) return <p>{error}</p>;
-  
-  // 2. Quando 'loading' ficar false, 'user' já estará definido,
-  //    e 'userData' também será definido pelo useEffect.
+  // --- Renderização ---
+  if (loading) return <div style={{padding: 40, textAlign: 'center'}}>Carregando perfil...</div>;
   if (!userData) return null;
 
-  // O JSX restante é o mesmo
   return (
     <section>
       <main className={styles.profileMain}>
         <div className={styles.profileContainer}>
+          
+          {/* Cabeçalho do Perfil */}
           <div className={styles.profileHeader}>
             <div className={styles.profileButtons}>
               <button
@@ -138,28 +123,25 @@ export default function Profile() {
           </div>
 
           <div className={styles.profileBody}>
+            
+            {/* --- ABA DADOS --- */}
             <div className={styles.box_section} style={{ display: activeSection === "dados" ? "block" : "none" }}>
               <h3 className={styles.sectionTitle}>Meus Dados</h3>
               <form className={styles.form} onSubmit={handleSave}>
-                <div className={styles.field} onClick={() => setEditName(true)} style={{ cursor: "pointer" }}>
+                
+                {/* Edição de Nome (Toggle) */}
+                <div className={styles.field} onClick={() => !editName && setEditName(true)} style={{ cursor: editName ? "default" : "pointer" }}>
                   {!editName ? (
-                    <p><strong>Nome:</strong> {userData.nome}</p>
+                    <p title="Clique para editar"><strong>Nome:</strong> {userData.nome} ✎</p>
                   ) : (
                     <div style={{ display: "flex", gap: "10px" }}>
                       <div className={`${styles.field} ${styles.field_half}`}>
-                        <label>Nome</label>
+                        <label>Nome Completo</label>
                         <input
                           type="text"
-                          value={editedData.nome?.split(" ")[0] || ""}
-                          onChange={(e) => handleChange("nome", e.target.value + " " + (editedData.nome?.split(" ")[1] || ""))}
-                        />
-                      </div>
-                      <div className={`${styles.field} ${styles.field_half}`}>
-                        <label>Sobrenome</label>
-                        <input
-                          type="text"
-                          value={editedData.nome?.split(" ")[1] || ""}
-                          onChange={(e) => handleChange("nome", (editedData.nome?.split(" ")[0] || "") + " " + e.target.value)}
+                          value={editedData.nome || ""}
+                          onChange={(e) => handleChange("nome", e.target.value)}
+                          autoFocus
                         />
                       </div>
                     </div>
@@ -168,7 +150,12 @@ export default function Profile() {
 
                 <div className={styles.field}>
                   <label>Email</label>
-                  <input type="email" value={editedData.email || ""} onChange={(e) => handleChange("email", e.target.value)} />
+                  <input type="email" value={editedData.email || ""} disabled style={{backgroundColor: '#f0f0f0'}} title="Email não pode ser alterado" />
+                </div>
+                
+                <div className={styles.field}>
+                   <label>Telefone</label>
+                   <input type="text" value={editedData.telefone || ""} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="11999999999" />
                 </div>
 
                 <h4 className={styles.subtitle}>Endereços</h4>
@@ -176,27 +163,30 @@ export default function Profile() {
                   <div key={index} className={styles.enderecoCard}>
                     <div className={styles.field}>
                       <label>Logradouro</label>
-                      <input value={endereco.logradouro || ""} onChange={(e) => {
-                        const novo = [...editedData.enderecos];
-                        novo[index].logradouro = e.target.value;
-                        setEditedData({ ...editedData, enderecos: novo });
-                      }} />
+                      <input 
+                        value={endereco.logradouro || ""} 
+                        onChange={(e) => {
+                            const novo = [...editedData.enderecos];
+                            novo[index] = { ...novo[index], logradouro: e.target.value }; // Cria novo objeto para evitar mutação direta
+                            setEditedData({ ...editedData, enderecos: novo });
+                        }} 
+                      />
                     </div>
 
-                    <div className={styles.enderecoActions} style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div className={styles.enderecoActions} style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
                       <label>
                         <input type="radio" name="principal" checked={endereco.principal} onChange={() => handleSelectPrincipal(index)} />
-                        Endereço principal
+                        Principal
                       </label>
                       <button type="button" onClick={() => handleRemoveEndereco(index)} className={styles.btn_remove}>
-                        Excluir
+                        Remover
                       </button>
                     </div>
                   </div>
                 ))}
 
                 <button type="button" className={styles.btn_addEndereco} onClick={handleAddEndereco}>
-                  + Adicionar outro endereço
+                  + Adicionar endereço
                 </button>
 
                 <div className={styles.fieldsubmit}>
@@ -207,6 +197,7 @@ export default function Profile() {
               </form>
             </div>
 
+            {/* --- ABA PEDIDOS --- */}
             <div className={styles.box_section} style={{ display: activeSection === "pedidos" ? "block" : "none" }}>
               <h3 className={styles.sectionTitle}>Meus Pedidos</h3>
               {userData.pedidos && userData.pedidos.length > 0 ? (
@@ -214,34 +205,42 @@ export default function Profile() {
                   <div key={pedido.id_pedido} className={styles.pedido}>
                     <div className={styles.pedidoInfoContainer}>
                       <div className={styles.pedidoStatus}>
-                        <p><strong>Número do Pedido:</strong> #{pedido.id_pedido}</p>
-                        <p><strong>Status:</strong> {pedido.status}</p>
+                        <p><strong>Pedido #{pedido.id_pedido}</strong></p>
+                        <p>Data: {new Date(pedido.data_pedido).toLocaleDateString()}</p>
+                        <p>Status: <strong>{pedido.status}</strong></p>
                       </div>
+                      
                       <div className={styles.pedidoProductsContainer}>
                         {pedido.pedidoProdutos?.map((pp, i) => {
                           const quantidade = pp.quantidade ?? 1;
                           const precoUnit = parseFloat(pp.produto?.preco || 0);
                           const subtotal = precoUnit * quantidade;
                           const isWrapNeeded = pedido.pedidoProdutos.length > 3;
+                          
+                          // Define a URL da imagem (ajuste a porta se necessário)
+                          const imgUrl = pp.produto?.imagem 
+                            ? `http://localhost:5000${pp.produto.imagem}` 
+                            : null;
+
                           return (
                             <div key={i} className={`${styles.pedidoProductItem} ${isWrapNeeded ? styles.withWrap : styles.noWrap}`}>
-                              {pp.produto?.imagem ? (
-                                <img src={`http://localhost:5000${pp.produto.imagem}`} alt={pp.produto.nome_produto} className={styles.pedidoImageContainer} />
+                              {imgUrl ? (
+                                <img src={imgUrl} alt={pp.produto.nome_produto} className={styles.pedidoImageContainer} />
                               ) : (
-                                <div className={styles.pedidoImagemPlaceholder} />
+                                <div className={styles.pedidoImagemPlaceholder}>Sem Imagem</div>
                               )}
                               <div className={styles.pedidoProductDetails}>
                                 <p><strong>{pp.produto?.nome_produto || "Produto"}</strong></p>
-                                <p>Uni: {quantidade}</p>
-                                {pp.tamanho && <p>Tam: {pp.tamanho}</p>}
-                                <p><strong>Subtotal: {formatCurrency(subtotal)}</strong></p>
+                                <p>Qtd: {quantidade} {pp.tamanho && `| Tam: ${pp.tamanho}`}</p>
+                                <p>Total: {formatCurrency(subtotal)}</p>
                               </div>
                             </div>
                           );
                         })}
                       </div>
+                      
                       <div className={styles.pedidoTotalContainer}>
-                        <strong>Total do pedido: {formatCurrency(parseFloat(pedido.total || 0))}</strong>
+                        <strong>Total: {formatCurrency(parseFloat(pedido.total || 0))}</strong>
                       </div>
                     </div>
                   </div>
@@ -250,6 +249,7 @@ export default function Profile() {
                 <p>Você ainda não fez pedidos.</p>
               )}
             </div>
+
           </div>
         </div>
       </main>

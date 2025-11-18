@@ -34,12 +34,15 @@ export const getMeController = async (req, res, next) => {
 
     if (!usuario) throw new ErroBase("Usuário não encontrado", 404);
 
-    // 🔧 Simplifica a estrutura (pega só a 1ª foto)
+
     const resposta = {
       id_usuario: usuario.id_usuario,
       nome: usuario.nome,
       email: usuario.email,
       telefone: usuario.telefone,
+      
+      role: usuario.id_role, 
+      
       enderecos: usuario.enderecos,
       pedidos: usuario.pedidos.map((pedido) => ({
         id_pedido: pedido.id_pedido,
@@ -55,7 +58,6 @@ export const getMeController = async (req, res, next) => {
           },
           quantidade: pp.quantidade,
           sku_variacao: pp.sku_variacao || null,
-          // Tenta extrair o tamanho como o último segmento do SKU (mais robusto que pegar o primeiro)
           tamanho: pp.sku_variacao
             ? String(pp.sku_variacao).split("-").slice(-1)[0]
             : null,
@@ -68,6 +70,7 @@ export const getMeController = async (req, res, next) => {
     next(error);
   }
 };
+
 
 /* ============================================
     PUT /me → atualizar dados do próprio usuário

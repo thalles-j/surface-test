@@ -7,10 +7,28 @@ import useAuth from "../../hooks/useAuth";
 
 export default function Header() {
   const location = useLocation();
-  const auth = useAuth();
+  const auth = useAuth(); // Hook de autenticação
+  
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // --- LÓGICA DE NAVEGAÇÃO DO USUÁRIO ---
+  // Define para onde o ícone de usuário deve levar
+  let linkDestino = "/entrar";
+  let tituloLink = "Ir para login";
+  const estaLogado = auth.signed && auth.user;
+
+  if (estaLogado) {
+    if (Number(auth.user.role) === 1) {
+      linkDestino = "/admin";
+      tituloLink = "Painel de Admin";
+    } else {
+      linkDestino = "/conta";
+      tituloLink = "Minha Conta";
+    }
+  }
+  // ---------------------------------------
 
   useEffect(() => {
     updateHeaderCSS(location.pathname);
@@ -86,15 +104,12 @@ export default function Header() {
                   </button>
                 </li>
 
-                {/* Login / Conta */}
+                {/* Login / Conta / Admin (Lógica Simplificada) */}
                 <li>
-                  <Link 
-                    to={auth?.initialized && auth?.user ? (auth.user.role === 2 ? "/admin" : "/conta") : "/entrar"} 
-                    title={auth?.initialized && auth?.user ? (auth.user.role === 1 ? "Painel de Admin" : "Ir para minha conta") : "Ir para login"}
-                  >
+                  <Link to={linkDestino} title={tituloLink}>
                     <button
                       type="button"
-                      className={`${styles.btn_login} ${auth?.initialized && auth?.user ? styles.btn_login_active : ""}`}
+                      className={`${styles.btn_login} ${estaLogado ? styles.btn_login_active : ""}`}
                       name="loginButton"
                     >
                       <FaUserCircle />

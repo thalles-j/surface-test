@@ -1,0 +1,116 @@
+.shop_header_container {
+  display: flex;
+  gap: 2rem; /* Espaço entre "Categorias" e "Ordenar Por" */
+  align-items: center;
+  position: relative;
+  padding: 0.5rem 0;
+  margin-bottom: 1.5rem;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dropdown_wrapper {
+  position: relative;
+  text-transform: uppercase;
+}
+
+.dropdown_toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+  font-family: "Halis GR", sans-serif;
+  margin-top: 0 !important;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 13px;
+  color: #222;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.dropdown_toggle:hover {
+  color: #555;
+}
+
+.toggle_label {
+  display: inline-block;
+  pointer-events: none
+}
+
+.chevron {
+  display: inline-block;
+  color: #444;
+  transition: transform 180ms ease;
+  pointer-events: none
+}
+
+.chevron_open {
+  transform: rotate(180deg);
+}
+
+/* Lista genérica para ambos os dropdowns */
+.dropdown_list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  padding: 8px 0; /* Padding vertical apenas */
+  list-style: none;
+  min-width: 180px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 40;
+}
+
+.dropdown_list.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown_list li {
+  margin: 0;
+}
+
+.dropdown_list button {
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  cursor: pointer;
+  color: #555;
+  font-family: "Halis GR", sans-serif;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dropdown_list button:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #000;
+}
+
+.active {
+  font-weight: 800 !important;
+  color: #000 !important;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+
+@media (max-width: 480px) {
+  .dropdown_toggle {
+    font-size: 10px;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

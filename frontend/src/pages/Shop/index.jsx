@@ -1,30 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./style.module.css";
-import CategoriasDropdown from "../../components/Categorias/";
+import ShopHeader from "../../components/ShopHeader";
+import PageLoader from "../../components/PageLoader"; 
 
-// category mapping based on seed (id_categoria)
 const categoryMap = {
   1: "Exclusivo",
   2: "Times",
 };
 
 export default function Shop() {
+  // 1. DEFINIÇÃO DO ESTADO DE CARREGAMENTO
+  const [loading, setLoading] = useState(true); 
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
   useEffect(() => {
+    // Garante que o loader esteja ativo antes de começar
+    setLoading(true);
+
     fetch("http://localhost:5000/api/products")
       .then((res) => res.json())
       .then((data) => {
         setRawProdutos(data || []);
       })
-      .catch((err) => console.error("Erro ao carregar produtos:", err));
+      .catch((err) => console.error("Erro ao carregar produtos:", err))
+     
+      .finally(() => setLoading(false));
   }, []);
 
-  
+  // ... (O restante da lógica de categories e useEffect para ordenação permanece a mesma)
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -44,6 +51,8 @@ export default function Shop() {
         return cat === selectedCategory;
       });
     }
+
+    // ... (Sua lógica de ordenação e filtros)
 
     const sorters = {
       destaque: (a, b) => (b.destaque ? 1 : 0) - (a.destaque ? 1 : 0),
@@ -73,46 +82,33 @@ export default function Shop() {
     setProdutos(list);
   }, [rawProdutos, selectedCategory, sortOption]);
 
-  return (
+
+  
+  if (loading) {
+    return <PageLoader />;
+  }
+   return (
     <section className={styles.shop_section}>
       <div className={styles.shop_body}>
         <div className={styles.shop_container}>
 
           <div className={styles.shop_headerWrapper}>
-            <CategoriasDropdown
+            <ShopHeader
+              // 1. Configuração de Categorias
               categories={categories}
-              selected={selectedCategory}
-              onSelect={(c) => setSelectedCategory(c)}
+              selectedCategory={selectedCategory}
+              onSelectCategory={(cat) => setSelectedCategory(cat)}
+
+              // 2. Configuração de Ordenação
+              selectedSort={sortOption}
+              onSelectSort={(val) => setSortOption(val)}
             />
-
-            <div className={styles.shop_filters}>
-              <div className={styles.filter_group}>
-                <label htmlFor="category">Categoria:</label>
-                <select id="category" className={styles.category_select} value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filter_group}>
-                <label htmlFor="sort">Ordenar por:</label>
-                <select id="sort" className={styles.sort_select} value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
-                  <option value="destaque">Destaque</option>
-                  <option value="az">Ordem alfabética A → Z</option>
-                  <option value="za">Ordem alfabética Z → A</option>
-                  <option value="price_desc">Preço: Maior → Menor</option>
-                  <option value="price_asc">Preço: Menor → Maior</option>
-                  <option value="date_new_old">Data: Mais novo → Mais antigo</option>
-                  <option value="date_old_new">Data: Mais antigo → Mais novo</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <div className={styles.produtos_grid}>
+            
             {produtos.length === 0 ? (
-              <p>Carregando produtos...</p>
+              <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
                 {produtos.map((produto) => (
@@ -143,9 +139,11 @@ export default function Shop() {
               </div>
             )}
           </div>
-
+          
         </div>
       </div>
     </section>
   );
+
+ 
 }

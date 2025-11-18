@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './style.module.css';
 
-// --- CONFIGURAÇÃO DA API ---
-const API_BASE = import.meta.env.VITE_API_BASE;
-
-// Ajuste os endpoints conforme suas rotas no Node.js
-const ENDPOINTS = {
-  products: `${API_BASE}/products/`,  // GET para listar, POST para criar
-  upload:   `${API_BASE}/upload`,    // POST para enviar imagens
-  orders:   `${API_BASE}/orders`,    // GET para listar
-};
+import { api } from '../../services/api';
+import useAuth from '../../hooks/useAuth';
 
 const MessageBox = ({ message, onClose }) => {
   if (!message) return null;
@@ -33,6 +26,8 @@ const PRODUTO_FORM_INICIAL = {
 const VARIACAO_INICIAL = { tamanho: 'M', sku: '', estoque: '', preco: '' };
 
 export default function AdminPainel() {
+  const { logout } = useAuth(); 
+
   const [activeTab, setActiveTab] = useState("produtos");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -47,43 +42,27 @@ export default function AdminPainel() {
   // --- Estados dos Dados ---
   const [produtosList, setProdutosList] = useState([]);
   const [pedidosList, setPedidosList] = useState([]);
-  const [pedidosStatus, setPedidosStatus] = useState({}); // Mapa para status local
+  const [pedidosStatus, setPedidosStatus] = useState({});
 
-  // --- Carregamento Inicial (Real) ---
+  // --- Carregamento Inicial ---
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Busca paralela de produtos e pedidos
-        const [resProducts, resOrders] = await Promise.all([
-          fetch(ENDPOINTS.products),
-          fetch(ENDPOINTS.orders)
-        ]);
+        // 1. Buscar Produtos (Rota: /api/products)
+        const resProducts = await api.get('/products');
+        setProdutosList(resProducts.data);
 
-        if (!resProducts.ok || !resOrders.ok) throw new Error("Falha ao buscar dados");
-
-        const productsData = await resProducts.json();
-        const ordersData = await resOrders.json();
-        
-        // Backend deve retornar o array de produtos. Se retornar { data: [...] }, ajuste aqui.
-        setProdutosList(productsData);
-        setPedidosList(ordersData);
-        
-        // Inicializa o mapa de status
-        const statusMap = ordersData.reduce((acc, p) => ({ ...acc, [p.id]: p.status }), {});
-        setPedidosStatus(statusMap);
         
       } catch (err) {
         console.error(err);
-        setMessage("Erro ao conectar com o servidor. Verifique se o backend está rodando.");
+        setMessage("Erro ao carregar dados. Verifique se o backend está rodando.");
       } finally {
         setIsLoading(false);
       }
     };
     
-    if (API_BASE) fetchData();
-    else setMessage("Erro: VITE_API_BASE não está definida no .env");
-    
+    fetchData();
   }, []);
 
   // --- Funções do Formulário ---
@@ -93,16 +72,11 @@ export default function AdminPainel() {
     setProdutoFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleLogout = () => {
-    // Adicione lógica real de logout aqui (remover token do localStorage, etc)
-    window.location.href = "/"; 
-  };
-
   const handleAddProduto = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // 1. Validação básica
+    // Validações
     if (!produtoFormData.nome) {
       setMessage("Por favor, informe o nome do produto.");
       setIsSubmitting(false);
@@ -117,24 +91,23 @@ export default function AdminPainel() {
     try {
       let uploadedFiles = [];
 
-      // 2. Upload de Imagens (Se houver arquivos)
+      // 1. Upload de Imagens (Rota: /api/upload)
       if (files.length > 0) {
         const formData = new FormData();
         Array.from(files).forEach(file => {
-          formData.append('photos', file); // O backend deve esperar 'photos' ou 'images'
+          // Certifique-se que seu Multer no backend espera o campo 'photos' ou 'images'
+          formData.append('photos', file); 
         });
 
-        const uploadRes = await fetch(ENDPOINTS.upload, {
-          method: 'POST',
-          body: formData, 
-          // Nota: Não defina 'Content-Type' manualmente para multipart/form-data, o navegador faz isso.
+        const uploadRes = await api.post('/upload', formData, {
+            headers: { "Content-Type": "multipart/form-data" }
         });
-
-        if (!uploadRes.ok) throw new Error("Erro no upload das imagens");
-        uploadedFiles = await uploadRes.json(); // Espera array de objetos { url, filename }
+        
+        // O backend deve retornar um array de objetos { url, filename } ou strings
+        uploadedFiles = uploadRes.data; 
       }
 
-      // 3. Preparar Payload JSON
+      // 2. Preparar JSON
       const precoBaseNum = parseFloat(produtoFormData.preco_base) || 0;
       
       const variacoesNorm = variacoes.map(v => ({
@@ -151,24 +124,14 @@ export default function AdminPainel() {
         variacoes: variacoesNorm
       };
 
-      // 4. Enviar Produto (JSON)
-      const prodRes = await fetch(ENDPOINTS.products, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(novoProdutoBody)
-      });
-
-      if (!prodRes.ok) throw new Error("Erro ao salvar produto no banco");
+      // 3. Criar Produto (Rota: /api/products)
+      const prodRes = await api.post('/products', novoProdutoBody);
       
-      const savedProduct = await prodRes.json();
-
-      // 5. Atualizar UI
-      setProdutosList(prev => [...prev, savedProduct]);
+      // Atualiza a lista na tela
+      setProdutosList(prev => [...prev, prodRes.data]);
       setMessage("Produto cadastrado com sucesso!");
       
-      // Resetar Form
+      // Limpa o form
       setProdutoFormData(PRODUTO_FORM_INICIAL);
       setVariacoes([VARIACAO_INICIAL]);
       setFiles([]);
@@ -176,13 +139,14 @@ export default function AdminPainel() {
 
     } catch (err) {
       console.error(err);
-      setMessage(`Erro: ${err.message}`);
+      const errorMsg = err.response?.data?.mensagem || err.message;
+      setMessage(`Erro: ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // --- Variações (Logica local) ---
+  // --- Variações ---
   const handleVariacaoChange = (index, field, value) => {
     const newVariacoes = [...variacoes];
     newVariacoes[index][field] = value;
@@ -201,13 +165,8 @@ export default function AdminPainel() {
     if (!window.confirm("Tem certeza que deseja excluir este produto?")) return;
 
     try {
-      const res = await fetch(`${ENDPOINTS.products}/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) throw new Error("Erro ao deletar");
-
-      setProdutosList(prev => prev.filter(p => p.id !== id));
+      await api.delete(`/products/${id}`);
+      setProdutosList(prev => prev.filter(p => p.id !== id)); // Otimista: remove da tela
       setMessage("Produto excluído.");
     } catch (err) {
       setMessage("Erro ao excluir produto.");
@@ -215,28 +174,18 @@ export default function AdminPainel() {
   };
 
   const handlePedidoStatusChange = async (id, newStatus) => {
-    // Atualização otimista (muda na tela antes de confirmar no server)
     const oldStatus = pedidosStatus[id];
-    setPedidosStatus(prev => ({ ...prev, [id]: newStatus }));
+    setPedidosStatus(prev => ({ ...prev, [id]: newStatus })); // Otimista
 
     try {
-      const res = await fetch(`${ENDPOINTS.orders}/${id}`, { // ou PATCH `${ENDPOINTS.orders}/${id}/status`
-        method: 'PATCH', // ou PUT dependendo do seu backend
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (!res.ok) throw new Error("Falha ao atualizar status");
-      
+      await api.patch(`/orders/${id}`, { status: newStatus });
       setMessage(`Pedido #${id} atualizado para ${newStatus}`);
     } catch (err) {
-      // Reverte se der erro
-      setPedidosStatus(prev => ({ ...prev, [id]: oldStatus }));
+      setPedidosStatus(prev => ({ ...prev, [id]: oldStatus })); // Reverte
       setMessage("Erro ao atualizar status do pedido.");
     }
   };
   
-  // --- Helpers de UI ---
   const getTabClassName = (tabName) => `${styles.btn_tab} ${activeTab === tabName ? styles.active : ""}`;
 
   if (isLoading) return <div className={styles.loadingContainer}>Carregando painel...</div>;
@@ -257,7 +206,7 @@ export default function AdminPainel() {
               </button>
             </div>
             <div className={styles.logout}>
-              <button className={styles.btn_logout} onClick={handleLogout}>Sair da Conta</button>
+              <button className={styles.btn_logout} onClick={logout}>Sair da Conta</button>
             </div>
           </div>
 
@@ -299,7 +248,6 @@ export default function AdminPainel() {
                   <textarea name="descricao" value={produtoFormData.descricao} onChange={handleChangeProdutoForm} disabled={isSubmitting}></textarea>
                 </div>
 
-                {/* Variações Dinâmicas */}
                 <div className={styles.variationsContainer}>
                   <label>Variações</label>
                   {variacoes.map((v, i) => (
@@ -328,19 +276,30 @@ export default function AdminPainel() {
                     <th>ID</th>
                     <th>Nome</th>
                     <th>Preço</th>
-                    <th>Estoque</th>
+                    <th>Estoque Total</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {produtosList.map(p => (
-                    <tr key={p.id}>
-                      <td data-label="ID">{p.id}</td>
-                      <td data-label="Nome">{p.nome}</td>
-                      <td data-label="Preço">R$ {parseFloat(p.preco_base).toFixed(2)}</td>
-                      <td data-label="Estoque">{p.estoque || p.variacoes?.reduce((acc, v) => acc + v.estoque, 0)}</td>
+                    // AQUI ESTAVA O ERRO: Usamos as chaves do JSON real agora
+                    <tr key={p.id_produto}>
+                      <td data-label="ID">{p.id_produto}</td>
+                      <td data-label="Nome">{p.nome_produto}</td>
+                      <td data-label="Preço">R$ {parseFloat(p.preco).toFixed(2)}</td>
+                      <td data-label="Estoque">
+                        {/* Calcula o total somando o array 'variacoes_estoque' */}
+                        {p.variacoes_estoque 
+                            ? p.variacoes_estoque.reduce((acc, v) => acc + (v.estoque || 0), 0) 
+                            : 0}
+                      </td>
                       <td data-label="Ações">
-                        <button className={`${styles.btn_action} ${styles.delete}`} onClick={() => handleDeleteProduto(p.id)}>Excluir</button>
+                        <button 
+                          className={`${styles.btn_action} ${styles.delete}`} 
+                          onClick={() => handleDeleteProduto(p.id_produto)}
+                        >
+                          Excluir
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -362,11 +321,11 @@ export default function AdminPainel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pedidosList.map(p => (
+                  {pedidosList.length > 0 ? pedidosList.map(p => (
                     <tr key={p.id}>
                       <td data-label="ID">#{p.id}</td>
-                      <td data-label="Cliente">{p.cliente || `Cliente ${p.userId}`}</td>
-                      <td data-label="Data">{new Date(p.createdAt || p.data).toLocaleDateString()}</td>
+                      <td data-label="Cliente">{p.cliente || `ID: ${p.id_usuario}`}</td>
+                      <td data-label="Data">{new Date(p.createdAt || p.data_pedido).toLocaleDateString()}</td>
                       <td data-label="Total">R$ {parseFloat(p.total).toFixed(2)}</td>
                       <td data-label="Status">
                         <select 
@@ -380,7 +339,11 @@ export default function AdminPainel() {
                         </select>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                       <td colSpan="5" style={{textAlign: 'center'}}>Nenhum pedido encontrado (ou rota não configurada).</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
