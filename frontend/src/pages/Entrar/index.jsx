@@ -56,7 +56,7 @@ export default function Login() {
       if (roleId === 1) {
         navigate("/admin");
       } else {
-        navigate("/conta"); // ou "/" se preferir
+        navigate("/account"); // ou "/" se preferir
       }
 
     } catch (error) {

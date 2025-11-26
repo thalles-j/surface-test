@@ -74,7 +74,7 @@ export default function AppRoutes() {
       />
 
        <Route 
-        path="/conta" 
+        path="/account" 
         element={
           <ProtectedRoute>
             <Profile />

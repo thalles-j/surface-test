@@ -98,15 +98,12 @@ div{
   color: white;
   border-radius: 10px;
   overflow: hidden;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: transform 1s ease, box-shadow 0.22s ease;
   display: flex;
   flex-direction: column;
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  
-}
+
 
 .produtoImage {
   width: 100%;

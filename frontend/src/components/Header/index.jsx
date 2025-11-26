@@ -24,7 +24,7 @@ export default function Header() {
       linkDestino = "/admin";
       tituloLink = "Painel de Admin";
     } else {
-      linkDestino = "/conta";
+      linkDestino = "/account";
       tituloLink = "Minha Conta";
     }
   }

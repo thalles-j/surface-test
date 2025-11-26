@@ -2,9 +2,12 @@
 
 
 
-.profileBody input, select, textarea {
+.profileBody input,
+select,
+textarea {
   font-family: inherit;
-  box-sizing: border-box; /* Garante que o padding não quebre o layout */
+  box-sizing: border-box;
+  /* Garante que o padding não quebre o layout */
 }
 
 /* Estilos do CSS Fornecido */
@@ -38,13 +41,15 @@
   width: 100%;
   display: inline-flex;
   justify-content: space-between;
-  align-items: flex-end; /* Alinha os botões e o link de sair */
-  border-bottom: 1px solid #e2e2e2; /* Adiciona um separador */
-  padding-bottom: 1rem;
+  align-items: flex-end;
+  /* Alinha os botões e o link de sair */
+  border-bottom: 1px solid #e2e2e2;
+  /* Adiciona um separador */
 }
 
 /* Estilo para o botão "Sair da Conta" */
 .btn_logout {
+  padding: 0 1rem;
   background: none;
   border: none;
   color: #dc3545;
@@ -52,13 +57,14 @@
   font-family: "Stack Sans Headline", sans-serif;
   transition: ease 0.3s;
 }
+
 .btn_logout:hover {
   transform: scale(1.01);
   opacity: 0.8;
   cursor: pointer;
 }
 
-.fieldRow {
+.fieldRow  {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -73,7 +79,7 @@
 }
 
 .field.field_quarter {
-   width: calc(25% - 8px);
+  width: calc(25% - 8px);
 }
 
 .btn_tab {
@@ -106,11 +112,13 @@
 .profileBody {
   padding: 0 2rem;
   border: 1px solid #e2e2e2;
-  border-top: none; /* A borda superior já está no header */
+  border-top: none;
+  /* A borda superior já está no header */
 }
 
 .box_section {
-  display: none; /* O JS vai controlar a exibição */
+  display: none;
+  /* O JS vai controlar a exibição */
 }
 
 .sectionTitle {
@@ -146,8 +154,10 @@
   padding-left: 1rem;
   border: 1px solid #707070;
   font-size: 14px;
-  border-radius: 4px; /* Cantos arredondados leves */
-  background-color: #fff; /* Garante fundo branco em selects */
+  border-radius: 4px;
+  /* Cantos arredondados leves */
+  background-color: #fff;
+  /* Garante fundo branco em selects */
 }
 
 .form input[type="file"] {
@@ -167,7 +177,8 @@
 
 .fieldsubmit {
   margin-top: 2rem;
-  margin-bottom: 2rem; /* Espaçamento inferior */
+  margin-bottom: 2rem;
+  /* Espaçamento inferior */
 }
 
 .btn_submit {
@@ -212,6 +223,7 @@
 }
 
 .varRow {
+  width: 100%;
   display: flex;
   gap: 10px;
   align-items: center;
@@ -224,10 +236,21 @@
   font-size: 13px;
 }
 
-.varRow .field_tamanho { width: 15%; }
-.varRow .field_sku { width: 30%; }
-.varRow .field_estoque { width: 20%; }
-.varRow .field_preco { width: 20%; }
+.varRow .field_tamanho {
+  width: 15%;
+}
+
+.varRow .field_sku {
+  width: 40%;
+}
+
+.varRow .field_estoque {
+  width: 10%;
+}
+
+.varRow .field_preco {
+  width: 20%;
+}
 
 .btn_removeVar {
   background: #dc3545;
@@ -257,24 +280,30 @@
   margin-bottom: 2rem;
   font-size: 0.9rem;
 }
-.adminTable th, .adminTable td {
+
+.adminTable th,
+.adminTable td {
   border: 1px solid #ddd;
   padding: 8px 12px;
   text-align: left;
   vertical-align: middle;
 }
+
 .adminTable th {
   background-color: #f2f2f2;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.8rem;
 }
+
 .adminTable tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
 .adminTable tr:hover {
   background-color: #f1f1f1;
 }
+
 .adminTable td .btn_action {
   background: transparent;
   border: 1px solid #007bff;
@@ -286,14 +315,17 @@
   font-size: 0.8rem;
   margin-right: 5px;
 }
+
 .adminTable td .btn_action.delete {
   border-color: #dc3545;
   color: #dc3545;
 }
+
 .adminTable td .btn_action:hover {
   background: #007bff;
   color: #fff;
 }
+
 .adminTable td .btn_action.delete:hover {
   background: #dc3545;
   color: #fff;
@@ -319,23 +351,30 @@
   .profileBody {
     padding: 1rem;
   }
+
   .fieldRow {
-    flex-direction: column; /* Empilha os campos */
+    flex-direction: column;
+    /* Empilha os campos */
     gap: 0;
   }
+
   .field.field_half,
   .field.field_third,
   .field.field_quarter {
-    width: 100%; /* Ocupa 100% em telas menores */
-    margin-bottom: 1.2rem; /* Adiciona margem quando empilhado */
+    width: 100%;
+    /* Ocupa 100% em telas menores */
+    margin-bottom: 1.2rem;
+    /* Adiciona margem quando empilhado */
   }
+
   .fieldRow .field:last-child {
     margin-bottom: 0;
   }
-  
+
   .varRow {
     flex-wrap: wrap;
   }
+
   .varRow .field_tamanho,
   .varRow .field_sku,
   .varRow .field_estoque,
@@ -343,6 +382,8 @@
     width: calc(50% - 5px);
     margin-bottom: 10px;
   }
+
+
   .btn_removeVar {
     margin-left: auto;
   }
@@ -353,45 +394,71 @@
     width: 100%;
     margin: 0 auto;
   }
+
   .profileMain {
     margin-top: 6rem;
     margin-bottom: 6rem;
   }
+
   .profileHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
+
   .profileBody {
     padding: 0.5rem;
     border-left: none;
     border-right: none;
   }
 
-  .sectionTitle { font-size: 1.1rem; }
-  .subtitle { font-size: 0.95rem; }
-  .form input, .form select { height: 2.2rem; font-size: 13px; }
-  .btn_tab { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
-  
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+  }
+
+  .form input,
+  .form select {
+    height: 2.2rem;
+    font-size: 13px;
+  }
+
+  .btn_tab {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
   /* Ajusta tabela para telas pequenas */
-  .adminTable, .adminTable thead, .adminTable tbody, .adminTable th, .adminTable td, .adminTable tr {
+  .adminTable,
+  .adminTable thead,
+  .adminTable tbody,
+  .adminTable th,
+  .adminTable td,
+  .adminTable tr {
     display: block;
   }
+
   .adminTable thead tr {
     position: absolute;
     top: -9999px;
     left: -9999px;
   }
-  .adminTable tr { 
-    border: 1px solid #ccc; 
+
+  .adminTable tr {
+    border: 1px solid #ccc;
     margin-bottom: 0.5rem;
   }
+
   .adminTable td {
     border: none;
     border-bottom: 1px solid #eee;
     position: relative;
     padding-left: 50%;
   }
+
   .adminTable td:before {
     position: absolute;
     top: 6px;
@@ -399,7 +466,7 @@
     width: 45%;
     padding-right: 10px;
     white-space: nowrap;
-    content: attr(data-label); /* Rótulo para tabela responsiva */
+    content: attr(data-label);
     font-weight: 600;
   }
 }
@@ -412,7 +479,8 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  display: none; /* Começa escondido */
+  display: none;
+  /* Começa escondido */
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -427,7 +495,7 @@
   padding: 2rem;
   border-radius: 8px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   font-family: "Stack Sans Headline", sans-serif;
 }
 
