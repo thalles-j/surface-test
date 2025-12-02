@@ -2,20 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import styles from "./style.module.css";
-import useAuth from "../../hooks/useAuth.js";
-
+import useAuth from "../../hooks/useAuth";
+import { apiRegister } from "../../services/auth"; 
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
 
   // Estados login
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginMsg, setLoginMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estados registro (não alterado)
+  // Estados registro
   const [registerData, setRegisterData] = useState({
     nome: "",
     sobrenome: "",
@@ -27,11 +26,11 @@ export default function Login() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [senhaConfere, setSenhaConfere] = useState(true);
 
-  // Funções de validação (não alterado)
+  // Funções de validação
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (senha) => senha.trim().length >= 7;
 
-  // 👇 3. FUNÇÃO DE LOGIN MODIFICADA
+  // --- FUNÇÃO DE LOGIN ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMsg("");
@@ -47,39 +46,48 @@ export default function Login() {
     }
 
     try {
-      await login(loginData);
+      const user = await login(loginData);
+
+      // Força conversão para número para garantir
+      const roleId = Number(user.role);
+
       setLoginMsg("Login realizado com sucesso!");
-      navigate("/conta");
+
+      if (roleId === 1) {
+        navigate("/admin");
+      } else {
+        navigate("/account"); // ou "/" se preferir
+      }
+
     } catch (error) {
-      setLoginMsg(error?.message || "Email ou senha inválidos.");
+      // Axios geralmente retorna a mensagem em error.response.data.mensagem
+      const msg = error.response?.data?.mensagem || error.message || "Email ou senha inválidos.";
+      setLoginMsg(msg);
     }
   };
 
-  // Função de registro (não alterado)
+  // --- FUNÇÃO DE REGISTRO (COM AXIOS) ---
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterMsg("");
 
+    // Validações locais
     if (!registerData.nome.trim()) {
       setRegisterMsg("Nome obrigatório.");
       return;
     }
-
     if (!registerData.sobrenome.trim()) {
       setRegisterMsg("Sobrenome obrigatório.");
       return;
     }
-
     if (!validateEmail(registerData.email)) {
       setRegisterMsg("Email inválido.");
       return;
     }
-
     if (!validatePassword(registerData.senha)) {
       setRegisterMsg("Senha deve ter no mínimo 7 caracteres.");
       return;
     }
-
     if (!senhaConfere) {
       setRegisterMsg("As senhas não conferem.");
       return;
@@ -88,25 +96,17 @@ export default function Login() {
     const nomeCompleto = `${registerData.nome.trim()} ${registerData.sobrenome.trim()}`.trim();
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: nomeCompleto,
-          email: registerData.email.trim(),
-          senha: registerData.senha,
-          telefone: "00000000000",
-        }),
+      // Substituímos o fetch pelo apiRegister (que usa o Axios configurado)
+      await apiRegister({
+        nome: nomeCompleto,
+        email: registerData.email.trim(),
+        senha: registerData.senha,
+        telefone: "11999999999", // Placeholder (ajuste se tiver campo de telefone no form)
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setRegisterMsg(result.mensagem || "Erro ao cadastrar");
-        return;
-      }
-
-      setRegisterMsg("Cadastro realizado com sucesso!");
+      setRegisterMsg("Cadastro realizado com sucesso! Faça login.");
+      
+      // Limpa o formulário
       setRegisterData({
         nome: "",
         sobrenome: "",
@@ -115,17 +115,13 @@ export default function Login() {
         confirmarSenha: "",
       });
       setSenhaConfere(true);
+
     } catch (error) {
-      setRegisterMsg("Erro de conexão com o servidor.");
+      // Tratamento de erro do Axios
+      const errorMsg = error.response?.data?.mensagem || "Erro ao realizar cadastro.";
+      setRegisterMsg(errorMsg);
     }
   };
-
-  // Validação do formulário de registro (não alterado)
-  const registroValido = registerData.nome.trim() &&
-    registerData.sobrenome.trim() &&
-    validateEmail(registerData.email) &&
-    validatePassword(registerData.senha) &&
-    senhaConfere;
 
   return (
     <section>
@@ -135,7 +131,7 @@ export default function Login() {
         </div>
 
         <div className={styles.loginBody}>
-          {/* Login */}
+          {/* Login Form */}
           <div className={styles.box_login}>
             <h4 className={styles.title_form}>Faça Login</h4>
             <form onSubmit={handleLogin} className={styles.form}>
@@ -191,7 +187,7 @@ export default function Login() {
             </form>
           </div>
 
-          {/* Registro */}
+          {/* Register Form */}
           <div className={styles.box_register}>
             <h4 className={styles.title_form}>Criar Conta</h4>
             <form onSubmit={handleRegister} className={styles.form}>
@@ -300,7 +296,6 @@ export default function Login() {
                 <button
                   className={styles.btn_submit}
                   type="submit"
-                  
                 >
                   Cadastrar
                 </button>

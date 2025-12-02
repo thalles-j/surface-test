@@ -145,6 +145,9 @@ input:focus {
 .btn_form{
     margin-left: 3px;
 }
+.cnpj{
+    text-transform: uppercase;
+}
 
 footer .wrap_newsletter .form .btn_form {
     background: transparent;

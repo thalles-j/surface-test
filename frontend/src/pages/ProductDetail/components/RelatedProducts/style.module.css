@@ -1,0 +1,121 @@
+/* ==============================================
+   SEÇÃO "VOCÊ TAMBÉM PODE GOSTAR"
+   ============================================== */
+
+/* Container da seção */
+.relatedSection {
+  max-width: 1400px;
+  margin: 12rem auto 10rem;
+  padding: 0 2rem;
+
+}
+
+.relatedSection h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  color: #000;
+}
+
+/* Grid de produtos */
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+/* --- CARDS DE PRODUTOS (ESTILO SHOP) --- */
+.card {
+  font-family: "Oswald", sans-serif;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #ffffff;
+  color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 1s ease, box-shadow 0.22s ease;
+}
+
+.card a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.produtoImage {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  display: block;
+}
+
+.produtoPlaceholder {
+  width: 100%;
+  height: 350px;
+  background-color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #000000;
+}
+
+.produtoInfo {
+  padding: 12px 14px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.produtoTag {
+  display: inline-block;
+  align-self: center;
+  background: rgba(255,255,255,0.06);
+  color: #ff0000;
+  padding: 1px 4px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.produtoNome {
+  color: #000000;
+  font-size: 1.1rem;
+  margin: 0;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.produtoPreco {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #000000;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 968px) {
+  .relatedGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .relatedGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .relatedSection {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+}

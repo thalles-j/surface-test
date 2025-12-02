@@ -81,7 +81,7 @@ export default function Footer() {
                     <div className={styles.wrap_info_loja}>
                         <div className={styles.cnpj}>
                             <p>
-                                Surface Company © 2025 - Todos os direitos reservados.
+                                Surface © 2025 - Todos os direitos reservados.
                                 <br />
                                 CNPJ: 00.000.000/0000-00
                                 <br />
