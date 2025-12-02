@@ -17,6 +17,16 @@ const ProductCard = ({ produto }) => {
   const [isHovered, setIsHovered] = useState(false);
   const baseUrl = "http://localhost:5000";
 
+  // Função para criar slug a partir do nome
+  const createSlug = (name) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   // Pega a primeira e a segunda imagem (se existir)
   const fotoPrincipal = produto.fotos?.[0]?.url ? `${baseUrl}${produto.fotos[0].url}` : null;
   const fotoSecundaria = produto.fotos?.[1]?.url ? `${baseUrl}${produto.fotos[1].url}` : null;
@@ -32,7 +42,7 @@ const ProductCard = ({ produto }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/produto/${produto.id_produto}`}>
+      <Link to={`/produto/${createSlug(produto.nome_produto)}`}>
         {imagemAtual ? (
           <img
             src={imagemAtual}
@@ -67,6 +77,7 @@ export default function Shop() {
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
   useEffect(() => {
@@ -89,6 +100,14 @@ export default function Shop() {
     return ["All", ...Array.from(set)];
   }, [rawProdutos]);
 
+  const types = useMemo(() => {
+    const set = new Set();
+    rawProdutos.forEach((p) => {
+      if (p.tipo) set.add(p.tipo);
+    });
+    return ["All", ...Array.from(set).sort()];
+  }, [rawProdutos]);
+
   useEffect(() => {
     let list = rawProdutos.slice();
 
@@ -97,6 +116,10 @@ export default function Shop() {
         const cat = categoryMap[p.id_categoria] || "Geral";
         return cat === selectedCategory;
       });
+    }
+
+    if (selectedType && selectedType !== "All") {
+      list = list.filter((p) => p.tipo === selectedType);
     }
 
     const sorters = {
@@ -125,7 +148,7 @@ export default function Shop() {
     }
 
     setProdutos(list);
-  }, [rawProdutos, selectedCategory, sortOption]);
+  }, [rawProdutos, selectedCategory, selectedType, sortOption]);
 
   if (loading) {
     return <PageLoader />;
@@ -140,6 +163,9 @@ export default function Shop() {
               categories={categories}
               selectedCategory={selectedCategory}
               onSelectCategory={(cat) => setSelectedCategory(cat)}
+              types={types}
+              selectedType={selectedType}
+              onSelectType={(type) => setSelectedType(type)}
               selectedSort={sortOption}
               onSelectSort={(val) => setSortOption(val)}
             />

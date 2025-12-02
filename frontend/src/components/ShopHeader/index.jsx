@@ -15,6 +15,9 @@ export default function ShopHeader({
   categories = ["All"], 
   selectedCategory = "All", 
   onSelectCategory = () => {}, 
+  types = ["All"],
+  selectedType = "All",
+  onSelectType = () => {},
   selectedSort = "destaque", 
   onSelectSort = () => {} 
 }) {
@@ -54,7 +57,7 @@ export default function ShopHeader({
   return (
     <div className={styles.shop_header_container} ref={rootRef}>
       
-      {/* --- DROPDOWN 1: CATEGORIAS --- */}
+      {/* --- DROPDOWN 1: CATEGORIAS (incluindo Tipos) --- */}
       <div className={styles.dropdown_wrapper}>
         <button
           className={styles.dropdown_toggle}
@@ -62,13 +65,14 @@ export default function ShopHeader({
           onClick={() => toggleMenu("cat")}
         >
           <span className={styles.toggle_label}>Categorias</span>
-          {/* O SVG deve estar AQUI, dentro do botão */}
           <Chevron isOpen={activeMenu === "cat"} /> 
         </button>
 
         <ul className={`${styles.dropdown_list} ${activeMenu === "cat" ? styles.open : ""}`}>
+          {/* Seção de Categorias */}
+          <li className={styles.section_label}>Categorias</li>
           {categories.map((cat) => (
-            <li key={cat}>
+            <li key={`cat-${cat}`}>
               <button
                 className={selectedCategory === cat ? styles.active : ""}
                 onClick={() => {
@@ -77,6 +81,25 @@ export default function ShopHeader({
                 }}
               >
                 {cat === "All" ? "Todas" : cat}
+              </button>
+            </li>
+          ))}
+          
+          {/* Divisor */}
+          {types.length > 1 && <li className={styles.divider}></li>}
+          
+          {/* Seção de Tipos */}
+          {types.length > 1 && <li className={styles.section_label}>Tipos</li>}
+          {types.length > 1 && types.map((type) => (
+            <li key={`type-${type}`}>
+              <button
+                className={selectedType === type ? styles.active : ""}
+                onClick={() => {
+                  onSelectType(type);
+                  setActiveMenu(null);
+                }}
+              >
+                {type === "All" ? "Todos" : type}
               </button>
             </li>
           ))}

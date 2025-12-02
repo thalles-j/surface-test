@@ -1,0 +1,175 @@
+/* ==============================================
+   GALERIA DE IMAGENS - IMAGE GALLERY
+   ============================================== */
+
+/* Container principal da galeria */
+.imageSection {
+  width: 100%;
+  max-width: 100%;
+  height: 600px;
+  max-height: 600px;
+  position: sticky;
+  top: 2rem;
+  display: flex;
+  gap: 1.5rem;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+/* --- MINIATURAS LATERAIS (DESKTOP ONLY) --- */
+.thumbnailsSwiper {
+  width: 100px;
+  height: 100%;
+  flex-shrink: 0;
+  display: block;
+}
+
+.thumbnailSlide {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+  border-color: #9999993f;
+}
+
+.thumbnailSlide:hover {
+  border-color: #ddd;
+}
+
+.thumbnailsSwiper :global(.swiper-slide-thumb-active) {
+  border: 3px solid;
+  border-color: #000 !important;
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- IMAGEM PRINCIPAL (CARROSSEL) --- */
+.swiperContainer {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  border-radius: 8px;
+  background: inherit;
+  overflow: hidden;
+}
+
+.swiperSlide {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swiperImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.noImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: inherit;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* --- PAGINAÇÃO (BOLINHAS - MOBILE ONLY) --- */
+.swiperContainer :global(.swiper-pagination) {
+  bottom: 20px !important;
+}
+
+.swiperContainer :global(.swiper-pagination-bullet) {
+  width: 9px;
+  height: 9px;
+  background: rgba(63, 63, 63, 0.5);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.swiperContainer :global(.swiper-pagination-bullet-active) {
+  width: 20px;
+  border-radius: 4px;
+  background: rgb(3, 3, 3);
+  opacity: 1;
+}
+
+/* RESPONSIVIDADE */
+/* RESPONSIVIDADE */
+@media (max-width: 1400px) {
+  .imageSection {
+    height: 500px;
+    max-height: 500px;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 1150px) {
+  .imageSection {
+    height: 450px;
+    max-height: 450px;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 1040px) {
+  .imageSection {
+    height: 380px;
+    max-height: 380px;
+    gap: 0.5rem;
+    padding: 0;
+  }
+
+  .thumbnailsSwiper {
+    width: 70px;
+  }
+}
+
+@media (max-width: 968px) {
+  .imageSection {
+    position: static;
+    height: 400px;
+    max-height: 400px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .thumbnailsSwiper {
+    display: none !important;
+  }
+
+  .swiperContainer :global(.swiper-pagination) {
+    display: block !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .imageSection {
+    height: 350px;
+    max-height: 350px;
+  }
+}
+
+@media (max-width: 640px) {
+  .imageSection {
+    height: 300px;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .imageSection {
+    height: 280px;
+    max-height: 280px;
+  }
+}

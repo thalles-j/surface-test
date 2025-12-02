@@ -62,6 +62,7 @@ export default function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
+      <Route path="/produto/:slug" element={<ProductDetail />} />
       
 
       <Route 
