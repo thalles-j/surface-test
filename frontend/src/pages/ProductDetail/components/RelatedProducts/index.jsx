@@ -6,11 +6,21 @@ import styles from './style.module.css';
 function RelatedProductCard({ produto, baseUrl, createSlug }) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const fotoPrincipal = produto.fotos?.[0]?.url
-    ? `${baseUrl}${produto.fotos[0].url}`
+  // Ordena as fotos para que a "front" seja a primeira
+  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
+      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
+      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
+      
+      if (isFrontA && !isFrontB) return -1;
+      if (!isFrontA && isFrontB) return 1;
+      return 0;
+  }) : [];
+
+  const fotoPrincipal = sortedFotos?.[0]?.url
+    ? `${baseUrl}${sortedFotos[0].url}`
     : null;
-  const fotoSecundaria = produto.fotos?.[1]?.url
-    ? `${baseUrl}${produto.fotos[1].url}`
+  const fotoSecundaria = sortedFotos?.[1]?.url
+    ? `${baseUrl}${sortedFotos[1].url}`
     : null;
 
   const imagemAtual = isHovered && fotoSecundaria ? fotoSecundaria : fotoPrincipal;

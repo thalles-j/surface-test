@@ -5,9 +5,11 @@ import PageLoader from "../../components/PageLoader";
 import ImageGallery from "./components/ImageGallery";
 import ProductInfo from "./components/ProductInfo";
 import RelatedProducts from "./components/RelatedProducts";
+import { useCart } from "../../context/CartContext";
 
 export default function ProductDetail() {
   const { slug } = useParams();
+  const { addToCart } = useCart();
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [error, setError] = useState("");
@@ -79,8 +81,7 @@ export default function ProductDetail() {
     const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
     if (selectedVariacao?.estoque === 0) return;
     
-    // TODO: Implementar lógica do carrinho
-    alert(`Produto adicionado ao carrinho!\nTamanho: ${selectedSize}`);
+    addToCart({ ...produto, selectedSize });
   };
 
   return (

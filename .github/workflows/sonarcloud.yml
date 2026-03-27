@@ -38,7 +38,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=thalles-j-key
-            -Dsonar.organization=Surface_sonar
+            -Dsonar.projectKey=thalles-j_surface-test
+            -Dsonar.organization=thalles-j-key
             -Dsonar.sources=backend/src,frontend/src
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/.vite/**

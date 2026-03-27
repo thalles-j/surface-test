@@ -4,10 +4,12 @@ import { FaSearch, FaCheck, FaShoppingCart, FaUserCircle, FaBars, FaTimes } from
 import styles from "./style.module.css";
 import { updateHeaderCSS } from "../../utils/headerTheme";
 import useAuth from "../../hooks/useAuth";
+import { useCart } from "../../context/CartContext";
 
 export default function Header() {
   const location = useLocation();
   const auth = useAuth(); // Hook de autenticação
+  const { toggleCart, cartItems } = useCart();
   
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -99,7 +101,7 @@ export default function Header() {
 
                 {/* Carrinho */}
                 <li>
-                  <button type="button" title="Carrinho de compras">
+                  <button type="button" title="Carrinho de compras" onClick={toggleCart}>
                     <FaShoppingCart />
                   </button>
                 </li>

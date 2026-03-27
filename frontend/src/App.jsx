@@ -4,7 +4,9 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import AppRoutes from './routes';
-import PageLoader from "./components/PageLoader"; 
+import PageLoader from "./components/PageLoader";
+import { CartProvider } from './context/CartContext.jsx';
+import CartDrawer from "./components/CartDrawer";
 
 export default function App() {
 
@@ -43,14 +45,18 @@ export default function App() {
   return (
     <AuthProvider>
       <Router> 
+        <CartProvider>
 
-        {loading && <PageLoader />}
+          {loading && <PageLoader />}
 
-        <Header />
-        <main> 
-          <AppRoutes />
-        </main>
-        <Footer />
+          <Header />
+          <CartDrawer />
+          <main> 
+            <AppRoutes />
+          </main>
+          <Footer />
+          
+        </CartProvider>
       </Router>
     </AuthProvider>
   );

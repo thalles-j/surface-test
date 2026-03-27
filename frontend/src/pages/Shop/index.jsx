@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import styles from "./style.module.css";
 import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
+import { useCart } from "../../context/CartContext";
+import { FaCartPlus } from "react-icons/fa";
 
 const categoryMap = {
   1: "Exclusivo",
@@ -15,6 +17,7 @@ const categoryMap = {
 // ---------------------------------------------------------
 const ProductCard = ({ produto }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { addToCart } = useCart();
   const baseUrl = "http://localhost:5000";
 
   // Função para criar slug a partir do nome
@@ -27,9 +30,19 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
+  // Ordena as fotos para que a "front" seja a primeira
+  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
+      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
+      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
+      
+      if (isFrontA && !isFrontB) return -1;
+      if (!isFrontA && isFrontB) return 1;
+      return 0;
+  }) : [];
+
   // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = produto.fotos?.[0]?.url ? `${baseUrl}${produto.fotos[0].url}` : null;
-  const fotoSecundaria = produto.fotos?.[1]?.url ? `${baseUrl}${produto.fotos[1].url}` : null;
+  const fotoPrincipal = sortedFotos?.[0]?.url ? `${baseUrl}${sortedFotos[0].url}` : null;
+  const fotoSecundaria = sortedFotos?.[1]?.url ? `${baseUrl}${sortedFotos[1].url}` : null;
 
   // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
   // Caso contrário, mostra a principal.
@@ -42,20 +55,33 @@ const ProductCard = ({ produto }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/produto/${createSlug(produto.nome_produto)}`}>
-        {imagemAtual ? (
-          <img
-            src={imagemAtual}
-            alt={produto.nome_produto}
-            className={styles.produtoImage}
-            // Dica: Adicione uma transição suave no seu CSS se desejar
-            style={{ transition: 'opacity 0.2s ease-in-out' }} 
-          />
-        ) : (
-          <div className={styles.produtoPlaceholder}>
-            Sem imagem
-          </div>
-        )}
+      <Link to={`/produto/${createSlug(produto.nome_produto)}`} className={styles.cardLink}>
+        <div className={styles.imageContainer}>
+          {imagemAtual ? (
+            <img
+              src={imagemAtual}
+              alt={produto.nome_produto}
+              className={styles.produtoImage}
+              style={{ transition: 'opacity 0.2s ease-in-out' }} 
+            />
+          ) : (
+            <div className={styles.produtoPlaceholder}>
+              Sem imagem
+            </div>
+          )}
+          
+          <button 
+            className={styles.cartIconButton}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              addToCart(produto);
+            }}
+            title="Adicionar ao Carrinho"
+          >
+            <FaCartPlus />
+          </button>
+        </div>
 
         <div className={styles.produtoInfo}>
           <span className={styles.produtoTag}>

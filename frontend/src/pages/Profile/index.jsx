@@ -55,24 +55,10 @@ export default function Profile() {
 
   // Busca de Pedidos
   useEffect(() => {
-    if (activeSection !== "pedidos" || !user || loadingPedidos) return;
-
-    setLoadingPedidos(true);
-    setErrorPedidos(null);
-
-    const userId = user.id || user._id || user.id_usuario;
-
-    api.get(`/pedidos/${userId}`)
-      .then((response) => {
-        const lista = response.data.pedidos || response.data || [];
-        setPedidos(Array.isArray(lista) ? lista : []);
-      })
-      .catch((err) => {
-        console.error(err);
-        setErrorPedidos("Não foi possível carregar seus pedidos.");
-      })
-      .finally(() => setLoadingPedidos(false));
-  }, [activeSection, user]);
+    if (user && user.pedidos) {
+      setPedidos(user.pedidos);
+    }
+  }, [user]);
 
   // Handlers de Formulário
   const handleChange = (field, value) => {

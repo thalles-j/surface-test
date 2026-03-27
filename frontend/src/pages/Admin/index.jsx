@@ -19,11 +19,11 @@ const MessageBox = ({ message, onClose }) => {
 const PRODUTO_FORM_INICIAL = {
   nome: "",
   preco_base: "",
-  categoria: "camisetas",
+  categoria: "1", // Default para ID 1 (Exclusivo)
   descricao: ""
 };
 
-const VARIACAO_INICIAL = { tamanho: 'M', sku: '', estoque: '', preco: '' };
+const VARIACAO_INICIAL = { tamanho: 'M', sku: '', estoque: '' };
 
 export default function AdminPainel() {
   const { logout } = useAuth(); 
@@ -82,10 +82,28 @@ export default function AdminPainel() {
       setIsSubmitting(false);
       return;
     }
+    if (!produtoFormData.preco_base || parseFloat(produtoFormData.preco_base) <= 0) {
+      setMessage("O preço base deve ser maior que zero.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!produtoFormData.categoria) {
+      setMessage("Por favor, selecione uma categoria.");
+      setIsSubmitting(false);
+      return;
+    }
     if (variacoes.length === 0 || !variacoes[0].tamanho) {
       setMessage("Por favor, adicione pelo menos uma variação.");
       setIsSubmitting(false);
       return;
+    }
+    // Valida estoque das variações
+    for (const v of variacoes) {
+      if (!v.estoque || parseInt(v.estoque) <= 0) {
+        setMessage(`O estoque da variação ${v.tamanho} deve ser maior que zero.`);
+        setIsSubmitting(false);
+        return;
+      }
     }
 
     try {
@@ -99,6 +117,7 @@ export default function AdminPainel() {
           formData.append('photos', file); 
         });
 
+        // Passa o nome do produto na query string para renomear o arquivo
         const uploadRes = await api.post('/upload', formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
@@ -114,14 +133,15 @@ export default function AdminPainel() {
         tamanho: v.tamanho,
         sku: v.sku || `${produtoFormData.nome.toUpperCase().substring(0, 3)}-${v.tamanho}`,
         estoque: parseInt(v.estoque) || 0,
-        preco: v.preco ? parseFloat(v.preco) : precoBaseNum
       }));
 
       const novoProdutoBody = {
-        ...produtoFormData,
-        preco_base: precoBaseNum,
-        fotos: uploadedFiles,
-        variacoes: variacoesNorm
+        nome_produto: produtoFormData.nome,
+        descricao: produtoFormData.descricao,
+        preco: precoBaseNum,
+        id_categoria: Number(produtoFormData.categoria),
+        variacoes_estoque: variacoesNorm,
+        fotos: uploadedFiles
       };
 
       // 3. Criar Produto (Rota: /api/products)
@@ -136,6 +156,11 @@ export default function AdminPainel() {
       setVariacoes([VARIACAO_INICIAL]);
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = null;
+
+      // Recarrega a página após sucesso
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
 
     } catch (err) {
       console.error(err);
@@ -232,9 +257,8 @@ export default function AdminPainel() {
                   <div className={`${styles.field} ${styles.field_third}`}>
                     <label>Categoria</label>
                     <select name="categoria" value={produtoFormData.categoria} onChange={handleChangeProdutoForm} disabled={isSubmitting}>
-                      <option value="camisetas">Camisetas</option>
-                      <option value="moletons">Moletons</option>
-                      <option value="acessorios">Acessórios</option>
+                      <option value="1">Exclusivo</option>
+                      <option value="2">Times</option>
                     </select>
                   </div>
                    <div className={`${styles.field} ${styles.field_third}`}>
@@ -255,7 +279,6 @@ export default function AdminPainel() {
                       <input type="text" placeholder="Tam" className={styles.field_tamanho} value={v.tamanho} onChange={(e) => handleVariacaoChange(i, 'tamanho', e.target.value)} disabled={isSubmitting} />
                       <input type="text" placeholder="SKU" className={styles.field_sku} value={v.sku} onChange={(e) => handleVariacaoChange(i, 'sku', e.target.value)} disabled={isSubmitting} />
                       <input type="number" placeholder="Qtd" className={styles.field_estoque} value={v.estoque} onChange={(e) => handleVariacaoChange(i, 'estoque', e.target.value)} disabled={isSubmitting} />
-                      <input type="number" placeholder="R$ (Opcional)" className={styles.field_preco} step="0.01" value={v.preco} onChange={(e) => handleVariacaoChange(i, 'preco', e.target.value)} disabled={isSubmitting} />
                       <button type="button" className={styles.btn_removeVar} onClick={() => removeVariacao(i)} disabled={isSubmitting || variacoes.length <= 1}>&times;</button>
                     </div>
                   ))}
