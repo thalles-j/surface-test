@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Calendar, Lock, Unlock } from 'lucide-react';
 import Modal from '../Modal';
 import AlertModal from '../AlertModal';
+import { api } from '../../services/api';
 
 export default function Collections() {
   const [collections, setCollections] = useState([
-    { id: 1, name: 'Drop 01 - Void Series', launchDate: '2024-11-15', status: 'Planejado', locked: false, products: 8 },
-    { id: 2, name: 'Essentials Winter', launchDate: '2024-12-01', status: 'Ativo', locked: false, products: 12 },
-    { id: 3, name: 'Black Friday 2024', launchDate: '2024-11-29', status: 'Planejado', locked: true, products: 25 },
-  ]);
+    ]);
+
+  const [products, setProducts] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -20,19 +20,54 @@ export default function Collections() {
     description: '',
   });
 
+  const [selectedProducts, setSelectedProducts] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [colsRes, prodsRes] = await Promise.all([api.get('/admin/collections'), api.get('/products')]);
+        setCollections(colsRes.data || []);
+        setProducts((prodsRes.data || []).map(p => ({ id: p.id_produto, name: p.nome_produto })));
+      } catch (err) {
+        console.error('Erro ao carregar coleções/produtos:', err);
+      }
+    };
+    load();
+  }, []);
+
   const handleAddCollection = () => {
-    if (editingId) {
-      setCollections(collections.map(c => c.id === editingId ? { ...formData, id: editingId, products: c.products } : c));
-      setEditingId(null);
-    } else {
-      setCollections([...collections, { ...formData, id: Date.now(), products: 0 }]);
-    }
-    setFormData({ name: '', launchDate: '', status: 'Planejado', locked: false, description: '' });
-    setShowForm(false);
+    const submit = async () => {
+      try {
+        if (editingId) {
+          await api.patch(`/admin/collections/${editingId}`, { nome: formData.name, descricao: formData.description, status: formData.status, locked: formData.locked, productIds: selectedProducts });
+        } else {
+          await api.post('/admin/collections', { nome: formData.name, descricao: formData.description, status: formData.status, locked: formData.locked, productIds: selectedProducts });
+        }
+        const res = await api.get('/admin/collections');
+        setCollections(res.data || []);
+        setFormData({ name: '', launchDate: '', status: 'Planejado', locked: false, description: '' });
+        setSelectedProducts([]);
+        setShowForm(false);
+        setEditingId(null);
+      } catch (err) {
+        console.error('Erro ao salvar coleção:', err);
+      }
+    };
+    submit();
   };
 
   const handleToggleLock = (id) => {
-    setCollections(collections.map(c => c.id === id ? { ...c, locked: !c.locked } : c));
+    const toggle = async () => {
+      try {
+        const target = collections.find(c => c.id === id);
+        await api.patch(`/admin/collections/${id}/lock`, { locked: !target.locked });
+        const res = await api.get('/admin/collections');
+        setCollections(res.data || []);
+      } catch (err) {
+        console.error('Erro ao alternar lock:', err);
+      }
+    };
+    toggle();
   };
 
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
@@ -42,9 +77,18 @@ export default function Collections() {
   };
 
   const confirmDeleteCollection = () => {
-    if (!confirmDelete.id) return;
-    setCollections(collections.filter(c => c.id !== confirmDelete.id));
-    setConfirmDelete({ isOpen: false, id: null });
+    const doDelete = async () => {
+      try {
+        if (!confirmDelete.id) return;
+        await api.delete(`/admin/collections/${confirmDelete.id}`);
+        const res = await api.get('/admin/collections');
+        setCollections(res.data || []);
+        setConfirmDelete({ isOpen: false, id: null });
+      } catch (err) {
+        console.error('Erro ao deletar coleção:', err);
+      }
+    };
+    doDelete();
   };
 
   return (
@@ -109,6 +153,22 @@ export default function Collections() {
             <label htmlFor="lockCollection" className="text-sm font-medium">Ativar Coming Soon (Site Travado)</label>
           </div>
 
+          {/* PRODUCTS MULTISELECT */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Produtos na Coleção</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded p-2">
+              {products.map(prod => (
+                <label key={prod.id} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={selectedProducts.includes(prod.id)} onChange={(e) => {
+                    if (e.target.checked) setSelectedProducts(prev => [...prev, prod.id]);
+                    else setSelectedProducts(prev => prev.filter(x => x !== prod.id));
+                  }} />
+                  <span>{prod.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-2 pt-4 border-t border-gray-200">
             <button
               onClick={handleAddCollection}
@@ -132,13 +192,13 @@ export default function Collections() {
           <div key={c.id} className="bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
             <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-sm text-gray-500 uppercase font-bold">{c.products} Produtos</p>
+                <p className="text-sm text-gray-500 uppercase font-bold">{(c.produtos || c.products || []).length} Produtos</p>
               </div>
             </div>
 
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-bold text-lg">{c.name}</h3>
+                <h3 className="font-bold text-lg">{c.nome || c.name}</h3>
                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${c.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {c.status}
                 </span>
@@ -146,7 +206,7 @@ export default function Collections() {
 
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                 <Calendar size={14} />
-                {new Date(c.launchDate).toLocaleDateString('pt-BR')}
+                {c.launchDate ? new Date(c.launchDate).toLocaleDateString('pt-BR') : c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : ''}
               </div>
 
               <div className="flex gap-2 pt-4 border-t border-gray-100">
@@ -161,7 +221,7 @@ export default function Collections() {
                   {c.locked ? 'Travada' : 'Liberar'}
                 </button>
                 <button
-                  onClick={() => { setFormData({ ...c, products: undefined }); setEditingId(c.id); setShowForm(true); }}
+                  onClick={() => { setFormData({ name: c.nome, launchDate: '', status: c.status || 'Planejado', locked: c.locked || false, description: c.descricao || '' }); setSelectedProducts((c.produtos || []).map(p => p.id_produto || p.id)); setEditingId(c.id_colecao || c.id); setShowForm(true); }}
                   className="p-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
                 >
                   <Edit size={16} />

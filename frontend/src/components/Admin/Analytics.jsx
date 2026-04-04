@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, Zap } from 'lucide-react';
+import { api } from '../../services/api';
 
 const CustomBarChart = ({ data }) => {
-  const maxVal = Math.max(...data.map(d => d.value));
+  if (!Array.isArray(data) || data.length === 0) return <div className="text-center py-8 text-sm text-gray-400">Sem dados suficientes</div>;
+  const maxVal = Math.max(...data.map(d => Number(d.value || 0)));
   return (
     <div className="flex items-end justify-between h-48 gap-2 pt-4">
       {data.map((item, i) => (
@@ -23,27 +25,36 @@ const CustomBarChart = ({ data }) => {
 };
 
 export default function Analytics() {
-  const analyticsData = {
-    monthlyRevenue: [
-      { month: 'Jan', value: 32000 },
-      { month: 'Fev', value: 28000 },
-      { month: 'Mar', value: 45000 },
-      { month: 'Abr', value: 38000 },
-      { month: 'Mai', value: 52000 },
-      { month: 'Jun', value: 61000 },
-    ],
-    categories: [
-      { name: 'Camisetas', value: 45, color: '#000000' },
-      { name: 'Moletons', value: 25, color: '#333333' },
-      { name: 'Acessórios', value: 20, color: '#666666' },
-      { name: 'Calças', value: 10, color: '#999999' },
-    ],
-    channels: [
-      { name: 'Instagram', value: '55%', color: 'bg-black' },
-      { name: 'Tráfego Pago', value: '30%', color: 'bg-zinc-600' },
-      { name: 'Orgânico/Google', value: '15%', color: 'bg-zinc-300' },
-    ]
-  };
+  const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+  const [channels, setChannels] = useState([]);
+  const [funnel, setFunnel] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const [revRes, chanRes, funnelRes, overviewRes] = await Promise.all([
+          api.get('/admin/dashboard/revenue'),
+          api.get('/admin/analytics/channels'),
+          api.get('/admin/analytics/conversion-funnel'),
+          api.get('/admin/analytics/overview'),
+        ]);
+        if (!mounted) return;
+        setMonthlyRevenue(revRes.data || []);
+        setChannels(chanRes.data || []);
+        setFunnel(funnelRes.data || null);
+        setOverview(overviewRes.data || null);
+      } catch (err) {
+        console.error('Erro ao carregar analytics:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -60,10 +71,10 @@ export default function Analytics() {
               <button className="text-[10px] font-bold bg-black text-white px-3 py-1 rounded">12 MESES</button>
             </div>
           </div>
-          <CustomBarChart data={analyticsData.monthlyRevenue} />
+          {loading ? <div className="text-center py-12">Carregando...</div> : <CustomBarChart data={monthlyRevenue} />}
         </div>
 
-        {/* PIE CHART CATEGORIAS */}
+        {/* PIE CHART CATEGORIAS (mantém visual estático como fallback) */}
         <div className="bg-white p-8 border border-gray-100 rounded-lg">
           <h3 className="text-lg font-bold mb-6">Vendas por Categoria</h3>
           <div className="flex flex-col items-center justify-center py-4">
@@ -75,12 +86,18 @@ export default function Analytics() {
                 <circle cx="18" cy="18" r="16" fill="none" stroke="#a1a1aa" strokeWidth="3" strokeDasharray="20 100" strokeDashoffset="-70" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
-                <span className="text-xl font-black">100%</span>
-                <span className="text-[10px] text-gray-400 font-bold uppercase">Total</span>
+                <span className="text-xl font-black">{overview ? overview.totalCustomers || '—' : '—'}</span>
+                <span className="text-[10px] text-gray-400 font-bold uppercase">Clientes</span>
               </div>
             </div>
             <div className="w-full space-y-2">
-              {analyticsData.categories.map((cat, i) => (
+              {/* Fallback categories estáticas */}
+              {[
+                { name: 'Camisetas', value: 45, color: '#000000' },
+                { name: 'Moletons', value: 25, color: '#333333' },
+                { name: 'Acessórios', value: 20, color: '#666666' },
+                { name: 'Calças', value: 10, color: '#999999' },
+              ].map((cat, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></div>
@@ -101,14 +118,14 @@ export default function Analytics() {
             <TrendingUp size={16} /> Canais de Origem
           </h4>
           <div className="space-y-4">
-            {analyticsData.channels.map((ch, i) => (
+            {(channels && channels.length > 0 ? channels : [{ name: 'Instagram', value: '55%', color: 'bg-black' }, { name: 'Tráfego Pago', value: '30%', color: 'bg-zinc-600' }, { name: 'Orgânico/Google', value: '15%', color: 'bg-zinc-300' }]).map((ch, i) => (
               <div key={i}>
                 <div className="flex justify-between text-xs mb-1 font-bold uppercase">
                   <span>{ch.name}</span>
                   <span>{ch.value}</span>
                 </div>
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${ch.color}`} style={{ width: ch.value }}></div>
+                  <div className={`${ch.color}`} style={{ width: typeof ch.value === 'string' ? ch.value : `${ch.value}%`, height: '100%' }}></div>
                 </div>
               </div>
             ))}
@@ -120,12 +137,17 @@ export default function Analytics() {
             <Target size={16} /> Funil de Conversão
           </h4>
           <div className="space-y-3">
-            {[
+            { (funnel ? [
+              { label: 'Visitantes', val: funnel.visits || '—', perc: '100%' },
+              { label: 'Add Carrinho', val: funnel.addedToCart || '—', perc: funnel.addedToCart ? `${((funnel.addedToCart / funnel.visits) * 100).toFixed(1)}%` : '—' },
+              { label: 'Checkouts', val: funnel.checkouts || '—', perc: funnel.checkouts ? `${((funnel.checkouts / funnel.visits) * 100).toFixed(1)}%` : '—' },
+              { label: 'Compras', val: funnel.purchases || '—', perc: funnel.purchases ? `${((funnel.purchases / funnel.visits) * 100).toFixed(1)}%` : '—' },
+            ] : [
               { label: 'Visitantes', val: '12.4k', perc: '100%' },
               { label: 'Add Carrinho', val: '1.2k', perc: '9.6%' },
               { label: 'Checkouts', val: '450', perc: '3.6%' },
               { label: 'Compras', val: '128', perc: '1.0%' },
-            ].map((step, i) => (
+            ]).map((step, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-12 text-[10px] font-bold text-gray-400">{step.perc}</div>
                 <div className="flex-1 bg-zinc-50 border border-gray-100 p-2 rounded flex justify-between items-center">

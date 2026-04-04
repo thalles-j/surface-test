@@ -40,6 +40,7 @@ const CustomBarChart = ({ data }) => {
 export default function Dashboard() {
   const [isDropLocked, setIsDropLocked] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  const [visitsCount, setVisitsCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +74,22 @@ export default function Dashboard() {
           topProducts,
           monthlyData,
         });
+
+        // Register a visit to the admin dashboard (public endpoint)
+        try {
+          await api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' });
+        } catch (e) {
+          // ignore
+        }
+
+        // Try to fetch visit counts (requires auth); ignore errors if unauthenticated
+        try {
+          const v = await api.get('/admin/analytics/visits');
+          const total = (v.data || []).reduce((s, it) => s + (it.count || 0), 0);
+          setVisitsCount(total);
+        } catch (e) {
+          // ignore
+        }
       } catch (err) {
         console.error('Erro ao carregar dashboard:', err);
       }

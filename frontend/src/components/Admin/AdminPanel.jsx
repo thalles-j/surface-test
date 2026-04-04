@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Plus, Trash2, Edit, Shield, Activity, Clock } from 'lucide-react';
 import Modal from '../Modal';
 import AlertModal from '../AlertModal';
+import { api } from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function AdminPanel() {
-  const [admins, setAdmins] = useState([
-    { id: 1, name: 'Admin Master', email: 'admin@surface.com', role: 'Super Admin', status: 'Ativo', lastLogin: '2024-10-26 14:30' },
-    { id: 2, name: 'João Manager', email: 'joao.manager@surface.com', role: 'Gerente', status: 'Ativo', lastLogin: '2024-10-25 09:15' },
-    { id: 3, name: 'Maria Editor', email: 'maria.editor@surface.com', role: 'Editor', status: 'Ativo', lastLogin: '2024-10-24 16:45' },
-  ]);
+  const [admins, setAdmins] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const { user } = useContext(AuthContext);
 
-  const [logs, setLogs] = useState([
-    { id: 1, action: 'Produto criado', user: 'João Manager', timestamp: '2024-10-26 14:30', details: 'Camiseta Boxy Logo' },
-    { id: 2, action: 'Pedido aprovado', user: 'Maria Editor', timestamp: '2024-10-26 13:20', details: '#1024 - João Silva' },
-    { id: 3, action: 'Cupom criado', user: 'Admin Master', timestamp: '2024-10-26 11:00', details: 'BLACK20 - 20%' },
-    { id: 4, action: 'Categoria editada', user: 'João Manager', timestamp: '2024-10-25 15:45', details: 'Exclusivo' },
-  ]);
+  const roleMap = { 'Super Admin': 1, 'Gerente': 2, 'Editor': 3, 'Viewer': 4 };
+  const roleLabel = { 1: 'Super Admin', 2: 'Gerente', 3: 'Editor', 4: 'Viewer' };
 
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
   const [formData, setFormData] = useState({
     name: '',
@@ -34,18 +31,8 @@ export default function AdminPanel() {
   };
 
   const handleAddAdmin = () => {
-    if (formData.name && formData.email && formData.password) {
-      setAdmins([...admins, {
-        id: Date.now(),
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        status: 'Ativo',
-        lastLogin: 'Nunca'
-      }]);
-      setFormData({ name: '', email: '', role: 'Editor', password: '' });
-      setShowForm(false);
-    }
+    // handled by submitAdmin
+    setShowForm(true);
   };
 
   const handleDeleteAdmin = (id) => {
@@ -53,9 +40,80 @@ export default function AdminPanel() {
   };
 
   const confirmDeleteAdmin = () => {
-    if (!confirmDelete.id) return;
-    setAdmins(admins.filter(a => a.id !== confirmDelete.id));
+    // handled by api call
     setConfirmDelete({ isOpen: false, id: null });
+  };
+
+  // Load admins and logs
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const [adminsRes, logsRes] = await Promise.all([
+          api.get('/admin/admins'),
+          api.get('/admin/admins/logs')
+        ]);
+        if (!mounted) return;
+        const mapped = (adminsRes.data || []).map(u => ({
+          id: u.id_usuario,
+          name: u.nome,
+          email: u.email,
+          role: roleLabel[u.id_role] || 'Admin',
+          status: 'Ativo',
+          lastLogin: u.data_cadastro ? new Date(u.data_cadastro).toLocaleString() : 'Nunca'
+        }));
+        setAdmins(mapped);
+        setLogs(logsRes.data || []);
+      } catch (err) {
+        console.error('Erro carregando admins/logs', err);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  const openEditAdmin = (admin) => {
+    setEditingId(admin.id);
+    setFormData({ name: admin.name, email: admin.email, role: admin.role, password: '' });
+    setShowForm(true);
+  };
+
+  const submitAdmin = async () => {
+    try {
+      if (editingId) {
+        const payload = { nome: formData.name, email: formData.email };
+        if (formData.password) payload.senha = formData.password;
+        payload.id_role = roleMap[formData.role] || 1;
+        payload.performedBy = user?.nome;
+        const res = await api.patch(`/admin/admins/${editingId}`, payload);
+        setAdmins(prev => prev.map(a => a.id === editingId ? { ...a, name: res.data.nome || formData.name, email: res.data.email || formData.email, role: formData.role } : a));
+      } else {
+        const payload = { nome: formData.name, email: formData.email, senha: formData.password || 'changeme', id_role: roleMap[formData.role] || 1, performedBy: user?.nome };
+        const res = await api.post('/admin/admins', payload);
+        const u = res.data;
+        const mapped = { id: u.id_usuario, name: u.nome, email: u.email, role: roleLabel[u.id_role] || formData.role, status: 'Ativo', lastLogin: u.data_cadastro ? new Date(u.data_cadastro).toLocaleString() : 'Nunca' };
+        setAdmins(prev => [mapped, ...prev]);
+      }
+      setFormData({ name: '', email: '', role: 'Editor', password: '' });
+      setEditingId(null);
+      setShowForm(false);
+      // refresh logs
+      try { const logsRes = await api.get('/admin/admins/logs'); setLogs(logsRes.data || []); } catch(e){}
+    } catch (err) {
+      console.error('Erro ao salvar admin', err);
+    }
+  };
+
+  const doDeleteAdmin = async (id) => {
+    try {
+      await api.delete(`/admin/admins/${id}`, { data: { performedBy: user?.nome } });
+      setAdmins(prev => prev.filter(a => a.id !== id));
+      setConfirmDelete({ isOpen: false, id: null });
+      try { const logsRes = await api.get('/admin/admins/logs'); setLogs(logsRes.data || []); } catch(e){}
+    } catch (err) {
+      console.error('Erro removendo admin', err);
+      setConfirmDelete({ isOpen: false, id: null });
+    }
   };
 
   return (
@@ -74,7 +132,7 @@ export default function AdminPanel() {
           </button>
         </div>
 
-        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Criar Novo Admin">
+        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingId ? 'Editar Admin' : 'Criar Novo Admin'}>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
@@ -82,14 +140,14 @@ export default function AdminPanel() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Nome completo"
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black"
+                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
               />
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Email"
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black"
+                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -98,12 +156,12 @@ export default function AdminPanel() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Senha temporária"
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black"
+                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
               />
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-white"
+                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
               >
                 <option>Super Admin</option>
                 <option>Gerente</option>
@@ -113,10 +171,10 @@ export default function AdminPanel() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={handleAddAdmin}
+                onClick={submitAdmin}
                 className="flex-1 bg-green-600 text-white py-2 font-bold hover:bg-green-700 rounded-lg"
               >
-                Criar Admin
+                {editingId ? 'Salvar' : 'Criar Admin'}
               </button>
               <button
                 onClick={() => setShowForm(false)}
@@ -128,7 +186,8 @@ export default function AdminPanel() {
           </div>
         </Modal>
 
-        <table className="w-full">
+        <div className="hidden md:block">
+          <table className="w-full">
           <thead>
             <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
               <th className="px-6 py-4">Nome</th>
@@ -158,7 +217,7 @@ export default function AdminPanel() {
                   <Clock size={14} /> {admin.lastLogin}
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-black transition-colors">
+                  <button onClick={() => openEditAdmin(admin)} className="p-2 text-gray-400 hover:text-black transition-colors">
                     <Edit size={16} />
                   </button>
                   <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
@@ -168,7 +227,30 @@ export default function AdminPanel() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
+
+        {/* mobile list */}
+        <div className="md:hidden space-y-3 p-4">
+          {admins.map(admin => (
+            <div key={admin.id} className="bg-white p-4 rounded-lg border border-gray-100">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-bold">{admin.name}</div>
+                  <div className="text-xs text-gray-500">{admin.email}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => openEditAdmin(admin)} className="p-2 text-gray-400 hover:text-black"><Edit size={14} /></button>
+                  <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={14} /></button>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="px-2 py-1 rounded-full bg-zinc-50">{admin.role}</span>
+                <span className="text-gray-400">{admin.lastLogin}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Confirm Delete Admin */}
@@ -179,7 +261,7 @@ export default function AdminPanel() {
         message="Deseja realmente remover este usuário admin?"
         type="warning"
         actionLabel="Remover"
-        actionCallback={confirmDeleteAdmin}
+        actionCallback={() => doDeleteAdmin(confirmDelete.id)}
       />
 
       {/* PERMISSÕES */}

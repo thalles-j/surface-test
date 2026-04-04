@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye, Edit, Trash2, ChevronRight } from 'lucide-react';
 import Modal from '../Modal';
+import { api } from '../../services/api';
 
 export default function Sales() {
-  const [orders, setOrders] = useState([
-    { id: '#1024', client: 'João Silva', email: 'joao@email.com', total: 450.00, status: 'Pago', date: '2024-10-25', items: 2 },
-    { id: '#1025', client: 'Maria Souza', email: 'maria@email.com', total: 149.90, status: 'Pendente', date: '2024-10-26', items: 1 },
-    { id: '#1026', client: 'Pedro Rocha', email: 'pedro@email.com', total: 890.50, status: 'Enviado', date: '2024-10-26', items: 3 },
-    { id: '#1027', client: 'Ana Costa', email: 'ana@email.com', total: 289.00, status: 'Entregue', date: '2024-10-24', items: 1 },
-  ]);
+  const [orders, setOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('todos');
@@ -31,6 +27,19 @@ export default function Sales() {
     return matchSearch && matchStatus;
   });
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get('/admin/sales');
+        const mapped = (res.data || []).map(o => ({ id: `#${o.id_pedido}`, client: o.usuario?.nome || '—', email: o.usuario?.email || '', total: Number(o.total || 0), status: o.status, date: o.data_pedido, items: o.pedidoProdutos?.length || 0, raw: o }));
+        setOrders(mapped);
+      } catch (err) {
+        console.error('Erro ao carregar pedidos:', err);
+      }
+    };
+    load();
+  }, []);
+
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
 
   const openOrderModal = (order) => setOrderModal({ isOpen: true, order });
@@ -40,9 +49,18 @@ export default function Sales() {
   const closeStatusModal = () => setStatusModal({ isOpen: false, order: null, status: '' });
 
   const saveOrderStatus = () => {
-    if (!statusModal.order) return;
-    setOrders(orders.map(o => o.id === statusModal.order.id ? { ...o, status: statusModal.status } : o));
-    closeStatusModal();
+    const doSave = async () => {
+      try {
+        if (!statusModal.order) return;
+        const orderId = statusModal.order.raw?.id_pedido || Number(statusModal.order.id.replace('#',''));
+        await api.patch(`/admin/orders/${orderId}/status`, { status: statusModal.status });
+        setOrders(orders.map(o => o.id === statusModal.order.id ? { ...o, status: statusModal.status } : o));
+        closeStatusModal();
+      } catch (err) {
+        console.error('Erro ao atualizar status:', err);
+      }
+    };
+    doSave();
   };
 
   return (

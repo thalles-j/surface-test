@@ -11,6 +11,9 @@ router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/dashboard/revenue', adminController.getRevenueData);
 router.get('/dashboard/top-products', adminController.getTopProducts);
 
+// Endpoint público para registrar um hit de acesso (útil para contagem de visitas)
+router.post('/analytics/visits/hit', adminController.hitVisit);
+
 // Todas as rotas abaixo requerem autenticação
 router.use(authMiddleware);
 
@@ -40,6 +43,9 @@ router.post('/collections', adminController.createCollection);
 router.patch('/collections/:id', adminController.updateCollection);
 router.delete('/collections/:id', adminController.deleteCollection);
 router.patch('/collections/:id/lock', adminController.toggleCollectionLock);
+// add/remove products in a collection
+router.post('/collections/:id/products', adminController.addProductsToCollection);
+router.delete('/collections/:id/products/:productId', adminController.removeProductFromCollection);
 
 // ===== CATEGORIES =====
 router.get('/categories', adminController.getCategories);
@@ -62,6 +68,9 @@ router.patch('/settings', adminController.updateStoreSettings);
 router.get('/customization', adminController.getCustomizationSettings);
 router.patch('/customization', adminController.updateCustomization);
 router.post('/customization/upload-banner', adminController.uploadBanner);
+
+// ===== VISITS (protected - list) =====
+router.get('/analytics/visits', adminController.getVisits);
 
 // ===== ADMIN MANAGEMENT =====
 router.get('/admins', adminController.getAdminUsers);

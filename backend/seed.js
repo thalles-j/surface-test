@@ -170,6 +170,41 @@ async function main() {
         });
         console.log('✅ Configurações da loja criadas!');
     }
+
+    // 8️⃣ Criar coleção DROP 0 e associar produtos
+    const drop = await prisma.colecoes.upsert({
+        where: { nome: 'DROP 0' },
+        update: {},
+        create: { nome: 'DROP 0', descricao: 'Coleção DROP 0 SURFACE', status: 'Ativo', locked: false }
+    });
+
+    const prodOff = await prisma.produtos.findUnique({ where: { nome_produto: 'T-Shirt DROP 0 SURFACE - OFF WHITE' } });
+    const prodBlack = await prisma.produtos.findUnique({ where: { nome_produto: 'T-Shirt DROP 0 SURFACE - BLACK' } });
+
+    if (prodOff) {
+        await prisma.colecao_produtos.upsert({ where: { id_colecao_id_produto: { id_colecao: drop.id_colecao, id_produto: prodOff.id_produto } }, update: {}, create: { id_colecao: drop.id_colecao, id_produto: prodOff.id_produto } });
+    }
+    if (prodBlack) {
+        await prisma.colecao_produtos.upsert({ where: { id_colecao_id_produto: { id_colecao: drop.id_colecao, id_produto: prodBlack.id_produto } }, update: {}, create: { id_colecao: drop.id_colecao, id_produto: prodBlack.id_produto } });
+    }
+    console.log('✅ Coleção DROP 0 criada e produtos associados!');
+
+    // 9️⃣ Criar pedidos de teste
+    const cliente = await prisma.usuarios.findUnique({ where: { email: 'teste@example.com' } });
+    if (cliente && prodOff) {
+        const pedido = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'Pago', total: Number(prodOff.preco), data_pedido: new Date() } });
+        await prisma.pedido_produtos.create({ data: { id_pedido: pedido.id_pedido, id_produto: prodOff.id_produto, sku_variacao: (prodOff.variacoes_estoque && prodOff.variacoes_estoque[0]) ? prodOff.variacoes_estoque[0].sku : 'NA', quantidade: 1, preco_unitario: Number(prodOff.preco) } });
+    }
+
+    if (cliente && prodBlack) {
+        const pedido2 = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'Pendente', total: Number(prodBlack.preco) * 2, data_pedido: new Date() } });
+        await prisma.pedido_produtos.create({ data: { id_pedido: pedido2.id_pedido, id_produto: prodBlack.id_produto, sku_variacao: (prodBlack.variacoes_estoque && prodBlack.variacoes_estoque[0]) ? prodBlack.variacoes_estoque[0].sku : 'NA', quantidade: 2, preco_unitario: Number(prodBlack.preco) } });
+    }
+    console.log('✅ Pedidos de teste criados!');
+
+    // 10️⃣ Inicializar contador de acessos
+    await prisma.acessos.upsert({ where: { path: '/' }, update: { count: { increment: 5 }, ultimo_acesso: new Date() }, create: { path: '/', count: 5, ultimo_acesso: new Date() } });
+    console.log('✅ Contador de acessos inicializado!');
 }
 
 main()

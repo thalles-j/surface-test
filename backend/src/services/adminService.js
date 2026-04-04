@@ -1,6 +1,39 @@
 import prisma from '../database/prisma.js';
 import { ErroValidation, ErroBase } from '../errors/index.js';
 import bcrypt from 'bcryptjs';
+import fs from 'fs/promises';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const ACTIVITY_LOGS_FILE = join(__dirname, '../../activity_logs.json');
+
+async function appendActivityLog(action, user, details) {
+  try {
+    let logs = [];
+    try {
+      const content = await fs.readFile(ACTIVITY_LOGS_FILE, 'utf8');
+      logs = JSON.parse(content || '[]');
+    } catch (err) {
+      logs = [];
+    }
+
+    const entry = {
+      id: Date.now(),
+      action,
+      user: user || 'Unknown',
+      timestamp: new Date().toISOString(),
+      details: details || ''
+    };
+
+    logs.unshift(entry);
+    // keep last 1000 entries
+    await fs.writeFile(ACTIVITY_LOGS_FILE, JSON.stringify(logs.slice(0, 1000), null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to append activity log', err);
+  }
+}
 
 // Helper para agrupar por mês em formato legível
 const monthName = (date) => new Date(date).toLocaleDateString('pt-BR', { month: 'short' });
@@ -243,11 +276,14 @@ export const getCustomerClassification = async (req, res) => {
 // ===== COLLECTIONS (DROPS) ===== (kept as mock for now)
 export const getCollections = async (req, res) => {
   try {
-    const collections = [
-      { id: 1, name: 'Drop 01 - Void Series', launchDate: '2024-11-15', status: 'Planejado', locked: false, products: 8 },
-      { id: 2, name: 'Essentials Winter', launchDate: '2024-12-01', status: 'Ativo', locked: false, products: 12 },
-    ];
-    return res.json(collections);
+    // Use raw SQL to avoid depending on generated Prisma models in runtime
+    const cols = await prisma.$queryRaw`SELECT id_colecao as id, nome, descricao, status, locked, criado_em FROM colecoes ORDER BY criado_em DESC`;
+    const formatted = [];
+    for (const c of cols) {
+      const produtos = await prisma.$queryRaw`SELECT p.* FROM colecao_produtos cp JOIN produtos p ON cp.id_produto = p.id_produto WHERE cp.id_colecao = ${c.id}`;
+      formatted.push({ id: c.id, nome: c.nome, descricao: c.descricao, status: c.status, locked: c.locked, produtos });
+    }
+    return res.json(formatted);
   } catch (error) {
     return res.status(500).json({ erro: error.message });
   }
@@ -255,9 +291,15 @@ export const getCollections = async (req, res) => {
 
 export const createCollection = async (req, res) => {
   try {
-    const { name, launchDate, status } = req.body;
-    const collection = { id: Date.now(), name, launchDate, status };
-    return res.status(201).json(collection);
+    const { nome, descricao, status, productIds } = req.body;
+    const created = await prisma.$queryRaw`INSERT INTO colecoes (nome, descricao, status, locked, criado_em) VALUES (${nome}, ${descricao || null}, ${status || 'Planejado'}, false, now()) RETURNING id_colecao as id, nome, descricao, status, locked`;
+    const createdObj = Array.isArray(created) ? created[0] : created;
+    if (Array.isArray(productIds) && productIds.length > 0) {
+      for (const pid of productIds) {
+        await prisma.$executeRaw`INSERT INTO colecao_produtos (id_colecao, id_produto) VALUES (${createdObj.id}, ${Number(pid)}) ON CONFLICT (id_colecao, id_produto) DO NOTHING`;
+      }
+    }
+    return res.status(201).json(createdObj);
   } catch (error) {
     return res.status(500).json({ erro: error.message });
   }
@@ -265,6 +307,15 @@ export const createCollection = async (req, res) => {
 
 export const updateCollection = async (req, res) => {
   try {
+    const { id } = req.params;
+    const { nome, descricao, status, locked, productIds } = req.body;
+    await prisma.$executeRaw`UPDATE colecoes SET nome = ${nome}, descricao = ${descricao}, status = ${status}, locked = ${locked} WHERE id_colecao = ${parseInt(id)}`;
+    if (Array.isArray(productIds)) {
+      await prisma.$executeRaw`DELETE FROM colecao_produtos WHERE id_colecao = ${parseInt(id)}`;
+      for (const pid of productIds) {
+        await prisma.$executeRaw`INSERT INTO colecao_produtos (id_colecao, id_produto) VALUES (${parseInt(id)}, ${Number(pid)}) ON CONFLICT (id_colecao, id_produto) DO NOTHING`;
+      }
+    }
     return res.json({ mensagem: 'Coleção atualizada' });
   } catch (error) {
     return res.status(500).json({ erro: error.message });
@@ -273,6 +324,9 @@ export const updateCollection = async (req, res) => {
 
 export const deleteCollection = async (req, res) => {
   try {
+    const { id } = req.params;
+    await prisma.$executeRaw`DELETE FROM colecao_produtos WHERE id_colecao = ${parseInt(id)}`;
+    await prisma.$executeRaw`DELETE FROM colecoes WHERE id_colecao = ${parseInt(id)}`;
     return res.json({ mensagem: 'Coleção deletada' });
   } catch (error) {
     return res.status(500).json({ erro: error.message });
@@ -281,8 +335,37 @@ export const deleteCollection = async (req, res) => {
 
 export const toggleCollectionLock = async (req, res) => {
   try {
+    const { id } = req.params;
     const { locked } = req.body;
+    await prisma.$executeRaw`UPDATE colecoes SET locked = ${locked} WHERE id_colecao = ${parseInt(id)}`;
     return res.json({ mensagem: `Coleção ${locked ? 'travada' : 'desbloqueada'}` });
+  } catch (error) {
+    return res.status(500).json({ erro: error.message });
+  }
+};
+
+// ===== COLLECTION PRODUCTS =====
+export const addProductsToCollection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { productIds } = req.body;
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ erro: 'Nenhum produto enviado' });
+    const results = [];
+    for (const pid of productIds) {
+      await prisma.$executeRaw`INSERT INTO colecao_produtos (id_colecao, id_produto) VALUES (${parseInt(id)}, ${Number(pid)}) ON CONFLICT (id_colecao, id_produto) DO NOTHING`;
+      results.push({ id_colecao: parseInt(id), id_produto: Number(pid) });
+    }
+    return res.json({ mensagem: 'Produtos adicionados', added: results.length });
+  } catch (error) {
+    return res.status(500).json({ erro: error.message });
+  }
+};
+
+export const removeProductFromCollection = async (req, res) => {
+  try {
+    const { id, productId } = req.params;
+    await prisma.$executeRaw`DELETE FROM colecao_produtos WHERE id_colecao = ${parseInt(id)} AND id_produto = ${parseInt(productId)}`;
+    return res.json({ mensagem: 'Produto removido da coleção' });
   } catch (error) {
     return res.status(500).json({ erro: error.message });
   }
@@ -432,6 +515,34 @@ export const uploadBanner = async (req, res) => {
   }
 };
 
+// ===== VISITS (Analytics) =====
+export const hitVisit = async (req, res) => {
+  try {
+    const { path } = req.body;
+    const p = path || '/';
+    // Postgres upsert to increment counter
+    const inserted = await prisma.$queryRaw`
+      INSERT INTO acessos (path, count, ultimo_acesso, criado_em, atualizado_em)
+      VALUES (${p}, 1, now(), now(), now())
+      ON CONFLICT (path) DO UPDATE SET count = acessos.count + 1, ultimo_acesso = now(), atualizado_em = now()
+      RETURNING *
+    `;
+    const visit = Array.isArray(inserted) ? inserted[0] : inserted;
+    return res.json({ mensagem: 'Hit registrado', visit });
+  } catch (error) {
+    return res.status(500).json({ erro: error.message });
+  }
+};
+
+export const getVisits = async (req, res) => {
+  try {
+    const visits = await prisma.$queryRaw`SELECT * FROM acessos ORDER BY criado_em DESC`;
+    return res.json(visits || []);
+  } catch (error) {
+    return res.status(500).json({ erro: error.message });
+  }
+};
+
 // ===== ADMIN MANAGEMENT =====
 export const getAdminUsers = async (req, res) => {
   try {
@@ -444,9 +555,11 @@ export const getAdminUsers = async (req, res) => {
 
 export const createAdminUser = async (req, res) => {
   try {
-    const { nome, email, senha, id_role } = req.body;
+    const { nome, email, senha, id_role, performedBy } = req.body;
     const hash = await bcrypt.hash(senha || 'changeme', 10);
     const user = await prisma.usuarios.create({ data: { nome, email, senha: hash, id_role: id_role || 1 } });
+    // Log activity
+    try { await appendActivityLog('Admin criado', performedBy || (req.user && req.user.nome), `Criado: ${user.nome} (${user.email})`); } catch(e){}
     return res.status(201).json(user);
   } catch (error) {
     return res.status(500).json({ erro: error.message });
@@ -457,8 +570,12 @@ export const updateAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    const performedBy = updates.performedBy || (req.user && req.user.nome);
     if (updates.senha) updates.senha = await bcrypt.hash(updates.senha, 10);
+    // remove helper field if present
+    if (updates.performedBy) delete updates.performedBy;
     const user = await prisma.usuarios.update({ where: { id_usuario: parseInt(id) }, data: updates });
+    try { await appendActivityLog('Admin atualizado', performedBy, `Atualizado id:${id} - ${user.nome || updates.nome || ''}`); } catch(e){}
     return res.json(user);
   } catch (error) {
     return res.status(500).json({ erro: error.message });
@@ -468,7 +585,10 @@ export const updateAdminUser = async (req, res) => {
 export const deleteAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const adminToDelete = await prisma.usuarios.findUnique({ where: { id_usuario: parseInt(id) } });
     await prisma.usuarios.delete({ where: { id_usuario: parseInt(id) } });
+    const performedBy = req.body && req.body.performedBy ? req.body.performedBy : (req.user && req.user.nome);
+    try { await appendActivityLog('Admin removido', performedBy, `Removido: ${adminToDelete ? adminToDelete.nome + ' (' + adminToDelete.email + ')' : 'id:'+id}`); } catch(e){}
     return res.json({ mensagem: 'Admin deletado' });
   } catch (error) {
     return res.status(500).json({ erro: error.message });
@@ -477,12 +597,18 @@ export const deleteAdminUser = async (req, res) => {
 
 export const getActivityLogs = async (req, res) => {
   try {
-    const logs = [
-      { id: 1, action: 'Produto criado', user: 'João Manager', timestamp: '2024-10-26 14:30', details: 'Camiseta Boxy Logo' },
-      { id: 2, action: 'Pedido aprovado', user: 'Maria Editor', timestamp: '2024-10-26 13:20', details: '#1024' },
-      { id: 3, action: 'Cupom criado', user: 'Admin Master', timestamp: '2024-10-26 11:00', details: 'BLACK20 - 20%' },
-    ];
-    return res.json(logs);
+    try {
+      const content = await fs.readFile(ACTIVITY_LOGS_FILE, 'utf8');
+      const logs = JSON.parse(content || '[]');
+      return res.json(logs);
+    } catch (err) {
+      const logs = [
+        { id: 1, action: 'Produto criado', user: 'João Manager', timestamp: '2024-10-26 14:30', details: 'Camiseta Boxy Logo' },
+        { id: 2, action: 'Pedido aprovado', user: 'Maria Editor', timestamp: '2024-10-26 13:20', details: '#1024' },
+        { id: 3, action: 'Cupom criado', user: 'Admin Master', timestamp: '2024-10-26 11:00', details: 'BLACK20 - 20%' },
+      ];
+      return res.json(logs);
+    }
   } catch (error) {
     return res.status(500).json({ erro: error.message });
   }

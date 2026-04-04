@@ -58,6 +58,7 @@ model produtos {
   categoria       categorias     @relation(fields: [id_categoria], references: [id_categoria])
   fotos           fotos_produtos[]
   pedidos         pedido_produtos[]
+  colecoes        colecao_produtos[]
 }
 
 model fotos_produtos {
@@ -137,4 +138,38 @@ model configuracoes_loja {
   banner_url       String?
   criado_em        DateTime @default(now())
   atualizado_em    DateTime @updatedAt
+}
+
+// --- COLEÇÕES E ASSOCIAÇÕES ---
+model colecoes {
+  id_colecao Int @id @default(autoincrement())
+  nome       String @unique
+  descricao  String?
+  status     String?
+  locked     Boolean @default(false)
+  criado_em  DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  produtos   colecao_produtos[]
+}
+
+model colecao_produtos {
+  id_colecao Int
+  id_produto Int
+
+  colecao colecoes @relation(fields: [id_colecao], references: [id_colecao])
+  produto produtos @relation(fields: [id_produto], references: [id_produto])
+
+  @@id([id_colecao, id_produto])
+  @@index([id_produto])
+}
+
+// --- CONTADOR DE ACESSOS ---
+model acessos {
+  id_acesso Int @id @default(autoincrement())
+  path      String @unique
+  count     Int    @default(0)
+  ultimo_acesso DateTime?
+  criado_em DateTime @default(now())
+  atualizado_em DateTime @updatedAt
 }

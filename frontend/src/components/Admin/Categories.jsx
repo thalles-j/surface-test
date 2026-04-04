@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Search } from 'lucide-react';
 import Modal from '../Modal';
 import AlertModal from '../AlertModal';
+import { api } from '../../services/api';
 
 export default function Categories() {
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Exclusive', description: 'Peças únicas e limitadas', productCount: 24, featured: true },
-    { id: 2, name: 'Essentials', description: 'Básicos de qualidade', productCount: 45, featured: false },
-    { id: 3, name: 'Drops', description: 'Coleções temporárias', productCount: 18, featured: true },
-    { id: 4, name: 'Sale', description: 'Produtos em promoção', productCount: 12, featured: false },
-  ]);
+  const [categories, setCategories] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -21,14 +17,23 @@ export default function Categories() {
   });
 
   const handleAddCategory = () => {
-    if (editingId) {
-      setCategories(categories.map(c => c.id === editingId ? { ...formData, id: editingId, productCount: c.productCount } : c));
-      setEditingId(null);
-    } else {
-      setCategories([...categories, { ...formData, id: Date.now(), productCount: 0 }]);
-    }
-    setFormData({ name: '', description: '', featured: false });
-    setShowForm(false);
+    const submit = async () => {
+      try {
+        if (editingId) {
+          await api.patch(`/admin/categories/${editingId}`, { name: formData.name, description: formData.description });
+        } else {
+          await api.post('/admin/categories', { name: formData.name, description: formData.description });
+        }
+        const res = await api.get('/admin/categories');
+        setCategories((res.data || []).map(c => ({ id: c.id_categoria, name: c.nome_categoria, description: c.descricao, productCount: c._count?.produtos || 0 })));
+        setFormData({ name: '', description: '', featured: false });
+        setShowForm(false);
+        setEditingId(null);
+      } catch (err) {
+        console.error('Erro ao salvar categoria:', err);
+      }
+    };
+    submit();
   };
 
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
@@ -38,14 +43,35 @@ export default function Categories() {
   };
 
   const confirmDeleteCategory = () => {
-    if (!confirmDelete.id) return;
-    setCategories(categories.filter(c => c.id !== confirmDelete.id));
-    setConfirmDelete({ isOpen: false, id: null });
+    const doDelete = async () => {
+      try {
+        if (!confirmDelete.id) return;
+        await api.delete(`/admin/categories/${confirmDelete.id}`);
+        const res = await api.get('/admin/categories');
+        setCategories((res.data || []).map(c => ({ id: c.id_categoria, name: c.nome_categoria, description: c.descricao, productCount: c._count?.produtos || 0 })));
+        setConfirmDelete({ isOpen: false, id: null });
+      } catch (err) {
+        console.error('Erro ao deletar categoria:', err);
+      }
+    };
+    doDelete();
   };
 
   const filteredCategories = categories.filter(c =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get('/admin/categories');
+        setCategories((res.data || []).map(c => ({ id: c.id_categoria, name: c.nome_categoria, description: c.descricao, productCount: c._count?.produtos || 0 })));
+      } catch (err) {
+        console.error('Erro ao carregar categorias:', err);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

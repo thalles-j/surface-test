@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Search, Hash, Info } from 'lucide-react';
 import Modal from '../Modal';
+import { api } from '../../services/api';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
 
 export default function Products() {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Camiseta Boxy Logo', price: 149.90, category: 'Exclusivo', sku: 'SRF-CAM-LOG-01', qty: 45, status: 'Ativo', featured: true },
-    { id: 2, name: 'Moletom Oversized Void', price: 349.00, category: 'Drops', sku: 'SRF-MOL-VOI-10', qty: 12, status: 'Ativo', featured: false },
-    { id: 3, name: 'Calça Cargo Tech', price: 289.00, category: 'Essentials', sku: 'SRF-CAL-TEC-05', qty: 0, status: 'Inativo', featured: false },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [uploadFiles, setUploadFiles] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -15,11 +15,12 @@ export default function Products() {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    category: 'Exclusivo',
+    category: '',
     sku: '',
     qty: '',
     status: 'Ativo',
     featured: false,
+    description: '',
   });
   const [variations, setVariations] = useState([
     { size: 'M', sku: '', stock: '' }
@@ -30,26 +31,91 @@ export default function Products() {
     p.sku.includes(searchTerm)
   );
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([api.get('/products'), api.get('/categories')]);
+        const prods = (prodRes.data || []).map(p => ({
+          id: p.id_produto,
+          name: p.nome_produto,
+          price: Number(p.preco),
+          categoryId: p.id_categoria,
+          category: p.categoria?.nome_categoria || '',
+          sku: Array.isArray(p.variacoes_estoque) && p.variacoes_estoque[0] ? p.variacoes_estoque[0].sku : '',
+          qty: Array.isArray(p.variacoes_estoque) ? p.variacoes_estoque.reduce((s, v) => s + (v.estoque || 0), 0) : 0,
+          status: 'Ativo',
+          featured: false,
+          fotos: p.fotos || [],
+        }));
+        setProducts(prods);
+        setCategories((catRes.data || []).map(c => ({ id: c.id_categoria, nome: c.nome_categoria })));
+      } catch (err) {
+        console.error('Erro ao carregar produtos:', err);
+      }
+    };
+    load();
+  }, []);
+
   const handleAddProduct = () => {
-    if (editingId) {
-      setProducts(products.map(p => p.id === editingId ? { ...formData, id: editingId } : p));
-      setEditingId(null);
-    } else {
-      setProducts([...products, { ...formData, id: Date.now() }]);
-    }
-    setFormData({ name: '', price: '', category: 'Exclusivo', sku: '', qty: '', status: 'Ativo', featured: false });
-    setShowForm(false);
-    setVariations([{ size: 'M', sku: '', stock: '' }]);
+    // Submit to API (create or update)
+    const submit = async () => {
+      try {
+        const payload = {
+          nome_produto: formData.name,
+          descricao: formData.description || '',
+          preco: Number(formData.price || 0),
+          id_categoria: Number(formData.category),
+          tipo: 'Produto',
+          variacoes_estoque: variations.map(v => ({ tamanho: v.size, sku: v.sku, estoque: Number(v.stock || 0), preco: Number(v.price || formData.price || 0) }))
+        };
+
+        // upload files if present
+        if (uploadFiles && uploadFiles.length > 0) {
+          const fd = new FormData();
+          uploadFiles.forEach(f => fd.append('photos', f));
+          const up = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+          payload.fotos = up.data.map(fi => ({ url: fi.url, descricao: fi.descricao }));
+        }
+
+        if (editingId) {
+          await api.put(`/products/${editingId}`, { nome_produto: payload.nome_produto, descricao: payload.descricao, preco: payload.preco, id_categoria: payload.id_categoria, variacoes_estoque: payload.variacoes_estoque, fotos: payload.fotos || [] });
+        } else {
+          await api.post('/products', { nome_produto: payload.nome_produto, descricao: payload.descricao, preco: payload.preco, id_categoria: payload.id_categoria, variacoes_estoque: payload.variacoes_estoque, fotos: payload.fotos || [] });
+        }
+
+        // refresh list
+        const res = await api.get('/products');
+        setProducts((res.data || []).map(p => ({ id: p.id_produto, name: p.nome_produto, price: Number(p.preco), categoryId: p.id_categoria, category: p.categoria?.nome_categoria || '', sku: Array.isArray(p.variacoes_estoque) && p.variacoes_estoque[0] ? p.variacoes_estoque[0].sku : '', qty: Array.isArray(p.variacoes_estoque) ? p.variacoes_estoque.reduce((s, v) => s + (v.estoque || 0), 0) : 0, fotos: p.fotos || [] })));
+        setShowForm(false);
+        setEditingId(null);
+        setFormData({ name: '', price: '', category: '', sku: '', qty: '', status: 'Ativo', featured: false, description: '' });
+        setVariations([{ size: 'M', sku: '', stock: '' }]);
+        setUploadFiles([]);
+      } catch (err) {
+        console.error('Erro ao salvar produto:', err);
+      }
+    };
+    submit();
   };
 
   const handleEditProduct = (p) => {
-    setFormData(p);
+    setFormData({ name: p.name, price: p.price, category: p.categoryId || '', sku: p.sku, qty: p.qty, description: p.description || '' });
+    // build variations from product if present
+    if (p.fotos) setUploadFiles([]);
     setEditingId(p.id);
     setShowForm(true);
   };
 
   const handleDeleteProduct = (id) => {
-    setProducts(products.filter(p => p.id !== id));
+    const doDelete = async () => {
+      try {
+        await api.delete(`/products/${id}`);
+        setProducts(products.filter(p => p.id !== id));
+      } catch (err) {
+        console.error('Erro ao deletar produto:', err);
+      }
+    };
+    doDelete();
   };
 
   const handleAddVariation = () => {
@@ -101,9 +167,8 @@ export default function Products() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-white"
                   >
-                    <option>Exclusivo</option>
-                    <option>Drops</option>
-                    <option>Essentials</option>
+                    <option value="">Selecione...</option>
+                    {categories.map(c => (<option key={c.id} value={c.id}>{c.nome}</option>))}
                   </select>
                 </div>
                 <div>
