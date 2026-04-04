@@ -5,7 +5,7 @@
   --logo-url: url('/src/assets/logo192white.png');
 }
 
-header {
+.header, header {
   z-index: 998;
   background-color: var(--header-bg);
   color: var(--header-color);
@@ -14,8 +14,7 @@ header {
   font-family: "Oswald", sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
-  transition: opacity 0.3s 
-  ease-in;
+  transition: opacity 0.3s ease-in;
 }
 
 .noBreak {
@@ -117,6 +116,27 @@ header {
 .logoWrapper img {
   content: var(--logo-url);
   transition: content 0.3s ease;
+}
+
+/* Compatibilidade com classes usadas no JSX */
+.logoImage {
+  display: inline-block;
+}
+
+/* Botão de pesquisa ativo (usado condicionalmente via styles.activeButton) */
+.activeButton {
+  color: #ff3b30;
+  transform: scale(1.05);
+}
+
+/* Classe base para botão de login (existe .btn_login_active para estado ativo) */
+.btn_login {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: var(--header-color);
+  transition: transform 0.4s ease-in-out, color 0.1s ease;
 }
 
 /* --- MENU DIREITO --- */

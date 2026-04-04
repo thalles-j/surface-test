@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+:global(body) {
+    font-family: 'Inter', sans-serif;
+}
+
+:root {
+    --brand-black: #000000;
+    --brand-white: #ffffff;
+    --brand-gray-muted: #9CA3AF;
+}
+
+.page {
+    min-height: 100vh;
+    color: var(--brand-black);
+    margin-top: 10rem;
+}
+
+.fadeInSection {
+    animation: fadeIn 0.7s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.accordionItem {
+    border-bottom: 1px solid #f3f4f6;
+    padding: 0.75rem 0;
+}
+
+.accordionButton {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.accordionTitle {
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.accordionContent {
+    margin-top: 0.5rem;
+    color: #9ca3af;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.rotate {
+    transform: rotate(180deg);
+}
+
+.surfaceInput {
+    width: 100%;
+    background-color: var(--brand-white);
+    border: 1px solid #E5E7EB;
+    padding: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.surfaceInput:focus {
+    border-color: var(--brand-black);
+}

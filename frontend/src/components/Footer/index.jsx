@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
@@ -6,6 +7,7 @@ import logoWhite from "../../assets/logotipoWhite.png";
 import styles from "./style.module.css";
 
 export default function Footer() {
+    const [isTermsOpen, setIsTermsOpen] = useState(false);
     return (
         <footer>
             <div className={styles.footer_section}>
@@ -32,6 +34,15 @@ export default function Footer() {
                                 </button>
                             </div>
                         </form>
+                        <div className={styles.terms_wrap}>
+                            <button
+                                type="button"
+                                className={styles.terms_button}
+                                onClick={() => setIsTermsOpen(true)}
+                            >
+                                Termos e Políticas
+                            </button>
+                        </div>
                     </div>
 
                     {/* Logo + Social */}
@@ -91,6 +102,23 @@ export default function Footer() {
                     </div>
                 </div>
             </div>
+            {isTermsOpen && (
+                <div className={styles.modal_overlay} role="dialog" aria-modal="true" onClick={() => setIsTermsOpen(false)}>
+                    <div className={styles.modal_content} onClick={(e) => e.stopPropagation()}>
+                        <button className={styles.modal_close} onClick={() => setIsTermsOpen(false)} aria-label="Fechar">×</button>
+                        <h2>Termos e Políticas</h2>
+                        <div className={styles.modal_body}>
+                            <p><strong>Última atualização:</strong> Abril 2026</p>
+                            <p>Estes termos e políticas descrevem as regras e diretrizes para uso do site Surface Store. Ao utilizar o site, você concorda com estes termos.</p>
+                            <h4>Privacidade</h4>
+                            <p>Coletamos e processamos dados pessoais para viabilizar pedidos e melhorar sua experiência. Consulte nossa política de privacidade completa para detalhes.</p>
+                            <h4>Uso do Site</h4>
+                            <p>É proibido utilizar o site para fins ilegais, compartilhar conteúdos ofensivos ou burlar mecanismos de pagamento.</p>
+                            <p style={{marginTop: '1rem'}}>Fechar este modal para retornar ao site.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </footer>
     );
 }
