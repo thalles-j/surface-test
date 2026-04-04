@@ -9,6 +9,8 @@ import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
 import Profile from '../pages/Profile';
 import AdminPainel from '../pages/Admin';
+import About from '../pages/About';
+import Atendimento from '../pages/Atendimento';
 
 // ======================
 // ProtectedRoute
@@ -63,7 +65,8 @@ export default function AppRoutes() {
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:slug" element={<ProductDetail />} />
-      
+      <Route path="/about-us" element={<About />} />
+      <Route path="/atendimento" element={<Atendimento />} />
 
       <Route 
         path="/admin/*" 

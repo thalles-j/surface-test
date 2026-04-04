@@ -15,7 +15,7 @@ export default function Footer() {
                         <div className={styles.wrap_menu}>
                             <ul className={styles.menu}>
                                 <li>
-                                    <Link to="/">Atendimento</Link>
+                                    <Link to="/atendimento">Atendimento</Link>
                                 </li>
                             </ul>
                         </div>
