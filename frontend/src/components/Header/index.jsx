@@ -37,6 +37,16 @@ export default function Header() {
     setMenuOpen(false);
   }, [location.pathname]);
 
+  const isActiveRoute = (route) => {
+    const path = location.pathname || '/';
+    if (!route) return false;
+    // Do not mark Home as active
+    if (route === '/') return false;
+    if (path === route) return true;
+    if (path.startsWith(route + '/')) return true;
+    return false;
+  };
+
   useEffect(() => {
     const handleResize = () => {
       const menuButton = document.querySelector(`.${styles.menuToggleWrapper}`);
@@ -62,10 +72,10 @@ export default function Header() {
           <div className={styles.centeredMenu}>
             <ul className={styles.noBreak}>
               <li><Link to="/" title="Ir para Home">Home</Link></li>
-              <li><Link to="/shop" title="Ir para Shop">Shop</Link></li>
-              <li><Link to="/community" title="Ir para Community">Community</Link></li>
-              <li><Link to="/sale" title="Ir para Sale">Sale</Link></li>
-              <li><Link to="/about-us" title="Ir para Sobre nós">About Us</Link></li>
+              <li className={isActiveRoute('/shop') ? styles.active : ''}><Link to="/shop" title="Ir para Shop">Shop</Link></li>
+              <li className={isActiveRoute('/community') ? styles.active : ''}><Link to="/community" title="Ir para Community">Community</Link></li>
+              <li className={isActiveRoute('/sale') ? styles.active : ''}><Link to="/sale" title="Ir para Sale">Sale</Link></li>
+              <li className={isActiveRoute('/about-us') ? styles.active : ''}><Link to="/about-us" title="Ir para Sobre nós">About Us</Link></li>
             </ul>
           </div>
 
@@ -189,10 +199,10 @@ export default function Header() {
         <nav className={styles.mobileMenu} title="Menu mobile">
           <ul className={styles.mobileMenuTop}>
             <li><Link to="/" onClick={() => { setMenuOpen(false); updateHeaderCSS("/"); }}>Home</Link></li>
-            <li><Link to="/shop" onClick={() => { setMenuOpen(false); updateHeaderCSS("/shop"); }}>Shop</Link></li>
-            <li><Link to="/community" onClick={() => { setMenuOpen(false); updateHeaderCSS("/community"); }}>Community</Link></li>
-            <li><Link to="/sale" onClick={() => { setMenuOpen(false); updateHeaderCSS("/sale"); }}>Sale</Link></li>
-            <li><Link to="/about-us" onClick={() => { setMenuOpen(false); updateHeaderCSS("/about-us"); }}>About Us</Link></li>
+            <li className={isActiveRoute('/shop') ? styles.active : ''}><Link to="/shop" onClick={() => { setMenuOpen(false); updateHeaderCSS("/shop"); }}>Shop</Link></li>
+            <li className={isActiveRoute('/community') ? styles.active : ''}><Link to="/community" onClick={() => { setMenuOpen(false); updateHeaderCSS("/community"); }}>Community</Link></li>
+            <li className={isActiveRoute('/sale') ? styles.active : ''}><Link to="/sale" onClick={() => { setMenuOpen(false); updateHeaderCSS("/sale"); }}>Sale</Link></li>
+            <li className={isActiveRoute('/about-us') ? styles.active : ''}><Link to="/about-us" onClick={() => { setMenuOpen(false); updateHeaderCSS("/about-us"); }}>About Us</Link></li>
           </ul>
 
           <ul className={styles.mobileMenuBottom}>

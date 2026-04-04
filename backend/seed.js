@@ -57,8 +57,8 @@ async function main() {
         {
             nome: "Teste da Silva",
             email: "teste@example.com",
-            senha: await bcrypt.hash("abcdefg", 10),
-            id_role: 2,
+            senha: await bcrypt.hash("1234567", 10),
+            id_role: 1,
         },
     ];
 
