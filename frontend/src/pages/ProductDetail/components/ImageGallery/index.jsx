@@ -5,8 +5,9 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/thumbs';
 import styles from './style.module.css';
+import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
 
-export default function ImageGallery({ fotos, productName, baseUrl }) {
+export default function ImageGallery({ fotos, productName }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
   // Ordena as fotos para que a "front" seja a primeira
@@ -43,7 +44,7 @@ export default function ImageGallery({ fotos, productName, baseUrl }) {
           {sortedFotos.slice(0, 4).map((foto) => (
             <SwiperSlide key={`thumb-${foto.id_foto}`} className={styles.thumbnailSlide}>
               <img 
-                src={`${baseUrl}${foto.url}`} 
+                src={resolveImageUrl(foto.url)} 
                 alt={foto.descricao || productName}
                 className={styles.thumbnailImage}
               />
@@ -67,7 +68,7 @@ export default function ImageGallery({ fotos, productName, baseUrl }) {
         {sortedFotos.map((foto) => (
           <SwiperSlide key={foto.id_foto} className={styles.swiperSlide}>
             <img 
-              src={`${baseUrl}${foto.url}`} 
+              src={resolveImageUrl(foto.url)} 
               alt={foto.descricao || productName}
               className={styles.swiperImage}
             />

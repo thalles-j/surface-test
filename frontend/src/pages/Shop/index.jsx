@@ -5,6 +5,8 @@ import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
 import { useCart } from "../../context/CartContext";
 import { FaCartPlus } from "react-icons/fa";
+import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { api } from "../../services/api";
 
 const categoryMap = {
   1: "Exclusivo",
@@ -18,7 +20,6 @@ const categoryMap = {
 const ProductCard = ({ produto }) => {
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
-  const baseUrl = "http://localhost:5000";
 
   // Função para criar slug a partir do nome
   const createSlug = (name) => {
@@ -41,8 +42,8 @@ const ProductCard = ({ produto }) => {
   }) : [];
 
   // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = sortedFotos?.[0]?.url ? `${baseUrl}${sortedFotos[0].url}` : null;
-  const fotoSecundaria = sortedFotos?.[1]?.url ? `${baseUrl}${sortedFotos[1].url}` : null;
+  const fotoPrincipal = sortedFotos?.[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
+  const fotoSecundaria = sortedFotos?.[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
 
   // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
   // Caso contrário, mostra a principal.
@@ -108,11 +109,8 @@ export default function Shop() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("http://localhost:5000/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        setRawProdutos(data || []);
-      })
+    api.get('/products')
+      .then(res => setRawProdutos(res.data || []))
       .catch((err) => console.error("Erro ao carregar produtos:", err))
       .finally(() => setLoading(false));
   }, []);

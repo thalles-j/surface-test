@@ -5,6 +5,7 @@ import authRoutes from "./authRoutes.js";
 import profileRoutes from "./profileRoutes.js";
 import uploadRoutes from "./uploadRoutes.js";
 import categoriesRoutes from "./categoriesRoutes.js";
+import adminRoutes from "./adminRoutes.js";
 
 const routes = (app) => {
     app.route("/").get((req, res) => res.status(200).send("API Funcionando!"));
@@ -16,6 +17,7 @@ const routes = (app) => {
     app.use("/api/conta", profileRoutes);
     app.use("/api/upload", uploadRoutes);
     app.use("/api/categories", categoriesRoutes);
+    app.use("/api/admin", adminRoutes);
 };
 
 export default routes;

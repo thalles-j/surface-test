@@ -2,6 +2,7 @@ import React from "react";
 import { useCart } from "../../context/CartContext";
 import styles from "./style.module.css";
 import { useNavigate } from "react-router-dom";
+import { resolveImageUrl } from "../../utils/resolveImageUrl";
 
 export default function CartDrawer() {
   const {
@@ -13,15 +14,9 @@ export default function CartDrawer() {
     cartTotal,
   } = useCart();
   
-  const baseUrl = "http://localhost:5000";
-
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/80?text=No+Image";
-    if (path.startsWith("http")) return path;
-    
-    // Normalize path: remove leading slash and replace backslashes
-    const cleanPath = path.replace(/\\/g, "/").replace(/^\/+/, "");
-    return `${baseUrl}/${cleanPath}`;
+    return resolveImageUrl(path);
   };
 
   const getFrontImage = (fotos) => {

@@ -87,8 +87,8 @@ async function main() {
             ],
             fotos: {
                 create: [
-                    { url: "/uploads/drop0_t-shirt_offwhite_front.png", descricao: "Frente" },
-                    { url: "/uploads/drop0_t-shirt_offwhite_back.png", descricao: "Costas" },
+                    { url: "/uploads/t-shirt_drop0_offwhite_front.png", descricao: "Frente" },
+                    { url: "/uploads/t-shirt_drop0_offwhite_back.png", descricao: "Costas" },
                 ],
             },
         },
@@ -106,8 +106,8 @@ async function main() {
             ],
             fotos: {
                 create: [
-                    { url: "/uploads/drop0_t-shirt_black_front.png", descricao: "Frente" },
-                    { url: "/uploads/drop0_t-shirt_black_back.png", descricao: "Costas" },
+                    { url: "/uploads/t-shirt_drop0_black_front.png", descricao: "Frente" },
+                    { url: "/uploads/t-shirt_drop0_black_back.png", descricao: "Costas" },
                 ],
             },
         },
@@ -121,6 +121,55 @@ async function main() {
         });
     }
     console.log("✅ Produtos DROP 0 SURFACE criados!");
+
+    // 5️⃣ Criar cupons iniciais
+    const cuponsData = [
+        { codigo: 'BLACK20', desconto: 20.00, tipo: 'Porcentagem', validade: new Date('2024-11-30') },
+        { codigo: 'FRETE10', desconto: 10.00, tipo: 'Frete', validade: new Date('2024-12-25') },
+    ];
+
+    for (const c of cuponsData) {
+        await prisma.cupons.upsert({
+            where: { codigo: c.codigo },
+            update: {},
+            create: c,
+        });
+    }
+    console.log('✅ Cupons criados!');
+
+    // 6️⃣ Criar campanhas iniciais
+    const campanhasData = [
+        { nome: 'Black Friday 2024', status: 'Planejada', data_inicio: new Date('2024-11-29'), data_fim: new Date('2024-12-02'), orcamento: 10000 },
+        { nome: 'Promoção Natal', status: 'Ativa', data_inicio: new Date('2024-12-01'), orcamento: 5000 },
+    ];
+
+    for (const camp of campanhasData) {
+        const exists = await prisma.campanhas.findFirst({ where: { nome: camp.nome } });
+        if (!exists) {
+            await prisma.campanhas.create({ data: camp });
+        }
+    }
+    console.log('✅ Campanhas criadas!');
+
+    // 7️⃣ Configurações iniciais da loja
+    const loja = await prisma.configuracoes_loja.findFirst();
+    if (!loja) {
+        await prisma.configuracoes_loja.create({
+            data: {
+                nome_loja: 'Surface Streetwear',
+                email: 'contato@surface.com',
+                telefone: '+55 11 99999-9999',
+                endereco: 'São Paulo, SP',
+                metodo_pagamento: 'PIX, Cartão',
+                frete: 15.0,
+                frete_gratis_acima: 200.0,
+                moeda: 'BRL',
+                idioma: 'pt-BR',
+                fundo_landing: '/uploads/t-shirt_drop0_offwhite_front.png'
+            }
+        });
+        console.log('✅ Configurações da loja criadas!');
+    }
 }
 
 main()

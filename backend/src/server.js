@@ -9,9 +9,17 @@ const PORT = process.env.PORT;
 const app = express();
 
 // --- Configuração CORS ---
+// Permitir origens de desenvolvimento (localhost em qualquer porta) e/ou listas definidas via env
+const allowedFromEnv = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
 app.use(cors({
-  origin: "http://localhost:5173", // frontend
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser clients (curl, Postman)
+    if (allowedFromEnv.includes(origin)) return callback(null, true);
+    // allow any localhost origin during development
+    if (/^https?:\/\/localhost(:\d+)?$/i.test(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
 }));
 

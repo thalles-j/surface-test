@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './style.module.css';
+import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
 
 // Card com hover para trocar para a segunda imagem (mesmo comportamento da página Shop)
-function RelatedProductCard({ produto, baseUrl, createSlug }) {
+function RelatedProductCard({ produto, createSlug }) {
   const [isHovered, setIsHovered] = useState(false);
 
   // Ordena as fotos para que a "front" seja a primeira
@@ -17,10 +18,10 @@ function RelatedProductCard({ produto, baseUrl, createSlug }) {
   }) : [];
 
   const fotoPrincipal = sortedFotos?.[0]?.url
-    ? `${baseUrl}${sortedFotos[0].url}`
+    ? resolveImageUrl(sortedFotos[0].url)
     : null;
   const fotoSecundaria = sortedFotos?.[1]?.url
-    ? `${baseUrl}${sortedFotos[1].url}`
+    ? resolveImageUrl(sortedFotos[1].url)
     : null;
 
   const imagemAtual = isHovered && fotoSecundaria ? fotoSecundaria : fotoPrincipal;

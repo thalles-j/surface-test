@@ -6,6 +6,7 @@ import ImageGallery from "./components/ImageGallery";
 import ProductInfo from "./components/ProductInfo";
 import RelatedProducts from "./components/RelatedProducts";
 import { useCart } from "../../context/CartContext";
+import { api } from "../../services/api";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -33,9 +34,8 @@ export default function ProductDetail() {
     const fetchProduto = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/products`);
-        if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
-        const data = await res.json();
+        const res = await api.get('/products');
+        const data = res.data;
         
         // Buscar produto pelo slug (nome convertido)
         const found = data.find(p => createSlug(p.nome_produto) === slug);
@@ -69,7 +69,6 @@ export default function ProductDetail() {
   if (error) return <div className={styles.error}>{error}</div>;
   if (!produto) return <div className={styles.error}>Produto não encontrado</div>;
 
-  const baseUrl = "http://localhost:5000";
   const variacoes = produto.variacoes_estoque || [];
 
   const handleAddToCart = () => {
@@ -90,7 +89,6 @@ export default function ProductDetail() {
         <ImageGallery 
           fotos={produto.fotos} 
           productName={produto.nome_produto}
-          baseUrl={baseUrl}
         />
 
         <ProductInfo 
@@ -104,7 +102,6 @@ export default function ProductDetail() {
 
       <RelatedProducts 
         products={relatedProducts}
-        baseUrl={baseUrl}
         createSlug={createSlug}
       />
     </div>

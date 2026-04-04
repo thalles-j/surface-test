@@ -98,3 +98,43 @@ model pedido_produtos {
 
   @@id([id_pedido, id_produto])
 }
+
+// --- MODELOS ADICIONAIS PARA MARKETING, CAMPANHAS E CONFIGURAÇÕES ---
+
+model cupons {
+  id_cupom Int    @id @default(autoincrement())
+  codigo   String @unique
+  desconto Decimal @db.Decimal(5,2)
+  tipo     String
+  validade DateTime?
+  usos     Int     @default(0)
+  ativo    Boolean @default(true)
+}
+
+model campanhas {
+  id_campanha Int     @id @default(autoincrement())
+  nome        String
+  status      String
+  data_inicio DateTime?
+  data_fim    DateTime?
+  orcamento   Decimal? @db.Decimal(12,2)
+  alcance     Int      @default(0)
+}
+
+model configuracoes_loja {
+  id_config        Int      @id @default(autoincrement())
+  nome_loja        String
+  email            String
+  telefone         String?
+  endereco         String?
+  metodo_pagamento String?
+  frete            Decimal? @db.Decimal(10,2)
+  frete_gratis_acima Decimal? @db.Decimal(10,2)
+  moeda            String   @default("BRL")
+  timezone         String?
+  idioma           String?  @default("pt-BR")
+  fundo_landing    String?  // url do background da landing
+  banner_url       String?
+  criado_em        DateTime @default(now())
+  atualizado_em    DateTime @updatedAt
+}

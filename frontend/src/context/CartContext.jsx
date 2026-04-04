@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
+import AlertModal from "../components/AlertModal";
 
 export const CartContext = createContext({});
 
@@ -23,14 +24,34 @@ export function CartProvider({ children }) {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    actionLabel: null,
+    actionCallback: null,
+  });
+
+  const showAlertModal = ({ title = '', message = '', type = 'info', actionLabel = null, actionCallback = null }) => {
+    setAlertModal({ isOpen: true, title, message, type, actionLabel, actionCallback });
+  };
+
+  const hideAlertModal = () => setAlertModal(prev => ({ ...prev, isOpen: false }));
+
   const toggleCart = () => {
     setIsCartOpen(!isCartOpen);
   };
 
   const addToCart = (product) => {
     if (!user) {
-      alert("Você precisa estar logado para adicionar itens ao carrinho.");
-      navigate("/entrar");
+      showAlertModal({
+        title: 'Login necessário',
+        message: 'Você precisa estar logado para adicionar itens ao carrinho.',
+        type: 'auth',
+        actionLabel: 'Entrar',
+        actionCallback: () => navigate('/entrar')
+      });
       return;
     }
 
@@ -82,9 +103,20 @@ export function CartProvider({ children }) {
         updateQuantity,
         clearCart,
         cartTotal,
+        showAlertModal,
+        hideAlertModal,
       }}
     >
       {children}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={hideAlertModal}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        actionLabel={alertModal.actionLabel}
+        actionCallback={alertModal.actionCallback}
+      />
     </CartContext.Provider>
   );
 }
