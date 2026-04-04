@@ -12,13 +12,18 @@ import Inventory from '../../components/Admin/Inventory';
 import Customers from '../../components/Admin/Customers';
 import Analytics from '../../components/Admin/Analytics';
 import Customization from '../../components/Admin/Customization';
-import Marketing from '../../components/Admin/Marketing';
 import AdminSettings from '../../components/Admin/AdminSettings';
 import AdminPanel from '../../components/Admin/AdminPanel';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [user, setUser] = useState({ name: 'Admin Surface', email: 'admin@surface.co' });
+  const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
+
+  const openCollectionsAndCreate = () => {
+    setActiveTab('collections');
+    setOpenCollectionsCreate(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -28,13 +33,13 @@ export default function AdminPage() {
   const renderContent = () => {
     switch(activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onCreateCollection={openCollectionsAndCreate} />;
       case 'sales':
         return <Sales />;
       case 'products':
         return <Products />;
       case 'collections':
-        return <Collections />;
+        return <Collections openCreate={openCollectionsCreate} onCloseCreate={() => setOpenCollectionsCreate(false)} />;
       case 'categories':
         return <Categories />;
       case 'inventory':
@@ -45,8 +50,6 @@ export default function AdminPage() {
         return <Analytics />;
       case 'customization':
         return <Customization />;
-      case 'marketing':
-        return <Marketing />;
       case 'settings':
         return <AdminSettings />;
       case 'admin':
@@ -67,7 +70,6 @@ export default function AdminPage() {
       customers: 'Clientes',
       analytics: 'Relatórios e Dados',
       customization: 'Customização da Loja',
-      marketing: 'Marketing e Promoções',
       settings: 'Configurações',
       admin: 'Painel Administrativo',
     };

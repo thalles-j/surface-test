@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Megaphone, Settings, Shield, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -37,7 +37,6 @@ export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClo
       items: [
         { id: 'customers', icon: Users, label: 'Clientes' },
         { id: 'analytics', icon: BarChart3, label: 'Analytics' },
-        { id: 'marketing', icon: Megaphone, label: 'Marketing' },
       ]
     },
     {

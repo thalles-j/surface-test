@@ -4,7 +4,7 @@ import Modal from '../Modal';
 import AlertModal from '../AlertModal';
 import { api } from '../../services/api';
 
-export default function Collections() {
+export default function Collections({ openCreate, onCloseCreate }) {
   const [collections, setCollections] = useState([
     ]);
 
@@ -34,6 +34,15 @@ export default function Collections() {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (openCreate) {
+      setEditingId(null);
+      setFormData({ name: '', launchDate: '', status: 'Planejado', locked: false, description: '' });
+      setSelectedProducts([]);
+      setShowForm(true);
+    }
+  }, [openCreate]);
 
   const handleAddCollection = () => {
     const submit = async () => {
@@ -94,7 +103,7 @@ export default function Collections() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* FORM (Modal) */}
-      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setEditingId(null); }} title={editingId ? 'Editar Coleção' : 'Criar Nova Coleção'}>
+      <Modal isOpen={showForm} onClose={() => { setShowForm(false); setEditingId(null); if (onCloseCreate) onCloseCreate(); }} title={editingId ? 'Editar Coleção' : 'Criar Nova Coleção'}>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Nome da Coleção</label>
@@ -169,20 +178,20 @@ export default function Collections() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4 border-t border-gray-200">
-            <button
-              onClick={handleAddCollection}
-              className="flex-1 bg-black text-white py-3 font-bold hover:bg-zinc-800 transition-colors rounded-lg"
-            >
-              {editingId ? 'Atualizar Coleção' : 'Criar Coleção'}
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setEditingId(null); }}
-              className="px-6 py-3 border border-gray-300 font-bold hover:bg-gray-50 transition-colors rounded-lg"
-            >
-              Cancelar
-            </button>
-          </div>
+            <div className="flex gap-2 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleAddCollection}
+                className="flex-1 bg-black text-white py-3 font-bold hover:bg-zinc-800 transition-colors rounded-lg"
+              >
+                {editingId ? 'Atualizar Coleção' : 'Criar Coleção'}
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setEditingId(null); if (onCloseCreate) onCloseCreate(); }}
+                className="px-6 py-3 border border-gray-300 font-bold hover:bg-gray-50 transition-colors rounded-lg"
+              >
+                Cancelar
+              </button>
+            </div>
         </div>
       </Modal>
 

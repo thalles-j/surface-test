@@ -37,7 +37,7 @@ const CustomBarChart = ({ data }) => {
   );
 };
 
-export default function Dashboard() {
+export default function Dashboard({ onCreateCollection }) {
   const [isDropLocked, setIsDropLocked] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [visitsCount, setVisitsCount] = useState(0);
@@ -189,24 +189,14 @@ export default function Dashboard() {
 
       {/* QUICK ACTIONS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-black text-white p-6 rounded-lg hover:shadow-lg transition-shadow cursor-pointer">
+        <div onClick={() => onCreateCollection && onCreateCollection()} className="bg-black text-white p-6 rounded-lg hover:shadow-lg transition-shadow cursor-pointer">
           <div className="flex items-start justify-between mb-4">
             <div className="p-2 bg-white/10 rounded-lg">
               <TrendingUp size={24} />
             </div>
           </div>
-          <h4 className="font-bold mb-2">Adicionar Produto</h4>
-          <p className="text-xs text-gray-300">Crie um novo item para seu catálogo</p>
-        </div>
-
-        <div className="bg-white border border-gray-100 p-6 rounded-lg hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex items-start justify-between mb-4">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <Target size={24} />
-            </div>
-          </div>
-          <h4 className="font-bold mb-2">Criar Campanha</h4>
-          <p className="text-xs text-gray-400">Lance uma promoção ou marketing</p>
+          <h4 className="font-bold mb-2">Criar uma Coleção</h4>
+          <p className="text-xs text-gray-300">Abra a criação de coleção</p>
         </div>
 
         <div className="bg-white border border-gray-100 p-6 rounded-lg hover:shadow-lg transition-shadow cursor-pointer">
