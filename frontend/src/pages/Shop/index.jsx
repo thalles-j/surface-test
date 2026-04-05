@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import styles from "./style.module.css";
 import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
+import { useCart } from "../../context/CartContext";
+import { FaCartPlus } from "react-icons/fa";
+import { resolveImageUrl, handleImgError } from "../../utils/resolveImageUrl";
+import { api } from "../../services/api";
 
 const categoryMap = {
   1: "Exclusivo",
@@ -15,7 +19,7 @@ const categoryMap = {
 // ---------------------------------------------------------
 const ProductCard = ({ produto }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const baseUrl = "http://localhost:5000";
+  const { addToCart } = useCart();
 
   // Função para criar slug a partir do nome
   const createSlug = (name) => {
@@ -27,9 +31,16 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
+  // Ordena as fotos: principal primeiro, depois por id
+  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
+      if (a.principal && !b.principal) return -1;
+      if (!a.principal && b.principal) return 1;
+      return (a.id_foto || 0) - (b.id_foto || 0);
+  }) : [];
+
   // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = produto.fotos?.[0]?.url ? `${baseUrl}${produto.fotos[0].url}` : null;
-  const fotoSecundaria = produto.fotos?.[1]?.url ? `${baseUrl}${produto.fotos[1].url}` : null;
+  const fotoPrincipal = sortedFotos?.[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
+  const fotoSecundaria = sortedFotos?.[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
 
   // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
   // Caso contrário, mostra a principal.
@@ -42,20 +53,34 @@ const ProductCard = ({ produto }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/produto/${createSlug(produto.nome_produto)}`}>
-        {imagemAtual ? (
-          <img
-            src={imagemAtual}
-            alt={produto.nome_produto}
-            className={styles.produtoImage}
-            // Dica: Adicione uma transição suave no seu CSS se desejar
-            style={{ transition: 'opacity 0.2s ease-in-out' }} 
-          />
-        ) : (
-          <div className={styles.produtoPlaceholder}>
-            Sem imagem
-          </div>
-        )}
+      <Link to={`/produto/${createSlug(produto.nome_produto)}`} className={styles.cardLink}>
+        <div className={styles.imageContainer}>
+          {imagemAtual ? (
+            <img
+              src={imagemAtual}
+              alt={produto.nome_produto}
+              className={styles.produtoImage}
+              style={{ transition: 'opacity 0.2s ease-in-out' }}
+              onError={handleImgError}
+            />
+          ) : (
+            <div className={styles.produtoPlaceholder}>
+              Sem imagem
+            </div>
+          )}
+          
+          <button 
+            className={styles.cartIconButton}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              addToCart(produto);
+            }}
+            title="Adicionar ao Carrinho"
+          >
+            <FaCartPlus />
+          </button>
+        </div>
 
         <div className={styles.produtoInfo}>
           <span className={styles.produtoTag}>
@@ -73,23 +98,30 @@ const ProductCard = ({ produto }) => {
 // ---------------------------------------------------------
 
 export default function Shop() {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
   const [loading, setLoading] = useState(true);
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
+  const [maintenance, setMaintenance] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    fetch("http://localhost:5000/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        setRawProdutos(data || []);
+    const params = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
+    api.get(`/products${params}`)
+      .then(res => setRawProdutos(res.data || []))
+      .catch((err) => {
+        if (err.response?.status === 503 && err.response?.data?.manutencao) {
+          setMaintenance(true);
+        } else {
+          console.error("Erro ao carregar produtos:", err);
+        }
       })
-      .catch((err) => console.error("Erro ao carregar produtos:", err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchQuery]);
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -152,6 +184,18 @@ export default function Shop() {
 
   if (loading) {
     return <PageLoader />;
+  }
+
+  if (maintenance) {
+    return (
+      <section className={styles.shop_section}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="text-6xl mb-6">🔧</div>
+          <h1 className="text-3xl font-bold mb-3">Estamos em Manutenção</h1>
+          <p className="text-gray-500 max-w-md">A loja está temporariamente indisponível. Estamos trabalhando para voltar o mais rápido possível.</p>
+        </div>
+      </section>
+    );
   }
 
   return (

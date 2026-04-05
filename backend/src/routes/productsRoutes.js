@@ -3,42 +3,26 @@ import { validateBody } from "../middlewares/vaildateBody.js";
 import {
     createProductController,
     getProductController,
+    getProductBySlugController,
     updateProductController,
-    deleteProductController
+    deleteProductController,
+    setPrincipalPhotoController,
+    bulkUpdateProductsController
 } from "../controllers/productsController.js";
-
-const router = Router();
-
-router.post("/", validateBody, createProductController);
-router.get("", getProductController);
-router.get("/:id", getProductController);
-router.put("/:id", updateProductController);
-router.delete("/:id", deleteProductController);
-
-export default router;
-
-/*import { Router } from "express";
-import { validateBody } from "../middlewares/vaildateBody.js";
-
-import {
-    createProductController,
-    getProductController,
-    updateProductController,
-    deleteProductController
-} from "../controllers/productsController.js";
-
 import { authMiddleware, adminMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
+// ROTAS PUBLICAS
+router.get("/", getProductController);
+router.get("/slug/:slug", getProductBySlugController);
+router.get("/:id", getProductController);
+
 // ROTAS PROTEGIDAS — SOMENTE ADMIN
 router.post("/", authMiddleware, adminMiddleware, validateBody, createProductController);
 router.put("/:id", authMiddleware, adminMiddleware, updateProductController);
+router.patch("/bulk-update", authMiddleware, adminMiddleware, bulkUpdateProductsController);
+router.patch("/:id/principal", authMiddleware, adminMiddleware, setPrincipalPhotoController);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteProductController);
 
-// ROTAS PÚBLICAS
-router.get("/", getProductController);
-router.get("/:id", getProductController);
-
 export default router;
- */

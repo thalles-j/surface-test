@@ -156,3 +156,46 @@ export const updateMeController = async (req, res, next) => {
     next(error);
   }
 };
+
+/* ============================================
+    PUT /conta/senha → alterar senha
+============================================ */
+export const changePasswordController = async (req, res, next) => {
+  try {
+    const { current_password, new_password, senhaAtual, novaSenha } = req.body;
+
+    const currentPwd = current_password || senhaAtual;
+    const newPwd = new_password || novaSenha;
+
+    if (!currentPwd) {
+      return res.status(400).json({ mensagem: "Informe a senha atual." });
+    }
+    if (!newPwd || newPwd.length < 6) {
+      return res.status(400).json({ mensagem: "A nova senha deve ter pelo menos 6 caracteres." });
+    }
+
+    const user = await prisma.usuarios.findUnique({
+      where: { id_usuario: req.user.id },
+      select: { senha: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ mensagem: "Usuario nao encontrado." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPwd, user.senha);
+    if (!isPasswordValid) {
+      return res.status(401).json({ mensagem: "Senha atual incorreta." });
+    }
+
+    const hashed = await bcrypt.hash(newPwd, 10);
+    await prisma.usuarios.update({
+      where: { id_usuario: req.user.id },
+      data: { senha: hashed },
+    });
+
+    res.json({ mensagem: "Senha atualizada com sucesso." });
+  } catch (error) {
+    next(error);
+  }
+};

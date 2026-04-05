@@ -25,3 +25,8 @@ img {
     border: 0;
     -ms-interpolation-mode: bicubic;
 }
+
+/* Base border-radius for form inputs */
+input, textarea, select {
+  border-radius: 0.375rem;
+}

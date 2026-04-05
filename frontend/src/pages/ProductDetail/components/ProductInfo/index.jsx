@@ -75,11 +75,11 @@ export default function ProductInfo({
           </div>
           
           <div className={styles.sizeButtons}>
-            {variacoes.map((v) => {
+            {variacoes.map((v, idx) => {
               const outOfStock = v.estoque === 0;
               return (
                 <button
-                  key={v.sku}
+                  key={v.sku || `${v.tamanho}-${idx}`}
                   className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ""} ${outOfStock ? styles.disabled : ""}`}
                   onClick={() => !outOfStock && setSelectedSize(v.tamanho)}
                   disabled={outOfStock}

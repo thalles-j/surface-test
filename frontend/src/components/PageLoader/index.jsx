@@ -1,17 +1,11 @@
 import React from 'react';
+import { ThreeDot } from "react-loading-indicators";
 import styles from './style.module.css';
 
 export default function PageLoader() {
   return (
     <div className={styles.loader_overlay}>
-      <div className={styles.loader_content}>
-        <p className={styles.loader_text}>Carregando...</p>
-        <div className={styles.dots_container}>
-          <span className={styles.dot}>.</span>
-          <span className={styles.dot}>.</span>
-          <span className={styles.dot}>.</span>
-        </div>
-      </div>
+      <ThreeDot color="#000000" size="medium" text="" textColor="" />
     </div>
   );
 }

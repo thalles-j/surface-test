@@ -3,6 +3,7 @@ import styles from "./style.module.css";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { api } from "../../services/api";
+import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import PageLoader from "../../components/PageLoader";
 
 export default function Profile() {
@@ -20,6 +21,7 @@ export default function Profile() {
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(false);
   const [errorPedidos, setErrorPedidos] = useState(null);
+  const [expandedPedido, setExpandedPedido] = useState(null);
 
   // Estados de Senha
   const [currentPassword, setCurrentPassword] = useState("");
@@ -53,26 +55,20 @@ export default function Profile() {
     }
   }, [user]);
 
-  // Busca de Pedidos
+  // Busca de Pedidos via API
   useEffect(() => {
-    if (activeSection !== "pedidos" || !user || loadingPedidos) return;
-
-    setLoadingPedidos(true);
-    setErrorPedidos(null);
-
-    const userId = user.id || user._id || user.id_usuario;
-
-    api.get(`/pedidos/${userId}`)
-      .then((response) => {
-        const lista = response.data.pedidos || response.data || [];
-        setPedidos(Array.isArray(lista) ? lista : []);
-      })
-      .catch((err) => {
-        console.error(err);
-        setErrorPedidos("Não foi possível carregar seus pedidos.");
-      })
-      .finally(() => setLoadingPedidos(false));
-  }, [activeSection, user]);
+    if (user && activeSection === "pedidos") {
+      setLoadingPedidos(true);
+      setErrorPedidos(null);
+      api.get("/orders")
+        .then((res) => setPedidos(res.data))
+        .catch((err) => {
+          console.error(err);
+          setErrorPedidos("Erro ao carregar pedidos.");
+        })
+        .finally(() => setLoadingPedidos(false));
+    }
+  }, [user, activeSection]);
 
   // Handlers de Formulário
   const handleChange = (field, value) => {
@@ -100,10 +96,12 @@ export default function Profile() {
     }
 
     try {
-      const userId = user.id || user._id || user.id_usuario;
-      const response = await api.put(`/users/${userId}`, editedData);
+      const response = await api.put("/conta", {
+        nome: editedData.nome,
+        telefone: editedData.telefone,
+      });
 
-      const updatedUser = response.data.user || response.data.usuario || response.data;
+      const updatedUser = response.data.usuario || response.data;
       setUserData(updatedUser);
       setEditName(false);
       showMessage("Perfil atualizado com sucesso!", "success");
@@ -133,9 +131,7 @@ export default function Profile() {
     }
 
     try {
-      const userId = user.id || user._id || user.id_usuario;
       await api.put("/conta/senha", {
-        id: userId,
         current_password: currentPassword,
         new_password: newPassword,
       });
@@ -191,6 +187,30 @@ export default function Profile() {
   };
 
   const formatCurrency = (value) => `R$ ${(Number(value) || 0).toFixed(2).replace(".", ",")}`;
+
+  const statusLabel = (status) => {
+    const labels = {
+      pendente: "Pendente",
+      confirmado: "Confirmado",
+      em_separacao: "Em Separação",
+      enviado: "Enviado",
+      finalizado: "Finalizado",
+      cancelado: "Cancelado",
+    };
+    return labels[status] || status;
+  };
+
+  const statusColor = (status) => {
+    const colors = {
+      pendente: "#f57c00",
+      confirmado: "#1976d2",
+      em_separacao: "#7b1fa2",
+      enviado: "#0288d1",
+      finalizado: "#2e7d32",
+      cancelado: "#d32f2f",
+    };
+    return colors[status] || "#666";
+  };
 
   if (loading) return <PageLoader />;
   if (!userData) return null;
@@ -317,24 +337,44 @@ export default function Profile() {
                       <div className={styles.pedidoStatus}>
                         <p><strong>Pedido #{pedido.id_pedido || pedido._id}</strong></p>
                         <p>Data: {new Date(pedido.data_pedido || pedido.createdAt).toLocaleDateString("pt-BR")}</p>
-                        <p>Status: <strong className={pedido.status === 'Entregue' ? styles.statusSuccess : styles.statusWarning}>{pedido.status}</strong></p>
+                        <p>Status: <strong style={{ color: statusColor(pedido.status) }}>{statusLabel(pedido.status)}</strong></p>
+                        {pedido.codigo_cupom && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Cupom: {pedido.codigo_cupom}</p>
+                        )}
                       </div>
+
                       <div className={styles.pedidoProductsContainer}>
                         {pedido.pedidoProdutos?.map((pp, i) => {
-                          const imgUrl = pp.produto?.imagem ? (pp.produto.imagem.startsWith('http') ? pp.produto.imagem : `http://localhost:5000${pp.produto.imagem}`) : null;
+                          const imgUrl = pp.produto?.fotos?.[0]?.url
+                            ? resolveImageUrl(pp.produto.fotos[0].url)
+                            : pp.produto?.imagem
+                              ? (pp.produto.imagem.startsWith('http') ? pp.produto.imagem : resolveImageUrl(pp.produto.imagem))
+                              : null;
                           return (
                             <div key={i} className={styles.pedidoProductItem}>
-                              {imgUrl ? <img src={imgUrl} alt={pp.produto?.nome} className={styles.pedidoImageContainer} /> : <div className={styles.pedidoImagemPlaceholder}>Sem Imagem</div>}
+                              {imgUrl ? <img src={imgUrl} alt={pp.produto?.nome_produto} className={styles.pedidoImageContainer} /> : <div className={styles.pedidoImagemPlaceholder}>Sem Imagem</div>}
                               <div className={styles.pedidoProductDetails}>
                                 <p><strong>{pp.produto?.nome_produto || "Produto"}</strong></p>
-                                <p>Qtd: {pp.quantidade || 1} {pp.tamanho && `| Tam: ${pp.tamanho}`}</p>
-                                <p>Total: {formatCurrency((parseFloat(pp.produto?.preco) || 0) * (pp.quantidade || 1))}</p>
+                                <p>Qtd: {pp.quantidade || 1} {pp.sku_variacao && `| SKU: ${pp.sku_variacao}`}</p>
+                                <p>{formatCurrency(pp.preco_unitario)} × {pp.quantidade || 1} = {formatCurrency(Number(pp.preco_unitario) * (pp.quantidade || 1))}</p>
                               </div>
                             </div>
                           );
                         })}
                       </div>
+
                       <div className={styles.pedidoTotalContainer}>
+                        {pedido.subtotal != null && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Subtotal: {formatCurrency(pedido.subtotal)}</p>
+                        )}
+                        {pedido.desconto != null && Number(pedido.desconto) > 0 && (
+                          <p style={{ fontSize: "0.85rem", color: "#2e7d32" }}>Desconto: -{formatCurrency(pedido.desconto)}</p>
+                        )}
+                        {pedido.frete != null && (
+                          <p style={{ fontSize: "0.85rem", color: "#666" }}>
+                            Frete: {Number(pedido.frete) > 0 ? formatCurrency(pedido.frete) : "Grátis"}
+                          </p>
+                        )}
                         <strong>Total: {formatCurrency(parseFloat(pedido.total || 0))}</strong>
                       </div>
                     </div>
