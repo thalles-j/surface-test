@@ -85,13 +85,14 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const orderId = parseInt(id);
 
     if (!getAllStatuses().includes(status)) {
       return erro(res, `Status inválido. Valores permitidos: ${getAllStatuses().join(', ')}`);
     }
 
     const currentOrder = await prisma.pedidos.findUnique({
-      where: { id_pedido: parseInt(id) },
+      where: { id_pedido: orderId },
     });
 
     if (!currentOrder) {
@@ -102,12 +103,42 @@ export const updateOrderStatus = async (req, res) => {
       return erro(res, `Transição de status inválida: "${currentOrder.status}" → "${status}".`);
     }
 
-    const order = await prisma.pedidos.update({
-      where: { id_pedido: parseInt(id) },
-      data: { status },
+    const [order] = await prisma.$transaction([
+      prisma.pedidos.update({
+        where: { id_pedido: orderId },
+        data: { status },
+      }),
+      prisma.historico_pedidos.create({
+        data: {
+          id_pedido: orderId,
+          tipo: 'status_change',
+          descricao: `Status alterado de "${currentOrder.status}" para "${status}"`,
+          status_de: currentOrder.status,
+          status_para: status,
+          autor: req.user?.email || 'admin',
+        },
+      }),
+    ]);
+
+    const historico = await prisma.historico_pedidos.findMany({
+      where: { id_pedido: orderId },
+      orderBy: { criado_em: 'desc' },
     });
 
-    return sucesso(res, { mensagem: 'Status atualizado', pedido: order });
+    return sucesso(res, { mensagem: 'Status atualizado', pedido: order, historico });
+  } catch (error) {
+    return erro(res, error.message, 500);
+  }
+};
+
+export const getOrderHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const historico = await prisma.historico_pedidos.findMany({
+      where: { id_pedido: parseInt(id) },
+      orderBy: { criado_em: 'desc' },
+    });
+    return res.json(historico);
   } catch (error) {
     return erro(res, error.message, 500);
   }
@@ -119,21 +150,41 @@ export const bulkUpdateOrderStatus = async (req, res) => {
     if (!Array.isArray(ids) || ids.length === 0) return erro(res, 'IDs são obrigatórios');
     if (!getAllStatuses().includes(status)) return erro(res, `Status inválido. Use: ${getAllStatuses().join(', ')}`);
 
+    const numericIds = ids.map(Number);
     const orders = await prisma.pedidos.findMany({
-      where: { id_pedido: { in: ids.map(Number) } },
+      where: { id_pedido: { in: numericIds } },
     });
 
-    let updated = 0;
+    const operations = [];
     let skipped = 0;
+
     for (const order of orders) {
       if (isValidTransition(order.status, status)) {
-        await prisma.pedidos.update({ where: { id_pedido: order.id_pedido }, data: { status } });
-        updated++;
+        operations.push(
+          prisma.pedidos.update({ where: { id_pedido: order.id_pedido }, data: { status } })
+        );
+        operations.push(
+          prisma.historico_pedidos.create({
+            data: {
+              id_pedido: order.id_pedido,
+              tipo: 'status_change',
+              descricao: `Status alterado de "${order.status}" para "${status}" (bulk)`,
+              status_de: order.status,
+              status_para: status,
+              autor: req.user?.email || 'admin',
+            },
+          })
+        );
       } else {
         skipped++;
       }
     }
 
+    if (operations.length > 0) {
+      await prisma.$transaction(operations);
+    }
+
+    const updated = orders.length - skipped;
     return sucesso(res, { mensagem: `${updated} pedidos atualizados, ${skipped} ignorados (transição inválida)`, updated, skipped });
   } catch (error) {
     return erro(res, error.message, 500);

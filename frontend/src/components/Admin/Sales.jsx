@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, ChevronDown, ChevronUp, Filter, Loader2 } from 'lucide-react';
+import { Search, Eye, ChevronDown, ChevronUp, ChevronRight, Filter, Loader2, Clock } from 'lucide-react';
 import Modal from '../Modal';
 import Pagination from './Pagination';
 import { api } from '../../services/api';
@@ -21,6 +21,24 @@ const STATUS_COLORS = {
   enviado: 'bg-indigo-950 text-indigo-400',
   finalizado: 'bg-emerald-950 text-emerald-400',
   cancelado: 'bg-red-950 text-red-400',
+};
+
+const STATUS_DOT = {
+  pendente: 'bg-yellow-400',
+  confirmado: 'bg-blue-400',
+  em_separacao: 'bg-purple-400',
+  enviado: 'bg-indigo-400',
+  finalizado: 'bg-emerald-400',
+  cancelado: 'bg-red-400',
+};
+
+const TRANSITIONS = {
+  pendente: ['confirmado', 'cancelado'],
+  confirmado: ['em_separacao', 'cancelado'],
+  em_separacao: ['enviado', 'cancelado'],
+  enviado: ['finalizado'],
+  finalizado: [],
+  cancelado: [],
 };
 
 const PAGE_SIZE = 15;
@@ -45,6 +63,8 @@ export default function Sales() {
   const [stats, setStats] = useState({ totalRevenue: 0, ordersCount: 0, ticketMedio: 0, finalizados: 0 });
 
   const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearch(searchTerm); setPage(1); }, 400);
@@ -85,20 +105,24 @@ export default function Sales() {
       if (endDate) params.set('endDate', endDate);
 
       const res = await api.get(`/admin/sales?${params}`);
-      if (res.data?.data) {
-        setOrders(res.data.data.map(mapOrder));
-        setTotalOrders(res.data.total);
-        setTotalPages(res.data.totalPages);
-        if (res.data.aggregates) {
-          setStats({
-            totalRevenue: res.data.aggregates.totalRevenue || 0,
-            ordersCount: res.data.total || 0,
-            ticketMedio: res.data.aggregates.avgTicket || 0,
-            finalizados: res.data.aggregates.finalizados || 0,
-          });
-        }
+      const body = res.data;
+      if (body?.data) {
+        setOrders(body.data.map(mapOrder));
+        setTotalOrders(body.total || 0);
+        setTotalPages(body.totalPages || 1);
+
+        // Always set stats — use aggregates when present, fallback to total count
+        const agg = body.aggregates || {};
+        setStats({
+          totalRevenue: Number(agg.totalRevenue) || 0,
+          ordersCount: body.total || 0,
+          ticketMedio: Number(agg.avgTicket) || 0,
+          finalizados: Number(agg.finalizados) || 0,
+        });
       } else {
-        setOrders((res.data || []).map(mapOrder));
+        // Unpaginated fallback
+        const list = Array.isArray(body) ? body : [];
+        setOrders(list.map(mapOrder));
       }
     } catch (err) {
       toast.error('Erro ao carregar pedidos');
@@ -120,8 +144,44 @@ export default function Sales() {
     setPage(1);
   }, []);
 
-  const openOrderModal = useCallback((order) => setOrderModal({ isOpen: true, order }), []);
-  const closeOrderModal = useCallback(() => setOrderModal({ isOpen: false, order: null }), []);
+  const openOrderModal = useCallback(async (order) => {
+    setOrderModal({ isOpen: true, order });
+    try {
+      const res = await api.get(`/admin/orders/${order.rawId}/history`);
+      setOrderHistory(res.data || []);
+    } catch {
+      setOrderHistory([]);
+    }
+  }, []);
+  const closeOrderModal = useCallback(() => {
+    setOrderModal({ isOpen: false, order: null });
+    setOrderHistory([]);
+  }, []);
+
+  const handleStatusChange = useCallback(async (newStatus) => {
+    const order = orderModal.order;
+    if (!order) return;
+    setStatusSaving(true);
+    try {
+      const res = await api.patch(`/admin/orders/${order.rawId}/status`, { status: newStatus });
+      const data = res.data?.dados || res.data;
+      toast.success(data?.mensagem || 'Status atualizado');
+      const updatedOrder = { ...order, status: newStatus };
+      setOrderModal(prev => ({ ...prev, order: updatedOrder }));
+      setOrders(prev => prev.map(o => o.rawId === order.rawId ? { ...o, status: newStatus } : o));
+      if (data?.historico) {
+        setOrderHistory(data.historico);
+      } else {
+        const hRes = await api.get(`/admin/orders/${order.rawId}/history`);
+        setOrderHistory(hRes.data || []);
+      }
+      loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.mensagem || 'Erro ao atualizar status');
+    } finally {
+      setStatusSaving(false);
+    }
+  }, [orderModal.order, toast, loadOrders]);
 
   const toggleSort = useCallback(() => {
     setSortByValue(prev => prev === null ? 'desc' : prev === 'desc' ? 'asc' : null);
@@ -226,25 +286,55 @@ export default function Sales() {
         </div>
 
         <Modal isOpen={orderModal.isOpen} onClose={closeOrderModal} title={`Detalhes do pedido ${orderModal.order?.id || ''}`} size="lg">
-          {orderModal.order && (
+          {orderModal.order && (() => {
+            const order = orderModal.order;
+            const nextStatuses = TRANSITIONS[order.status] || [];
+            return (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div><p className="text-xs text-zinc-500 font-bold uppercase">Cliente</p><p className="text-sm font-bold text-white">{orderModal.order.client}</p></div>
-                <div><p className="text-xs text-zinc-500 font-bold uppercase">Email</p><p className="text-sm text-zinc-300">{orderModal.order.email}</p></div>
-                {orderModal.order.phone && <div><p className="text-xs text-zinc-500 font-bold uppercase">Telefone</p><p className="text-sm text-zinc-300">{orderModal.order.phone}</p></div>}
-                <div><p className="text-xs text-zinc-500 font-bold uppercase">Status</p><span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[orderModal.order.status]}`}>{STATUS_LABELS[orderModal.order.status]}</span></div>
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Cliente</p><p className="text-sm font-bold text-white">{order.client}</p></div>
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Email</p><p className="text-sm text-zinc-300">{order.email}</p></div>
+                {order.phone && <div><p className="text-xs text-zinc-500 font-bold uppercase">Telefone</p><p className="text-sm text-zinc-300">{order.phone}</p></div>}
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Status</p><span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[order.status]}`}>{STATUS_LABELS[order.status]}</span></div>
               </div>
-              {orderModal.order.address && (
+
+              {nextStatuses.length > 0 && (
+                <div className="border-t border-zinc-800 pt-4">
+                  <p className="text-xs text-zinc-500 font-bold uppercase mb-3">Atualizar Status</p>
+                  <div className="flex flex-wrap gap-2">
+                    {nextStatuses.map(ns => (
+                      <button key={ns} onClick={() => handleStatusChange(ns)} disabled={statusSaving}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50
+                          ${ns === 'cancelado'
+                            ? 'border border-red-800 text-red-400 hover:bg-red-950'
+                            : 'bg-white text-black hover:bg-zinc-200'}`}>
+                        {statusSaving && <Loader2 size={14} className="animate-spin" />}
+                        <span>{STATUS_LABELS[order.status]}</span>
+                        <ChevronRight size={14} />
+                        <span>{STATUS_LABELS[ns]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {nextStatuses.length === 0 && (
+                <div className="border-t border-zinc-800 pt-4">
+                  <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Status Final</p>
+                  <p className="text-sm text-zinc-400">Este pedido está em estado terminal e não pode mais ser alterado.</p>
+                </div>
+              )}
+
+              {order.address && (
                 <div className="border-t border-zinc-800 pt-4">
                   <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Endereço</p>
-                  <p className="text-sm text-zinc-300">{orderModal.order.address.logradouro}, {orderModal.order.address.numero}{orderModal.order.address.complemento ? ` - ${orderModal.order.address.complemento}` : ''}</p>
-                  <p className="text-sm text-zinc-500">{orderModal.order.address.cidade} - {orderModal.order.address.estado}, CEP: {orderModal.order.address.cep}</p>
+                  <p className="text-sm text-zinc-300">{order.address.logradouro}, {order.address.numero}{order.address.complemento ? ` - ${order.address.complemento}` : ''}</p>
+                  <p className="text-sm text-zinc-500">{order.address.cidade} - {order.address.estado}, CEP: {order.address.cep}</p>
                 </div>
               )}
               <div className="border-t border-zinc-800 pt-4">
                 <p className="text-xs text-zinc-500 font-bold uppercase mb-3">Itens</p>
                 <div className="space-y-2">
-                  {orderModal.order.items.map((item, idx) => (
+                  {order.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
                       <div><p className="text-sm font-bold text-white">{item.name}</p>{item.size && <p className="text-xs text-zinc-500">Tam: {item.size}</p>}</div>
                       <div className="text-right"><p className="text-sm font-bold text-white">R$ {(item.price * item.qty).toFixed(2)}</p><p className="text-xs text-zinc-500">{item.qty}x R$ {item.price.toFixed(2)}</p></div>
@@ -253,14 +343,39 @@ export default function Sales() {
                 </div>
               </div>
               <div className="border-t border-zinc-800 pt-4 space-y-1">
-                <div className="flex justify-between text-sm"><span className="text-zinc-500">Subtotal</span><span className="text-zinc-300">R$ {orderModal.order.subtotal.toFixed(2)}</span></div>
-                {orderModal.order.desconto > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Desconto</span><span className="text-emerald-400">-R$ {orderModal.order.desconto.toFixed(2)}</span></div>}
-                {orderModal.order.frete > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Frete</span><span className="text-zinc-300">R$ {orderModal.order.frete.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-sm font-bold pt-2 border-t border-zinc-800"><span className="text-white">Total</span><span className="text-white">R$ {orderModal.order.total.toFixed(2)}</span></div>
-                {orderModal.order.metodo_pagamento && <p className="text-xs text-zinc-500 pt-1">Pagamento: {orderModal.order.metodo_pagamento}</p>}
+                <div className="flex justify-between text-sm"><span className="text-zinc-500">Subtotal</span><span className="text-zinc-300">R$ {order.subtotal.toFixed(2)}</span></div>
+                {order.desconto > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Desconto</span><span className="text-emerald-400">-R$ {order.desconto.toFixed(2)}</span></div>}
+                {order.frete > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Frete</span><span className="text-zinc-300">R$ {order.frete.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-sm font-bold pt-2 border-t border-zinc-800"><span className="text-white">Total</span><span className="text-white">R$ {order.total.toFixed(2)}</span></div>
+                {order.metodo_pagamento && <p className="text-xs text-zinc-500 pt-1">Pagamento: {order.metodo_pagamento}</p>}
               </div>
+
+              {orderHistory.length > 0 && (
+                <div className="border-t border-zinc-800 pt-4">
+                  <p className="text-xs text-zinc-500 font-bold uppercase mb-3 flex items-center gap-2"><Clock size={14} /> Histórico</p>
+                  <div className="space-y-0">
+                    {orderHistory.map((h, i) => (
+                      <div key={h.id_historico} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${STATUS_DOT[h.status_para] || 'bg-zinc-500'}`} />
+                          {i < orderHistory.length - 1 && <div className="w-px flex-1 bg-zinc-800 my-1" />}
+                        </div>
+                        <div className="pb-4">
+                          <div className="flex items-center gap-2">
+                            {h.status_de && <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_COLORS[h.status_de] || 'bg-zinc-800 text-zinc-400'}`}>{STATUS_LABELS[h.status_de] || h.status_de}</span>}
+                            {h.status_de && h.status_para && <ChevronRight size={12} className="text-zinc-600" />}
+                            {h.status_para && <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${STATUS_COLORS[h.status_para] || 'bg-zinc-800 text-zinc-400'}`}>{STATUS_LABELS[h.status_para] || h.status_para}</span>}
+                          </div>
+                          <p className="text-[11px] text-zinc-500 mt-1">{h.autor} · {new Date(h.criado_em).toLocaleString('pt-BR')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+            );
+          })()}
         </Modal>
 
         {!loading && orders.length === 0 && (

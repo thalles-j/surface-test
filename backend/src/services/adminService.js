@@ -1,6 +1,6 @@
 // Barrel file: re-exports all admin services from focused sub-modules
 export { getDashboardStats, getRevenueData, getTopProducts } from './admin/dashboardService.js';
-export { getSalesData, getSalesByPeriod, updateOrderStatus, bulkUpdateOrderStatus } from './admin/salesService.js';
+export { getSalesData, getSalesByPeriod, updateOrderStatus, bulkUpdateOrderStatus, getOrderHistory } from './admin/salesService.js';
 export { getAnalyticsOverview, getConversionFunnel, getChannelData, hitVisit, getVisits, getCategorySales, getRecentOrders } from './admin/analyticsService.js';
 export { getInventoryStatus, getLowStockProducts, updateProductInventory, createStockMovement, getStockMovements } from './admin/inventoryService.js';
 export { getAllCustomers, getCustomerDetails, getCustomerClassification } from './admin/customerService.js';

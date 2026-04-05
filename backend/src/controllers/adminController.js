@@ -6,9 +6,12 @@ import {
   getSalesByPeriod,
   updateOrderStatus,
   bulkUpdateOrderStatus,
+  getOrderHistory,
   getAnalyticsOverview,
   getConversionFunnel,
   getChannelData,
+  getCategorySales,
+  getRecentOrders,
   getInventoryStatus,
   getLowStockProducts,
   updateProductInventory,
@@ -49,8 +52,6 @@ import {
   getActivityLogs
 } from '../services/adminService.js';
 
-import { getCategorySales, getRecentOrders } from '../services/admin/analyticsService.js';
-
 export default {
   getDashboardStats,
   getRevenueData,
@@ -59,9 +60,12 @@ export default {
   getSalesByPeriod,
   updateOrderStatus,
   bulkUpdateOrderStatus,
+  getOrderHistory,
   getAnalyticsOverview,
   getConversionFunnel,
   getChannelData,
+  getCategorySales,
+  getRecentOrders,
   getInventoryStatus,
   getLowStockProducts,
   updateProductInventory,
@@ -100,6 +104,4 @@ export default {
   updateAdminUser,
   deleteAdminUser,
   getActivityLogs,
-  getCategorySales,
-  getRecentOrders,
 };

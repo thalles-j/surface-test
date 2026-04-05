@@ -20,8 +20,9 @@ router.use(authMiddleware);
 // ===== SALES / ORDERS =====
 router.get('/sales', adminController.getSalesData);
 router.get('/sales/by-period', adminController.getSalesByPeriod);
-router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
+router.patch('/orders/:id/status', adminController.updateOrderStatus);
+router.get('/orders/:id/history', adminController.getOrderHistory);
 
 // ===== ANALYTICS =====
 router.get('/analytics/overview', adminController.getAnalyticsOverview);
