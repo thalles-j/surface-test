@@ -21,20 +21,21 @@ export const authMiddleware = (req, res, next) => {
 
         if (!token) throw new ErroSemToken();
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
-            if (err) {
-                if (err.name === "TokenExpiredError") throw new ErroTokenExpirado();
-                throw new ErroTokenInvalido();
-            }
+        let payload;
+        try {
+            payload = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            if (err.name === "TokenExpiredError") throw new ErroTokenExpirado();
+            throw new ErroTokenInvalido();
+        }
 
-            req.user = {
-                id: payload.id,
-                email: payload.email,
-                id_role: payload.id_role,
-            };
+        req.user = {
+            id: payload.id,
+            email: payload.email,
+            id_role: payload.id_role,
+        };
 
-            next();
-        });
+        next();
     } catch (error) {
         if (error.status) return error.enviarResposta(res);
         return res.status(500).json({ message: "Erro interno do servidor." });

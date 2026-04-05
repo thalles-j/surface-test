@@ -1,5 +1,5 @@
 import prisma from "../database/prisma.js";
-import * as crudService from "./crudService.js";
+import * as crudService from "./crudServices.js";
 
 // Campos que precisam de hash
 const hashFields = ["senha"];
@@ -9,7 +9,7 @@ export const createUser = async (data) => {
 };
 
 export const listUser = async () => {
-  return crudService.listEntities(prisma.usuarios, {
+  return crudService.getAllEntities(prisma.usuarios, {
     role: true,
     enderecos: true,
     pedidos: true

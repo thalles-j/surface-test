@@ -5,12 +5,15 @@ import {
   getSalesData,
   getSalesByPeriod,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
   getAnalyticsOverview,
   getConversionFunnel,
   getChannelData,
   getInventoryStatus,
   getLowStockProducts,
   updateProductInventory,
+  createStockMovement,
+  getStockMovements,
   getAllCustomers,
   getCustomerDetails,
   getCustomerClassification,
@@ -19,6 +22,7 @@ import {
   updateCollection,
   deleteCollection,
   toggleCollectionLock,
+  bulkUpdateCollectionStatus,
   getCategories,
   createCategory,
   updateCategory,
@@ -30,6 +34,7 @@ import {
   createCampaign,
   getStoreSettings,
   updateStoreSettings,
+  toggleStoreStatus,
   getCustomizationSettings,
   updateCustomization,
   uploadBanner,
@@ -44,6 +49,8 @@ import {
   getActivityLogs
 } from '../services/adminService.js';
 
+import { getCategorySales, getRecentOrders } from '../services/admin/analyticsService.js';
+
 export default {
   getDashboardStats,
   getRevenueData,
@@ -51,12 +58,15 @@ export default {
   getSalesData,
   getSalesByPeriod,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
   getAnalyticsOverview,
   getConversionFunnel,
   getChannelData,
   getInventoryStatus,
   getLowStockProducts,
   updateProductInventory,
+  createStockMovement,
+  getStockMovements,
   getAllCustomers,
   getCustomerDetails,
   getCustomerClassification,
@@ -65,6 +75,7 @@ export default {
   updateCollection,
   deleteCollection,
   toggleCollectionLock,
+  bulkUpdateCollectionStatus,
   getCategories,
   createCategory,
   updateCategory,
@@ -76,6 +87,7 @@ export default {
   createCampaign,
   getStoreSettings,
   updateStoreSettings,
+  toggleStoreStatus,
   getCustomizationSettings,
   updateCustomization,
   uploadBanner,
@@ -87,5 +99,7 @@ export default {
   createAdminUser,
   updateAdminUser,
   deleteAdminUser,
-  getActivityLogs
+  getActivityLogs,
+  getCategorySales,
+  getRecentOrders,
 };

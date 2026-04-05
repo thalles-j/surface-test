@@ -21,15 +21,20 @@ router.use(authMiddleware);
 router.get('/sales', adminController.getSalesData);
 router.get('/sales/by-period', adminController.getSalesByPeriod);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
+router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
 
 // ===== ANALYTICS =====
 router.get('/analytics/overview', adminController.getAnalyticsOverview);
 router.get('/analytics/conversion-funnel', adminController.getConversionFunnel);
 router.get('/analytics/channels', adminController.getChannelData);
+router.get('/analytics/category-sales', adminController.getCategorySales);
+router.get('/analytics/recent-orders', adminController.getRecentOrders);
 
 // ===== INVENTORY =====
 router.get('/inventory/status', adminController.getInventoryStatus);
 router.get('/inventory/low-stock', adminController.getLowStockProducts);
+router.get('/inventory/movements', adminController.getStockMovements);
+router.post('/inventory/movements', adminController.createStockMovement);
 router.patch('/inventory/:productId', adminController.updateProductInventory);
 
 // ===== CUSTOMERS =====
@@ -43,6 +48,7 @@ router.post('/collections', adminController.createCollection);
 router.patch('/collections/:id', adminController.updateCollection);
 router.delete('/collections/:id', adminController.deleteCollection);
 router.patch('/collections/:id/lock', adminController.toggleCollectionLock);
+router.patch('/collections/bulk-status', adminController.bulkUpdateCollectionStatus);
 // add/remove products in a collection
 router.post('/collections/:id/products', adminController.addProductsToCollection);
 router.delete('/collections/:id/products/:productId', adminController.removeProductFromCollection);
@@ -63,6 +69,7 @@ router.post('/marketing/campaigns', adminController.createCampaign);
 // ===== STORE SETTINGS =====
 router.get('/settings', adminController.getStoreSettings);
 router.patch('/settings', adminController.updateStoreSettings);
+router.patch('/settings/toggle-store', adminController.toggleStoreStatus);
 
 // ===== CUSTOMIZATION =====
 router.get('/customization', adminController.getCustomizationSettings);
