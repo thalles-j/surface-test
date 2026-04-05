@@ -26,7 +26,7 @@ export default function Footer() {
     }, [isTermsOpen]);
 
     return (
-        <footer className="bg-black text-white px-6 md:px-16 py-20 mt-20">
+        <footer className="bg-black text-white px-6 md:px-16 py-20 ">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 max-w-7xl mx-auto">
 
                 {/* Newsletter Section */}
@@ -104,11 +104,16 @@ export default function Footer() {
                     {/* Popover Menu (Exatamente como na imagem) */}
                     <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-64 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-8 transition-all duration-300 origin-bottom ${isTermsOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
                         <ul className="flex flex-col gap-5 text-left">
-                            {['Política de Privacidade', 'Trocas e Devoluções', 'Contato', 'Termos de Uso'].map((item, i) => (
+                            {[
+                                { label: 'Política de Privacidade', to: '/privacidade' },
+                                { label: 'Trocas e Devoluções', to: '/trocas-devolucoes' },
+                                { label: 'Contato', to: '/atendimento' },
+                                { label: 'Termos de Uso', to: '/termos-de-uso' }
+                            ].map((item, i) => (
                                 <li key={i}>
-                                    <a href="#" className="text-[11px] font-black uppercase tracking-tight text-black hover:opacity-40 transition-opacity">
-                                        {item}
-                                    </a>
+                                    <Link to={item.to} onClick={() => setIsTermsOpen(false)} className="text-[11px] font-black uppercase tracking-tight text-black hover:opacity-40 transition-opacity">
+                                        {item.label}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>

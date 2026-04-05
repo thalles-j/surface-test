@@ -6,7 +6,7 @@
 }
 
 .header, header {
-  z-index: 998;
+  z-index: 997;
   background-color: var(--header-bg);
   color: var(--header-color);
   visibility: visible;

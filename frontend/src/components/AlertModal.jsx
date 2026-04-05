@@ -23,7 +23,7 @@ const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabe
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
 
       <div className="relative bg-white w-full max-w-sm p-10 border border-gray-200 shadow-2xl animate-in zoom-in-95 duration-200">
