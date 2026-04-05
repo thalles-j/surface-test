@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './style.module.css';
-import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
+import { resolveImageUrl, handleImgError } from '../../../../utils/resolveImageUrl';
 
 // Card com hover para trocar para a segunda imagem (mesmo comportamento da página Shop)
 function RelatedProductCard({ produto, createSlug }) {
@@ -42,6 +42,7 @@ function RelatedProductCard({ produto, createSlug }) {
             alt={produto.nome_produto}
             className={styles.produtoImage}
             style={{ transition: 'opacity 0.2s ease-in-out' }}
+            onError={handleImgError}
           />
         ) : (
           <div className={styles.produtoPlaceholder}>Sem imagem</div>

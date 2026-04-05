@@ -1,5 +1,6 @@
 import React from 'react';
-import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X, ExternalLink } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -15,6 +16,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
 );
 
 export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClose = () => {} }) {
+  const navigate = useNavigate();
   const menuGroups = [
     {
       title: 'PRINCIPAL',
@@ -82,6 +84,13 @@ export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClo
           </div>
 
           <div className="mt-auto p-6 border-t border-gray-50">
+            <button
+              onClick={() => { onClose(); navigate('/'); }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-4 text-gray-600 hover:bg-gray-100 transition-all duration-200"
+            >
+              <ExternalLink size={18} />
+              Ver Loja
+            </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full" />
               <div className="flex-1">
@@ -131,6 +140,13 @@ export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClo
 
       {/* FOOTER */}
       <div className="mt-auto p-8 border-t border-gray-50">
+        <button
+          onClick={() => navigate('/')}
+          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-4 text-gray-600 hover:bg-gray-100 transition-all duration-200"
+        >
+          <ExternalLink size={18} />
+          Ver Loja
+        </button>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full"></div>
           <div className="flex-1">

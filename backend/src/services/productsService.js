@@ -1,5 +1,5 @@
 import prisma from "../database/prisma.js";
-import * as crudService from "./crudService.js";
+import * as crudService from "./crudServices.js";
 
 // Criar produto com validação de categoria
 export const createProduct = async (data) => {
@@ -13,7 +13,7 @@ export const createProduct = async (data) => {
 };
 
 export const listProducts = async () => {
-  return crudService.listEntities(prisma.produtos, { categoria: true });
+  return crudService.getAllEntities(prisma.produtos, { categoria: true });
 };
 
 export const getProductById = async (id) => {

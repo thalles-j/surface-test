@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import styles from "./style.module.css";
 import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
 import { useCart } from "../../context/CartContext";
 import { FaCartPlus } from "react-icons/fa";
-import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { resolveImageUrl, handleImgError } from "../../utils/resolveImageUrl";
 import { api } from "../../services/api";
 
 const categoryMap = {
@@ -31,14 +31,11 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
-  // Ordena as fotos para que a "front" seja a primeira
+  // Ordena as fotos: principal primeiro, depois por id
   const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
+      if (a.principal && !b.principal) return -1;
+      if (!a.principal && b.principal) return 1;
+      return (a.id_foto || 0) - (b.id_foto || 0);
   }) : [];
 
   // Pega a primeira e a segunda imagem (se existir)
@@ -63,7 +60,8 @@ const ProductCard = ({ produto }) => {
               src={imagemAtual}
               alt={produto.nome_produto}
               className={styles.produtoImage}
-              style={{ transition: 'opacity 0.2s ease-in-out' }} 
+              style={{ transition: 'opacity 0.2s ease-in-out' }}
+              onError={handleImgError}
             />
           ) : (
             <div className={styles.produtoPlaceholder}>
@@ -100,20 +98,30 @@ const ProductCard = ({ produto }) => {
 // ---------------------------------------------------------
 
 export default function Shop() {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
   const [loading, setLoading] = useState(true);
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
+  const [maintenance, setMaintenance] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    api.get('/products')
+    const params = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
+    api.get(`/products${params}`)
       .then(res => setRawProdutos(res.data || []))
-      .catch((err) => console.error("Erro ao carregar produtos:", err))
+      .catch((err) => {
+        if (err.response?.status === 503 && err.response?.data?.manutencao) {
+          setMaintenance(true);
+        } else {
+          console.error("Erro ao carregar produtos:", err);
+        }
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchQuery]);
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -176,6 +184,18 @@ export default function Shop() {
 
   if (loading) {
     return <PageLoader />;
+  }
+
+  if (maintenance) {
+    return (
+      <section className={styles.shop_section}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="text-6xl mb-6">🔧</div>
+          <h1 className="text-3xl font-bold mb-3">Estamos em Manutenção</h1>
+          <p className="text-gray-500 max-w-md">A loja está temporariamente indisponível. Estamos trabalhando para voltar o mais rápido possível.</p>
+        </div>
+      </section>
+    );
   }
 
   return (

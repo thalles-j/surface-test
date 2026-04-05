@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LogOut } from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
 
 // Import Components
 import Sidebar from '../../components/Admin/Sidebar';
@@ -17,16 +18,19 @@ import AdminPanel from '../../components/Admin/AdminPanel';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [user, setUser] = useState({ name: 'Admin Surface', email: 'admin@surface.co' });
+  const { user, logout } = useAuth();
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
+
+  const displayName = user?.nome || 'Admin';
+  const displayEmail = user?.email || '';
 
   const openCollectionsAndCreate = () => {
     setActiveTab('collections');
     setOpenCollectionsCreate(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    await logout();
     window.location.href = '/entrar';
   };
 
@@ -93,8 +97,8 @@ export default function AdminPage() {
             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-gray-100">
               <div className="w-8 h-8 rounded-full bg-gray-300"></div>
               <div>
-                <p className="text-xs font-bold">{user.name}</p>
-                <p className="text-[11px] text-gray-400">{user.email}</p>
+                <p className="text-xs font-bold">{displayName}</p>
+                <p className="text-[11px] text-gray-400">{displayEmail}</p>
               </div>
               <button
                 onClick={handleLogout}

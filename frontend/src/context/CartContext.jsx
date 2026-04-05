@@ -1,7 +1,9 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 import AlertModal from "../components/AlertModal";
+import { api } from "../services/api";
+import { buildWhatsAppCheckoutUrl } from "../utils/whatsapp";
 
 export const CartContext = createContext({});
 
@@ -92,6 +94,68 @@ export function CartProvider({ children }) {
 
   const cartTotal = cartItems.reduce((total, item) => total + Number(item.preco) * item.quantity, 0);
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const createOrder = useCallback(async (codigoCupom = null) => {
+    if (cartItems.length === 0) {
+      showAlertModal({ title: 'Carrinho vazio', message: 'Adicione itens ao carrinho antes de finalizar.', type: 'info' });
+      return null;
+    }
+    if (!user) {
+      showAlertModal({
+        title: 'Login necessário',
+        message: 'Faça login para finalizar a compra.',
+        type: 'auth',
+        actionLabel: 'Entrar',
+        actionCallback: () => navigate('/entrar'),
+      });
+      return null;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const items = cartItems.map((item) => ({
+        id_produto: item.id_produto,
+        selectedSize: item.selectedSize,
+        sku_variacao: item.sku_variacao || null,
+        quantity: item.quantity,
+      }));
+
+      const { data: order } = await api.post('/orders', { items, codigo_cupom: codigoCupom });
+
+      // Build WhatsApp URL with full financial breakdown
+      const whatsappUrl = buildWhatsAppCheckoutUrl({
+        customerName: user.nome,
+        items: cartItems,
+        total: Number(order.total),
+        orderId: order.id_pedido,
+        subtotal: order.subtotal != null ? Number(order.subtotal) : null,
+        desconto: order.desconto != null ? Number(order.desconto) : null,
+        frete: order.frete != null ? Number(order.frete) : null,
+        codigoCupom: order.codigo_cupom,
+      });
+
+      clearCart();
+      setIsCartOpen(false);
+
+      window.open(whatsappUrl, '_blank');
+
+      showAlertModal({
+        title: 'Pedido criado!',
+        message: `Pedido #${order.id_pedido} registrado com sucesso. Você será redirecionado para o WhatsApp.`,
+        type: 'info',
+      });
+
+      return order;
+    } catch (error) {
+      const msg = error.response?.data?.mensagem || error.response?.data?.erro || error.response?.data?.message || 'Erro ao criar pedido.';
+      showAlertModal({ title: 'Erro no pedido', message: msg, type: 'info' });
+      return null;
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [cartItems, user, cartTotal, navigate]);
+
   return (
     <CartContext.Provider
       value={{
@@ -103,6 +167,8 @@ export function CartProvider({ children }) {
         updateQuantity,
         clearCart,
         cartTotal,
+        createOrder,
+        checkoutLoading,
         showAlertModal,
         hideAlertModal,
       }}

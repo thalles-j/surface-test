@@ -29,23 +29,27 @@ export default function Analytics() {
   const [channels, setChannels] = useState([]);
   const [funnel, setFunnel] = useState(null);
   const [overview, setOverview] = useState(null);
+  const [categorySales, setCategorySales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [revenuePeriod, setRevenuePeriod] = useState(12);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        const [revRes, chanRes, funnelRes, overviewRes] = await Promise.all([
-          api.get('/admin/dashboard/revenue'),
+        const [revRes, chanRes, funnelRes, overviewRes, catRes] = await Promise.all([
+          api.get(`/admin/dashboard/revenue?months=${revenuePeriod}`),
           api.get('/admin/analytics/channels'),
           api.get('/admin/analytics/conversion-funnel'),
           api.get('/admin/analytics/overview'),
+          api.get('/admin/analytics/category-sales'),
         ]);
         if (!mounted) return;
         setMonthlyRevenue(revRes.data || []);
         setChannels(chanRes.data || []);
         setFunnel(funnelRes.data || null);
         setOverview(overviewRes.data || null);
+        setCategorySales(catRes.data || []);
       } catch (err) {
         console.error('Erro ao carregar analytics:', err);
       } finally {
@@ -54,7 +58,7 @@ export default function Analytics() {
     }
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [revenuePeriod]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -67,23 +71,31 @@ export default function Analytics() {
               <p className="text-sm text-gray-400">Comparativo de faturamento mensal</p>
             </div>
             <div className="flex gap-2">
-              <button className="text-[10px] font-bold border border-gray-200 px-3 py-1 rounded hover:bg-gray-50">6 MESES</button>
-              <button className="text-[10px] font-bold bg-black text-white px-3 py-1 rounded">12 MESES</button>
+              <button onClick={() => setRevenuePeriod(6)} className={`text-[10px] font-bold border px-3 py-1 rounded ${revenuePeriod === 6 ? 'bg-black text-white border-black' : 'border-gray-200 hover:bg-gray-50'}`}>6 MESES</button>
+              <button onClick={() => setRevenuePeriod(12)} className={`text-[10px] font-bold border px-3 py-1 rounded ${revenuePeriod === 12 ? 'bg-black text-white border-black' : 'border-gray-200 hover:bg-gray-50'}`}>12 MESES</button>
             </div>
           </div>
           {loading ? <div className="text-center py-12">Carregando...</div> : <CustomBarChart data={monthlyRevenue} />}
         </div>
 
-        {/* PIE CHART CATEGORIAS (mantém visual estático como fallback) */}
+        {/* PIE CHART CATEGORIAS (dados reais) */}
         <div className="bg-white p-8 border border-gray-100 rounded-lg">
           <h3 className="text-lg font-bold mb-6">Vendas por Categoria</h3>
           <div className="flex flex-col items-center justify-center py-4">
             <div className="relative w-40 h-40 mb-6">
               <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                 <circle cx="18" cy="18" r="16" fill="none" stroke="#f4f4f5" strokeWidth="3" />
-                <circle cx="18" cy="18" r="16" fill="none" stroke="#000" strokeWidth="3" strokeDasharray="45 100" />
-                <circle cx="18" cy="18" r="16" fill="none" stroke="#52525b" strokeWidth="3" strokeDasharray="25 100" strokeDashoffset="-45" />
-                <circle cx="18" cy="18" r="16" fill="none" stroke="#a1a1aa" strokeWidth="3" strokeDasharray="20 100" strokeDashoffset="-70" />
+                {(() => {
+                  const total = categorySales.reduce((s, c) => s + c.value, 0);
+                  const colors = ['#000', '#333', '#666', '#999', '#bbb'];
+                  let offset = 0;
+                  return categorySales.map((cat, i) => {
+                    const pct = total > 0 ? (cat.value / total) * 100 : 0;
+                    const el = <circle key={i} cx="18" cy="18" r="16" fill="none" stroke={colors[i % colors.length]} strokeWidth="3" strokeDasharray={`${pct} ${100 - pct}`} strokeDashoffset={`-${offset}`} />;
+                    offset += pct;
+                    return el;
+                  });
+                })()}
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
                 <span className="text-xl font-black">{overview ? overview.totalCustomers || '—' : '—'}</span>
@@ -91,21 +103,20 @@ export default function Analytics() {
               </div>
             </div>
             <div className="w-full space-y-2">
-              {/* Fallback categories estáticas */}
-              {[
-                { name: 'Camisetas', value: 45, color: '#000000' },
-                { name: 'Moletons', value: 25, color: '#333333' },
-                { name: 'Acessórios', value: 20, color: '#666666' },
-                { name: 'Calças', value: 10, color: '#999999' },
-              ].map((cat, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></div>
-                    <span className="text-gray-500 font-medium">{cat.name}</span>
+              {(() => {
+                const total = categorySales.reduce((s, c) => s + c.value, 0);
+                const colors = ['#000000', '#333333', '#666666', '#999999', '#bbbbbb'];
+                const cats = categorySales.length > 0 ? categorySales : [{ name: 'Sem dados', value: 0 }];
+                return cats.map((cat, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }}></div>
+                      <span className="text-gray-500 font-medium">{cat.name}</span>
+                    </div>
+                    <span className="font-bold">{total > 0 ? `${((cat.value / total) * 100).toFixed(0)}%` : '—'}</span>
                   </div>
-                  <span className="font-bold">{cat.value}%</span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
         </div>

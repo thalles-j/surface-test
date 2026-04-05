@@ -5,19 +5,16 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/thumbs';
 import styles from './style.module.css';
-import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
+import { resolveImageUrl, handleImgError } from '../../../../utils/resolveImageUrl';
 
 export default function ImageGallery({ fotos, productName }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
-  // Ordena as fotos para que a "front" seja a primeira
+  // Ordena as fotos: principal primeiro, depois por id
   const sortedFotos = fotos ? [...fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
+      if (a.principal && !b.principal) return -1;
+      if (!a.principal && b.principal) return 1;
+      return (a.id_foto || 0) - (b.id_foto || 0);
   }) : [];
 
   if (!sortedFotos || sortedFotos.length === 0) {
@@ -47,6 +44,7 @@ export default function ImageGallery({ fotos, productName }) {
                 src={resolveImageUrl(foto.url)} 
                 alt={foto.descricao || productName}
                 className={styles.thumbnailImage}
+                onError={handleImgError}
               />
             </SwiperSlide>
           ))}
@@ -71,6 +69,7 @@ export default function ImageGallery({ fotos, productName }) {
               src={resolveImageUrl(foto.url)} 
               alt={foto.descricao || productName}
               className={styles.swiperImage}
+              onError={handleImgError}
             />
           </SwiperSlide>
         ))}

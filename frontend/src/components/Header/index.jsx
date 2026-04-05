@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
-import { FaSearch, FaCheck, FaShoppingCart, FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { FaSearch, FaCheck, FaShoppingCart, FaUserCircle, FaBars, FaTimes, FaCrown } from "react-icons/fa";
 import styles from "./style.module.css";
 import { updateHeaderCSS } from "../../utils/headerTheme";
 import useAuth from "../../hooks/useAuth";
@@ -8,6 +8,7 @@ import { useCart } from "../../context/CartContext";
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const auth = useAuth(); // Hook de autenticação
   const { toggleCart, cartItems } = useCart();
   
@@ -16,19 +17,15 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // --- LÓGICA DE NAVEGAÇÃO DO USUÁRIO ---
-  // Define para onde o ícone de usuário deve levar
+  const estaLogado = auth.signed && auth.user;
+  const isAdmin = estaLogado && Number(auth.user.role) === 1;
+
   let linkDestino = "/entrar";
   let tituloLink = "Ir para login";
-  const estaLogado = auth.signed && auth.user;
 
   if (estaLogado) {
-    if (Number(auth.user.role) === 1) {
-      linkDestino = "/admin";
-      tituloLink = "Painel de Admin";
-    } else {
-      linkDestino = "/account";
-      tituloLink = "Minha Conta";
-    }
+    linkDestino = "/account";
+    tituloLink = "Minha Conta";
   }
   // ---------------------------------------
 
@@ -106,7 +103,18 @@ export default function Header() {
                   </button>
                 </li>
 
-                {/* Login / Conta / Admin (Lógica Simplificada) */}
+                {/* Admin Quick Access */}
+                {isAdmin && (
+                  <li>
+                    <Link to="/admin" title="Painel Admin">
+                      <button type="button" name="adminButton">
+                        <FaCrown />
+                      </button>
+                    </Link>
+                  </li>
+                )}
+
+                {/* Login / Conta (Lógica Simplificada) */}
                 <li>
                   <Link to={linkDestino} title={tituloLink}>
                     <button
@@ -164,7 +172,9 @@ export default function Header() {
             className={styles.searchConfirmButton}
             title="Confirmar pesquisa"
             onClick={() => {
-              console.log("Pesquisar:", searchValue);
+              if (searchValue.trim()) {
+                navigate(`/shop?search=${encodeURIComponent(searchValue.trim())}`);
+              }
               setSearchValue("");
               setSearchOpen(false);
             }}
@@ -196,6 +206,9 @@ export default function Header() {
           </ul>
 
           <ul className={styles.mobileMenuBottom}>
+            {isAdmin && (
+              <li><Link to="/admin" onClick={() => { setMenuOpen(false); }}>⚡ Painel Admin</Link></li>
+            )}
             <li><Link to="/atendimento" onClick={() => { setMenuOpen(false); updateHeaderCSS("/atendimento"); }}>Atendimento</Link></li>
           </ul>
         </nav>

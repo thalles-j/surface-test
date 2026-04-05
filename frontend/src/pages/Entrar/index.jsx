@@ -19,6 +19,7 @@ export default function Login() {
     nome: "",
     sobrenome: "",
     email: "",
+    telefone: "",
     senha: "",
     confirmarSenha: "",
   });
@@ -95,13 +96,18 @@ export default function Login() {
 
     const nomeCompleto = `${registerData.nome.trim()} ${registerData.sobrenome.trim()}`.trim();
 
+    const telefoneClean = registerData.telefone.replace(/\D/g, '');
+    if (!telefoneClean || telefoneClean.length < 10) {
+      setRegisterMsg("Informe um telefone valido com DDD (ex: 11999999999).");
+      return;
+    }
+
     try {
-      // Substituímos o fetch pelo apiRegister (que usa o Axios configurado)
       await apiRegister({
         nome: nomeCompleto,
         email: registerData.email.trim(),
         senha: registerData.senha,
-        telefone: "11999999999", // Placeholder (ajuste se tiver campo de telefone no form)
+        telefone: telefoneClean,
       });
 
       setRegisterMsg("Cadastro realizado com sucesso! Faça login.");
@@ -111,6 +117,7 @@ export default function Login() {
         nome: "",
         sobrenome: "",
         email: "",
+        telefone: "",
         senha: "",
         confirmarSenha: "",
       });
@@ -229,6 +236,19 @@ export default function Login() {
                   value={registerData.email}
                   onChange={(e) =>
                     setRegisterData({ ...registerData, email: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="register-telefone">Telefone</label>
+                <input
+                  type="tel"
+                  id="register-telefone"
+                  placeholder="(11) 99999-9999"
+                  value={registerData.telefone}
+                  onChange={(e) =>
+                    setRegisterData({ ...registerData, telefone: e.target.value })
                   }
                 />
               </div>

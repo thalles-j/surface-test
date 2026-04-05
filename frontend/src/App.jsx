@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import AppRoutes from './routes';
 import PageLoader from "./components/PageLoader";
 import { CartProvider } from './context/CartContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
 import CartDrawer from "./components/CartDrawer";
 
 // Componente que renderiza condicionalmente Header/Footer
@@ -63,8 +64,10 @@ export default function App() {
     <AuthProvider>
       <Router> 
         <CartProvider>
-          {loading && <PageLoader />}
-          <AppLayout />
+          <ToastProvider>
+            {loading && <PageLoader />}
+            <AppLayout />
+          </ToastProvider>
         </CartProvider>
       </Router>
     </AuthProvider>
