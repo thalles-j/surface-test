@@ -8,8 +8,8 @@ const router = Router();
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.resolve(process.cwd(), "uploads")),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2,8)}${ext}`;
+    // Mantém o nome original do arquivo, apenas adicionando timestamp para evitar duplicatas
+    const name = `${Date.now()}-${file.originalname}`;
     cb(null, name);
   }
 });

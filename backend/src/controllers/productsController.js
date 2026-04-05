@@ -142,7 +142,7 @@ export const updateProductController = async (req, res) => {
 
     // 4.1. Atualizar fotos existentes
     for (const foto of fotosEnviadasComId) {
-      await prisma.fotos.update({
+      await prisma.fotos_produtos.update({
         where: { id_foto: foto.id_foto },
         data: {
           url: foto.url,
@@ -153,7 +153,7 @@ export const updateProductController = async (req, res) => {
 
     // 4.2. Criar novas fotos
     for (const foto of fotosNovas) {
-      await prisma.fotos.create({
+      await prisma.fotos_produtos.create({
         data: {
           url: foto.url,
           descricao: foto.descricao,
@@ -165,7 +165,7 @@ export const updateProductController = async (req, res) => {
     // 4.3. Remover fotos que sumiram do frontend
     const idsEnviados = fotosEnviadasComId.map(f => f.id_foto);
 
-    await prisma.fotos.deleteMany({
+    await prisma.fotos_produtos.deleteMany({
       where: {
         id_produto: id,
         id_foto: {

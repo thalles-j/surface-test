@@ -1,10 +1,29 @@
 import { useEffect, useState } from "react"; // Adicionei useState
-import { BrowserRouter as Router } from 'react-router-dom'; 
+import { BrowserRouter as Router, useLocation } from 'react-router-dom'; 
 import { AuthProvider } from './context/AuthContext.jsx'; 
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import AppRoutes from './routes';
-import PageLoader from "./components/PageLoader"; 
+import PageLoader from "./components/PageLoader";
+import { CartProvider } from './context/CartContext.jsx';
+import CartDrawer from "./components/CartDrawer";
+
+// Componente que renderiza condicionalmente Header/Footer
+function AppLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  return (
+    <>
+      {!isAdmin && <Header />}
+      <CartDrawer />
+      <main>
+        <AppRoutes />
+      </main>
+      {!isAdmin && <Footer />}
+    </>
+  );
+}
 
 export default function App() {
 
@@ -43,14 +62,10 @@ export default function App() {
   return (
     <AuthProvider>
       <Router> 
-
-        {loading && <PageLoader />}
-
-        <Header />
-        <main> 
-          <AppRoutes />
-        </main>
-        <Footer />
+        <CartProvider>
+          {loading && <PageLoader />}
+          <AppLayout />
+        </CartProvider>
       </Router>
     </AuthProvider>
   );

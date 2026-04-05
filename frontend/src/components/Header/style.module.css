@@ -5,8 +5,8 @@
   --logo-url: url('/src/assets/logo192white.png');
 }
 
-header {
-  z-index: 998;
+.header, header {
+  z-index: 997;
   background-color: var(--header-bg);
   color: var(--header-color);
   visibility: visible;
@@ -14,8 +14,7 @@ header {
   font-family: "Oswald", sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
-  transition: opacity 0.3s 
-  ease-in;
+  transition: opacity 0.3s ease-in;
 }
 
 .noBreak {
@@ -49,7 +48,7 @@ header {
   display: inline-flex;
   position: relative;
   width: calc(100% / 3);
-  padding-left: 4rem;
+  padding-left: 10rem;
 }
 
 .centeredMenu ul {
@@ -62,7 +61,7 @@ header {
 .centeredMenu li {
   position: relative;
   text-transform: uppercase;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   padding: 15px 0 25px;
   cursor: pointer;
@@ -88,6 +87,23 @@ header {
   width: 100%;
 }
 
+/* Ensure links inherit li color and support active state */
+.centeredMenu li a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.active {}
+
+.centeredMenu li.active {
+  color: #ff3b30; /* active red */
+}
+
+.centeredMenu li.active::after {
+  width: 100%;
+  background-color: #ff3b30;
+}
+
 /* --- LOGO --- */
 .logoWrapper {
   transition: transform 0.4s ease, filter 0.5s ease;
@@ -100,6 +116,27 @@ header {
 .logoWrapper img {
   content: var(--logo-url);
   transition: content 0.3s ease;
+}
+
+/* Compatibilidade com classes usadas no JSX */
+.logoImage {
+  display: inline-block;
+}
+
+/* Botão de pesquisa ativo (usado condicionalmente via styles.activeButton) */
+.activeButton {
+  color: #ff3b30;
+  transform: scale(1.05);
+}
+
+/* Classe base para botão de login (existe .btn_login_active para estado ativo) */
+.btn_login {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: var(--header-color);
+  transition: transform 0.4s ease-in-out, color 0.1s ease;
 }
 
 /* --- MENU DIREITO --- */
@@ -300,6 +337,12 @@ header {
   .mobileMenuBottom li a:hover{
     background-color: black;
     color: white;
+  }
+
+  /* mobile active link */
+  .mobileMenu li.active a {
+    color: #ff3b30;
+    font-weight: 800;
   }
 }
 

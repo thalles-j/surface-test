@@ -9,6 +9,11 @@ import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
 import Profile from '../pages/Profile';
 import AdminPainel from '../pages/Admin';
+import About from '../pages/About';
+import Atendimento from '../pages/Atendimento';
+import TrocasDevolucoes from '../pages/TrocasDevolucoes';
+import TermosDeUso from '../pages/TermosDeUso';
+import Privacidade from '../pages/Privacidade';
 
 // ======================
 // ProtectedRoute
@@ -63,7 +68,11 @@ export default function AppRoutes() {
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:slug" element={<ProductDetail />} />
-      
+      <Route path="/about-us" element={<About />} />
+      <Route path="/atendimento" element={<Atendimento />} />
+      <Route path="/trocas-devolucoes" element={<TrocasDevolucoes />} />
+      <Route path="/termos-de-uso" element={<TermosDeUso />} />
+      <Route path="/privacidade" element={<Privacidade />} />
 
       <Route 
         path="/admin/*" 

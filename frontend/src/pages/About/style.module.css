@@ -1,0 +1,145 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap");
+
+:global(body) {
+    font-family: "apple", sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+:root {
+    --brand-red: #ff3b30;
+    --brand-black: #000000;
+    --brand-white: #ffffff;
+    --brand-gray-muted: #9ca3af;
+}
+
+.page {
+    min-height: 100vh;
+    color: var(--brand-black);
+    margin-top: 10rem;
+}
+
+.tagline {
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+}
+
+.heroManifesto {
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 0.85;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
+}
+
+.videoPlaceholder {
+    width: 100%;
+    aspect-ratio: 25/2;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    color: rgba(0, 0, 0, 0.04);
+}
+
+.videoGhost {
+    font-size: 12vw;
+    font-weight: 900;
+    text-transform: uppercase;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.videoOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.videoPlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #000000;
+}
+
+.valuesSection {
+    padding: 4rem 0;
+}
+
+.surfaceInput {
+    width: 100%;
+    background-color: var(--brand-white);
+    border: 1px solid #e5e7eb;
+    padding: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.surfaceInput:focus {
+    border-color: var(--brand-black);
+}
+
+.fadeInSection {
+    animation: fadeIn 0.7s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.footerDivider {
+    height: 1px;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.footerHeading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+}
+
+.socialIconWrapper {
+    transition: all 0.3s ease;
+}
+
+.socialIconWrapper:hover {
+    opacity: 0.5;
+    transform: translateY(-4px);
+}
+
+.valuesHeading {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin-bottom: 4rem;
+    font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+    .valuesHeading {
+        font-size: 2rem;
+    }
+}

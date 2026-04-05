@@ -7,7 +7,7 @@ footer {
     background: #000;
     color: #fff;
     padding: 0 0 2.25rem;
-    font-sans: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    font-sans: "apple", sans-serif;
 
 }
 
@@ -287,4 +287,59 @@ footer .wrap_infos_loja .cnpj {
         margin-left: 0;
         margin-top: 10px;
     }
+}
+
+/* Terms modal and button */ 
+.terms_wrap {
+    padding-top: 0.75rem;
+}
+.terms_button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    padding: 8px 14px;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.terms_button:hover {
+    background: #fff;
+    color: #000;
+}
+.modal_overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+.modal_content {
+    background: #fff;
+    color: #000;
+    max-width: 900px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: auto;
+    padding: 24px;
+    border-radius: 8px;
+    position: relative;
+}
+.modal_close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+}
+.modal_body {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
 }

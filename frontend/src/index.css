@@ -14,7 +14,7 @@ header {
   align-items: center;    
   width: 100%;         
   color: #ffffff;
-  z-index: 999;
+  z-index: 997;
 }
 
 
@@ -24,4 +24,10 @@ img {
     height: auto;
     border: 0;
     -ms-interpolation-mode: bicubic;
+}
+
+/* Improve visibility for form inputs across the app */
+input, textarea, select {
+  background-color: #f8fafc; /* light neutral */
+  border-radius: 0.375rem;
 }
