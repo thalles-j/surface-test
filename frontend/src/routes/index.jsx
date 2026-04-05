@@ -1,7 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from "../hooks/useAuth";
 
-//pages
+// Pages
 import LandingPage from '../pages/LandingPage';
 import Shop from '../pages/Shop';
 import ProductDetail from '../pages/ProductDetail';
@@ -14,56 +15,45 @@ import Atendimento from '../pages/Atendimento';
 import TrocasDevolucoes from '../pages/TrocasDevolucoes';
 import TermosDeUso from '../pages/TermosDeUso';
 import Privacidade from '../pages/Privacidade';
+import Checkout from '../pages/Checkout';
 
-// ======================
-// ProtectedRoute
-// ======================
-function ProtectedRoute({ children }) {
+// ============================
+// Component: RequireAuth
+// ============================
+// role: number | undefined -> se definido, valida o role do usuário
+function RequireAuth({ children, role }) {
   const { user, loading } = useAuth();
-
+  const location = useLocation();
 
   if (loading) {
-    return <div style={{ display:'flex', justifyContent:'center', padding: 50 }}>Carregando sessão...</div>;
+    // UX de carregamento (utilizando classes do Tailwind)
+    return (
+      <div className="flex justify-center items-center h-[60vh] text-gray-500">
+        <span className="animate-pulse">Verificando sessão...</span>
+      </div>
+    );
   }
 
   if (!user) {
-    return <Navigate to="/entrar" replace />;
+    // Redireciona para login, salvando a rota original na qual o usuário tentou entrar
+    return <Navigate to="/entrar" state={{ from: location }} replace />;
   }
 
-  return children;
-}
-
-// =========================================
-// 2. Rota de Admin (Para Role 1)
-// =========================================
-function AdminRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  // --- MESMA CORREÇÃO AQUI ---
-  if (loading) {
-    return <div>Verificando permissões...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/entrar" replace />;
-  }
-
-  if (Number(user.role) !== 1) {
-    console.log("Acesso negado. Role do usuário:", user.role);
+  if (role && Number(user.role) !== role) {
+    // Redireciona para a home se não tiver a permissão necessária (ex: não for admin)
     return <Navigate to="/" replace />;
   }
 
   return children;
 }
 
-// =========================================
-// Rotas Principais
-// =========================================
+// ============================
+// Rotas principais
+// ============================
 export default function AppRoutes() {
-  
   return (
     <Routes>
-      {/* Rotas Públicas */}
+      {/* Rotas públicas */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
@@ -74,24 +64,36 @@ export default function AppRoutes() {
       <Route path="/termos-de-uso" element={<TermosDeUso />} />
       <Route path="/privacidade" element={<Privacidade />} />
 
+      {/* Rotas protegidas (Usuários logados) */}
       <Route 
-        path="/admin/*" 
+        path="/account" 
         element={
-          <AdminRoute>
-            <AdminPainel />
-          </AdminRoute>
+          <RequireAuth>
+            <Profile />
+          </RequireAuth>
         } 
       />
 
-       <Route 
-        path="/account" 
+      <Route 
+        path="/checkout" 
         element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
+          <RequireAuth>
+            <Checkout />
+          </RequireAuth>
         } 
       />
-      
+
+      {/* Rotas Admin (role=1) */}
+      <Route 
+        path="/admin/*" 
+        element={
+          <RequireAuth role={1}>
+            <AdminPainel />
+          </RequireAuth>
+        } 
+      />
+
+      {/* Rota 404 - Página não encontrada */}
       <Route path="*" element={<Page404 />} />
     </Routes>
   );
