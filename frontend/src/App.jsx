@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react"; // Adicionei useState
+import { useEffect, useState } from "react";
 import { BrowserRouter as Router, useLocation } from 'react-router-dom'; 
 import { AuthProvider } from './context/AuthContext.jsx'; 
-import { ToastProvider } from './context/ToastContext.jsx';
+import { CartProvider } from './context/CartContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx'; // 1. Importei o ToastProvider aqui
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import AppRoutes from './routes';
 import PageLoader from "./components/PageLoader";
-import { CartProvider } from './context/CartContext.jsx';
 import CartDrawer from "./components/CartDrawer";
 
 // Componente que renderiza condicionalmente Header/Footer
@@ -27,11 +27,9 @@ function AppLayout() {
 }
 
 export default function App() {
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     function autoLightMode() {
       const bodyBg = getComputedStyle(document.body).backgroundColor;
       const rgb = bodyBg.match(/\d+/g);
@@ -49,7 +47,6 @@ export default function App() {
     const observer = new MutationObserver(autoLightMode);
     observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
 
-
     const timer = setTimeout(() => {
       setLoading(false);
     }, 2000);
@@ -62,14 +59,15 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <Router> 
-        <CartProvider>
-          <ToastProvider>
+      {/* 2. Envolvi a aplicação com o ToastProvider aqui */}
+      <ToastProvider>
+        <Router> 
+          <CartProvider>
             {loading && <PageLoader />}
             <AppLayout />
-          </ToastProvider>
-        </CartProvider>
-      </Router>
+          </CartProvider>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }
