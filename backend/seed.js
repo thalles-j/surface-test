@@ -58,7 +58,7 @@ async function main() {
             nome: "Teste da Silva",
             email: "teste@example.com",
             senha: await bcrypt.hash("1234567", 10),
-            id_role: 2,
+            id_role: 1,
         },
     ];
 
@@ -114,11 +114,36 @@ async function main() {
     ];
 
     for (const produto of produtosData) {
-        await prisma.produtos.upsert({
+        // Separar fotos do payload para evitar duplicatas no update
+        const { fotos, ...produtoSemFotos } = produto;
+
+        const existing = await prisma.produtos.findUnique({
             where: { nome_produto: produto.nome_produto },
-            update: produto,
-            create: produto,
         });
+
+        if (existing) {
+            // Atualizar produto sem recriar fotos
+            await prisma.produtos.update({
+                where: { nome_produto: produto.nome_produto },
+                data: produtoSemFotos,
+            });
+            // Limpar fotos duplicadas e recriar corretamente
+            await prisma.fotos_produtos.deleteMany({ where: { id_produto: existing.id_produto } });
+            for (const [idx, f] of fotos.create.entries()) {
+                await prisma.fotos_produtos.create({
+                    data: { ...f, id_produto: existing.id_produto, principal: idx === 0 },
+                });
+            }
+        } else {
+            await prisma.produtos.create({
+                data: {
+                    ...produtoSemFotos,
+                    fotos: {
+                        create: fotos.create.map((f, idx) => ({ ...f, principal: idx === 0 })),
+                    },
+                },
+            });
+        }
     }
     console.log("✅ Produtos DROP 0 SURFACE criados!");
 
@@ -189,15 +214,21 @@ async function main() {
     }
     console.log('✅ Coleção DROP 0 criada e produtos associados!');
 
-    // 9️⃣ Criar pedidos de teste
+    // 9️⃣ Limpar pedidos antigos de teste e normalizar status
+    // Remove pedidos de teste antigos para evitar duplicatas
+    await prisma.pedido_produtos.deleteMany({});
+    await prisma.pedidos.deleteMany({});
+    console.log('✅ Pedidos antigos limpos!');
+
+    // Criar pedidos de teste
     const cliente = await prisma.usuarios.findUnique({ where: { email: 'teste@example.com' } });
     if (cliente && prodOff) {
-        const pedido = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'Pago', total: Number(prodOff.preco), data_pedido: new Date() } });
+        const pedido = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'finalizado', total: Number(prodOff.preco), data_pedido: new Date() } });
         await prisma.pedido_produtos.create({ data: { id_pedido: pedido.id_pedido, id_produto: prodOff.id_produto, sku_variacao: (prodOff.variacoes_estoque && prodOff.variacoes_estoque[0]) ? prodOff.variacoes_estoque[0].sku : 'NA', quantidade: 1, preco_unitario: Number(prodOff.preco) } });
     }
 
     if (cliente && prodBlack) {
-        const pedido2 = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'Pendente', total: Number(prodBlack.preco) * 2, data_pedido: new Date() } });
+        const pedido2 = await prisma.pedidos.create({ data: { id_usuario: cliente.id_usuario, status: 'pendente', total: Number(prodBlack.preco) * 2, data_pedido: new Date() } });
         await prisma.pedido_produtos.create({ data: { id_pedido: pedido2.id_pedido, id_produto: prodBlack.id_produto, sku_variacao: (prodBlack.variacoes_estoque && prodBlack.variacoes_estoque[0]) ? prodBlack.variacoes_estoque[0].sku : 'NA', quantidade: 2, preco_unitario: Number(prodBlack.preco) } });
     }
     console.log('✅ Pedidos de teste criados!');

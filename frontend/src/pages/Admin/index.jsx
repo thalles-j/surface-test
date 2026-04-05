@@ -81,7 +81,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] flex font-sans text-black">
+    <div className="min-h-screen bg-[#0a0a0a] flex font-sans text-white">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* MAIN CONTENT */}
@@ -91,18 +91,18 @@ export default function AdminPage() {
             <h2 className="text-3xl font-black uppercase tracking-tight">
               {getPageTitle()}
             </h2>
-            <p className="text-sm text-gray-400 font-medium mt-1">Dados atualizados em tempo real.</p>
+            <p className="text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-gray-300"></div>
+            <div className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
+              <div className="w-8 h-8 rounded-full bg-zinc-700"></div>
               <div>
-                <p className="text-xs font-bold">{displayName}</p>
-                <p className="text-[11px] text-gray-400">{displayEmail}</p>
+                <p className="text-xs font-bold text-zinc-200">{displayName}</p>
+                <p className="text-[11px] text-zinc-500">{displayEmail}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-2 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                className="ml-2 p-1 text-zinc-500 hover:text-red-400 transition-colors"
                 title="Sair"
               >
                 <LogOut size={16} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { AlertCircle, Edit, Search, RotateCcw, History } from 'lucide-react';
+import { AlertCircle, Search, RotateCcw, History } from 'lucide-react';
 import Modal from '../Modal';
 import Pagination from './Pagination';
 import { useToast } from '../../context/ToastContext';
@@ -8,10 +8,10 @@ import { api } from '../../services/api';
 const PAGE_SIZE = 20;
 
 const getStockHealth = (stock) => {
-  if (stock === 0) return { label: 'Esgotado', color: 'bg-red-100 text-red-700', key: 'out' };
-  if (stock <= 5) return { label: 'Crítico', color: 'bg-red-100 text-red-700', key: 'critical' };
-  if (stock <= 15) return { label: 'Baixo', color: 'bg-yellow-100 text-yellow-700', key: 'low' };
-  return { label: 'Em estoque', color: 'bg-green-100 text-green-700', key: 'ok' };
+  if (stock === 0) return { label: 'Esgotado', color: 'bg-red-950 text-red-400', key: 'out' };
+  if (stock <= 5) return { label: 'Crítico', color: 'bg-red-950 text-red-400', key: 'critical' };
+  if (stock <= 15) return { label: 'Baixo', color: 'bg-yellow-950 text-yellow-400', key: 'low' };
+  return { label: 'Em estoque', color: 'bg-emerald-950 text-emerald-400', key: 'ok' };
 };
 
 export default function Inventory() {
@@ -26,7 +26,6 @@ export default function Inventory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const [stockModal, setStockModal] = useState({ isOpen: false, item: null, newStock: 0 });
   const [movementsModal, setMovementsModal] = useState({ isOpen: false, productId: null, productName: '' });
   const [movements, setMovements] = useState([]);
   const [repoModal, setRepoModal] = useState({ isOpen: false, item: null, qty: 0, obs: '' });
@@ -104,22 +103,6 @@ export default function Inventory() {
     outOfStockItems: inventory.filter(i => i.stock === 0),
   }), [inventory]);
 
-  const openStockModal = useCallback((item) => setStockModal({ isOpen: true, item, newStock: item.stock }), []);
-  const closeStockModal = useCallback(() => setStockModal({ isOpen: false, item: null, newStock: 0 }), []);
-
-  const saveStockModal = useCallback(async () => {
-    if (!stockModal.item) return;
-    try {
-      await api.patch(`/admin/inventory/${stockModal.item.productId}`, { stock: Number(stockModal.newStock) });
-      addToast('Estoque atualizado!', 'success');
-      await loadInventory();
-      closeStockModal();
-    } catch (err) {
-      console.error('Erro ao atualizar estoque:', err);
-      addToast('Erro ao atualizar estoque', 'error');
-    }
-  }, [stockModal, loadInventory, closeStockModal, addToast]);
-
   const openMovementsModal = useCallback(async (item) => {
     setMovementsModal({ isOpen: true, productId: item.productId, productName: item.name });
     try {
@@ -127,6 +110,7 @@ export default function Inventory() {
       setMovements(res.data || []);
     } catch (err) {
       console.error('Erro ao carregar movimentações:', err);
+      addToast('Erro ao carregar movimentações', 'error');
       setMovements([]);
     }
   }, []);
@@ -159,42 +143,42 @@ export default function Inventory() {
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* RESUMO */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Total em Estoque</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Total em Estoque</p>
           <h3 className="text-3xl font-bold mt-2">{stats.totalUnits}</h3>
-          <p className="text-xs text-gray-400 mt-1">unidades</p>
+          <p className="text-xs text-zinc-600 mt-1">unidades</p>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Valor em Estoque</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Valor em Estoque</p>
           <h3 className="text-3xl font-bold mt-2">R$ {stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Estoque Baixo</p>
-          <h3 className="text-3xl font-bold mt-2 text-yellow-600">{stats.lowStockItems.length}</h3>
-          <p className="text-xs text-gray-400 mt-1">SKUs</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Estoque Baixo</p>
+          <h3 className="text-3xl font-bold mt-2 text-yellow-400">{stats.lowStockItems.length}</h3>
+          <p className="text-xs text-zinc-600 mt-1">SKUs</p>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Esgotados</p>
-          <h3 className="text-3xl font-bold mt-2 text-red-600">{stats.outOfStockItems.length}</h3>
-          <p className="text-xs text-gray-400 mt-1">SKUs</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Esgotados</p>
+          <h3 className="text-3xl font-bold mt-2 text-red-400">{stats.outOfStockItems.length}</h3>
+          <p className="text-xs text-zinc-600 mt-1">SKUs</p>
         </div>
       </div>
 
       {/* ALERTAS */}
       {stats.lowStockItems.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="bg-yellow-950/50 border border-yellow-900 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <AlertCircle className="text-yellow-600 flex-shrink-0" size={24} />
+            <AlertCircle className="text-yellow-400 flex-shrink-0" size={24} />
             <div>
-              <h3 className="font-bold text-yellow-900 mb-2">Atenção: Estoque Baixo</h3>
-              <p className="text-sm text-yellow-700">Os seguintes SKUs estão com estoque baixo:</p>
+              <h3 className="font-bold text-yellow-400 mb-2">Atenção: Estoque Baixo</h3>
+              <p className="text-sm text-yellow-500">Os seguintes SKUs estão com estoque baixo:</p>
               <ul className="mt-3 space-y-1">
                 {stats.lowStockItems.slice(0, 10).map((item, idx) => (
-                  <li key={idx} className="text-sm text-yellow-700">
+                  <li key={idx} className="text-sm text-yellow-500">
                     <span className="font-bold">{item.name}</span> ({item.size}) — {item.stock} un
                   </li>
                 ))}
-                {stats.lowStockItems.length > 10 && <li className="text-sm text-yellow-700">...e mais {stats.lowStockItems.length - 10}</li>}
+                {stats.lowStockItems.length > 10 && <li className="text-sm text-yellow-500">...e mais {stats.lowStockItems.length - 10}</li>}
               </ul>
             </div>
           </div>
@@ -202,22 +186,22 @@ export default function Inventory() {
       )}
 
       {/* TABELA */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex gap-4 items-center">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 flex gap-4 items-center">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
             <input
               type="text"
               placeholder="Buscar por nome ou SKU..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-black outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:border-zinc-500 outline-none text-white placeholder-zinc-500"
             />
           </div>
           <select
             value={healthFilter}
             onChange={(e) => setHealthFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-black bg-white"
+            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
           >
             <option value="todos">Todos</option>
             <option value="ok">Em estoque</option>
@@ -227,12 +211,12 @@ export default function Inventory() {
           <h2 className="text-lg font-bold">Gestão de Estoque</h2>
         </div>
 
-        {loading && <div className="p-4 text-center text-gray-400 text-sm">Atualizando...</div>}
+        {loading && <div className="p-4 text-center text-zinc-500 text-sm">Atualizando...</div>}
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
+              <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
                 <th className="px-6 py-4">Produto</th>
                 <th className="px-6 py-4">SKU</th>
                 <th className="px-6 py-4">Tamanho</th>
@@ -242,23 +226,23 @@ export default function Inventory() {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-800">
               {filteredInventory.map((item, idx) => {
                 const health = getStockHealth(item.stock);
                 return (
-                  <tr key={`${item.productId}-${item.sku}-${idx}`} className="hover:bg-gray-50 transition-colors">
+                  <tr key={`${item.productId}-${item.sku}-${idx}`} className="hover:bg-zinc-800/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-bold text-sm">{item.name}</div>
-                      <div className="text-[10px] text-gray-400 uppercase">{item.category}</div>
+                      <div className="text-[10px] text-zinc-500 uppercase">{item.category}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-mono bg-zinc-100 px-2 py-1 rounded text-xs text-zinc-600 font-semibold">
+                      <span className="font-mono bg-zinc-800 px-2 py-1 rounded text-xs text-zinc-400 font-semibold">
                         {item.sku}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-bold">{item.size}</td>
                     <td className="px-6 py-4">
-                      <span className={`font-bold text-sm ${item.stock === 0 ? 'text-red-600' : item.stock <= 15 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      <span className={`font-bold text-sm ${item.stock === 0 ? 'text-red-400' : item.stock <= 15 ? 'text-yellow-400' : 'text-emerald-400'}`}>
                         {item.stock} un
                       </span>
                     </td>
@@ -271,24 +255,17 @@ export default function Inventory() {
                     <td className="px-6 py-4 text-right space-x-1">
                       <button
                         onClick={() => openRepoModal(item)}
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                        className="p-2 text-zinc-500 hover:text-emerald-400 transition-colors"
                         title="Repor Estoque"
                       >
                         <RotateCcw size={16} />
                       </button>
                       <button
                         onClick={() => openMovementsModal(item)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                        className="p-2 text-zinc-500 hover:text-blue-400 transition-colors"
                         title="Histórico"
                       >
                         <History size={16} />
-                      </button>
-                      <button
-                        onClick={() => openStockModal(item)}
-                        className="p-2 text-gray-400 hover:text-black transition-colors"
-                        title="Editar Estoque"
-                      >
-                        <Edit size={16} />
                       </button>
                     </td>
                   </tr>
@@ -299,7 +276,7 @@ export default function Inventory() {
         </div>
 
         {!loading && filteredInventory.length === 0 && (
-          <div className="p-12 text-center text-gray-400">
+          <div className="p-12 text-center text-zinc-500">
             <p>Nenhum item encontrado.</p>
           </div>
         )}
@@ -308,53 +285,32 @@ export default function Inventory() {
       </div>
     </div>
 
-    {/* Stock Edit Modal */}
-    <Modal isOpen={stockModal.isOpen} onClose={closeStockModal} title={`Editar estoque — ${stockModal.item?.name || ''} (${stockModal.item?.size || ''})`} size="sm">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-2 border rounded" onClick={() => setStockModal(prev => ({ ...prev, newStock: Math.max(0, prev.newStock - 1) }))}>−</button>
-          <input
-            type="number"
-            value={stockModal.newStock}
-            onChange={(e) => setStockModal(prev => ({ ...prev, newStock: Number(e.target.value) }))}
-            className="w-24 p-2 border rounded text-center"
-          />
-          <button className="px-3 py-2 border rounded" onClick={() => setStockModal(prev => ({ ...prev, newStock: Number(prev.newStock) + 1 }))}>+</button>
-        </div>
-
-        <div className="flex gap-2">
-          <button onClick={saveStockModal} className="flex-1 bg-black text-white py-2 font-bold hover:bg-zinc-800 rounded-lg">Salvar</button>
-          <button onClick={closeStockModal} className="px-4 py-2 border rounded-lg">Cancelar</button>
-        </div>
-      </div>
-    </Modal>
-
     {/* Reposition Modal */}
     <Modal isOpen={repoModal.isOpen} onClose={() => setRepoModal({ isOpen: false, item: null, qty: 0, obs: '' })} title={`Repor estoque — ${repoModal.item?.name || ''} (${repoModal.item?.size || ''})`} size="sm">
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium block mb-1">Quantidade a repor</label>
+          <label className="text-sm font-medium block mb-1 text-zinc-300">Quantidade a repor</label>
           <input
             type="number"
             min="1"
             value={repoModal.qty}
             onChange={(e) => setRepoModal(prev => ({ ...prev, qty: Number(e.target.value) }))}
-            className="w-full p-2 border rounded-lg"
+            className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:border-zinc-500 outline-none"
           />
         </div>
         <div>
-          <label className="text-sm font-medium block mb-1">Observação</label>
+          <label className="text-sm font-medium block mb-1 text-zinc-300">Observação</label>
           <input
             type="text"
             value={repoModal.obs}
             onChange={(e) => setRepoModal(prev => ({ ...prev, obs: e.target.value }))}
             placeholder="Ex: Reposição do fornecedor X"
-            className="w-full p-2 border rounded-lg"
+            className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:border-zinc-500 outline-none"
           />
         </div>
         <div className="flex gap-2">
-          <button onClick={saveRepoModal} disabled={repoModal.qty <= 0} className="flex-1 bg-green-600 text-white py-2 font-bold hover:bg-green-700 rounded-lg disabled:opacity-50">Repor</button>
-          <button onClick={() => setRepoModal({ isOpen: false, item: null, qty: 0, obs: '' })} className="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button onClick={saveRepoModal} disabled={repoModal.qty <= 0} className="flex-1 bg-emerald-600 text-white py-2 font-bold hover:bg-emerald-700 rounded-lg disabled:opacity-50">Repor</button>
+          <button onClick={() => setRepoModal({ isOpen: false, item: null, qty: 0, obs: '' })} className="px-4 py-2 border border-zinc-700 text-zinc-400 rounded-lg hover:text-white hover:border-zinc-500">Cancelar</button>
         </div>
       </div>
     </Modal>
@@ -363,11 +319,11 @@ export default function Inventory() {
     <Modal isOpen={movementsModal.isOpen} onClose={() => setMovementsModal({ isOpen: false, productId: null, productName: '' })} title={`Histórico — ${movementsModal.productName}`} size="lg">
       <div className="max-h-96 overflow-y-auto">
         {movements.length === 0 ? (
-          <p className="text-center text-gray-400 py-8">Nenhuma movimentação registrada.</p>
+          <p className="text-center text-zinc-500 py-8">Nenhuma movimentação registrada.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs uppercase text-gray-500 border-b">
+              <tr className="text-xs uppercase text-zinc-500 border-b border-zinc-800">
                 <th className="py-2 text-left">Data</th>
                 <th className="py-2 text-left">Tipo</th>
                 <th className="py-2 text-left">SKU</th>
@@ -375,21 +331,21 @@ export default function Inventory() {
                 <th className="py-2 text-left">Obs</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-zinc-800">
               {movements.map(m => (
                 <tr key={m.id_movimentacao}>
                   <td className="py-2">{new Date(m.criado_em).toLocaleDateString('pt-BR')}</td>
                   <td className="py-2">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      m.tipo === 'venda' ? 'bg-blue-100 text-blue-700' :
-                      m.tipo === 'reposicao' ? 'bg-green-100 text-green-700' :
-                      m.tipo === 'devolucao' ? 'bg-purple-100 text-purple-700' :
-                      'bg-gray-100 text-gray-700'
+                      m.tipo === 'venda' ? 'bg-blue-950 text-blue-400' :
+                      m.tipo === 'reposicao' ? 'bg-emerald-950 text-emerald-400' :
+                      m.tipo === 'devolucao' ? 'bg-purple-950 text-purple-400' :
+                      'bg-zinc-800 text-zinc-400'
                     }`}>{m.tipo}</span>
                   </td>
                   <td className="py-2 font-mono text-xs">{m.sku_variacao}</td>
                   <td className="py-2 text-right font-bold">{m.tipo === 'venda' ? '-' : '+'}{m.quantidade}</td>
-                  <td className="py-2 text-gray-500 text-xs">{m.observacao || '-'}</td>
+                  <td className="py-2 text-zinc-500 text-xs">{m.observacao || '-'}</td>
                 </tr>
               ))}
             </tbody>

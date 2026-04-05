@@ -20,15 +20,15 @@ export default function Pagination({ page, totalPages, total, onPageChange, limi
   };
 
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-      <span className="text-xs text-gray-400">
+    <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+      <span className="text-xs text-zinc-500">
         {start}–{end} de {total}
       </span>
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-zinc-400"
         >
           <ChevronLeft size={16} />
         </button>
@@ -37,7 +37,7 @@ export default function Pagination({ page, totalPages, total, onPageChange, limi
             key={p}
             onClick={() => onPageChange(p)}
             className={`min-w-[32px] h-8 rounded text-xs font-bold transition-colors ${
-              p === page ? 'bg-black text-white' : 'hover:bg-gray-100 text-gray-600'
+              p === page ? 'bg-white text-black' : 'hover:bg-zinc-800 text-zinc-400'
             }`}
           >
             {p}
@@ -46,7 +46,7 @@ export default function Pagination({ page, totalPages, total, onPageChange, limi
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-zinc-400"
         >
           <ChevronRight size={16} />
         </button>

@@ -83,6 +83,7 @@ export default function Customers() {
       })));
     } catch (err) {
       console.error('Erro ao carregar cupons:', err);
+      addToast('Erro ao carregar cupons', 'error');
     }
   }, []);
 
@@ -91,10 +92,10 @@ export default function Customers() {
 
   const getTypeColor = useCallback((type) => {
     switch (type) {
-      case 'VIP': return 'bg-purple-100 text-purple-700';
-      case 'Recorrente': return 'bg-blue-100 text-blue-700';
-      case 'Novo': return 'bg-green-100 text-green-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'VIP': return 'bg-purple-950 text-purple-400';
+      case 'Recorrente': return 'bg-blue-950 text-blue-400';
+      case 'Novo': return 'bg-emerald-950 text-emerald-400';
+      default: return 'bg-zinc-800 text-zinc-400';
     }
   }, []);
 
@@ -158,14 +159,14 @@ export default function Customers() {
     if (!confirmDeleteCoupon.id) return;
     try {
       await api.delete(`/admin/marketing/coupons/${confirmDeleteCoupon.id}`);
-      setCoupons(prev => prev.filter(c => c.id !== confirmDeleteCoupon.id));
       setConfirmDeleteCoupon({ isOpen: false, id: null });
       addToast('Cupom excluído', 'success');
+      await loadCoupons();
     } catch (err) {
       console.error('Erro ao deletar cupom:', err);
       addToast('Erro ao deletar cupom', 'error');
     }
-  }, [confirmDeleteCoupon.id, addToast]);
+  }, [confirmDeleteCoupon.id, addToast, loadCoupons]);
 
   if (loading && customers.length === 0) return <div className="text-center py-12">Carregando clientes...</div>;
 
@@ -173,43 +174,43 @@ export default function Customers() {
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* RESUMO */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Total de Clientes</p>
-          <h3 className="text-3xl font-bold mt-2">{stats.total}</h3>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Total de Clientes</p>
+          <h3 className="text-3xl font-bold mt-2">{ stats.total}</h3>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Clientes VIP</p>
-          <h3 className="text-3xl font-bold mt-2 text-purple-600">{stats.vip}</h3>
-          <p className="text-xs text-gray-400 mt-1">nesta página</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Clientes VIP</p>
+          <h3 className="text-3xl font-bold mt-2 text-purple-400">{stats.vip}</h3>
+          <p className="text-xs text-zinc-600 mt-1">nesta página</p>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Novos Clientes</p>
-          <h3 className="text-3xl font-bold mt-2 text-green-600">{stats.novo}</h3>
-          <p className="text-xs text-gray-400 mt-1">nesta página</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Novos Clientes</p>
+          <h3 className="text-3xl font-bold mt-2 text-emerald-400">{stats.novo}</h3>
+          <p className="text-xs text-zinc-600 mt-1">nesta página</p>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Receita (página)</p>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 text-sm font-medium">Receita (página)</p>
           <h3 className="text-2xl font-bold mt-2">R$ {stats.totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
         </div>
       </div>
 
       {/* TABELA */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex gap-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 flex gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
             <input
               type="text"
               placeholder="Buscar por nome, email ou telefone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-black outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:border-zinc-500 outline-none text-white placeholder-zinc-500"
             />
           </div>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-black bg-white"
+            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
           >
             <option value="todos">Todas as Categorias</option>
             <option value="VIP">VIP</option>
@@ -218,12 +219,12 @@ export default function Customers() {
           </select>
         </div>
 
-        {loading && <div className="p-4 text-center text-gray-400 text-sm">Atualizando...</div>}
+        {loading && <div className="p-4 text-center text-zinc-500 text-sm">Atualizando...</div>}
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
+              <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
                 <th className="px-6 py-4">Cliente</th>
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Telefone</th>
@@ -239,12 +240,12 @@ export default function Customers() {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-800">
               {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={c.id} className="hover:bg-zinc-800/50 transition-colors">
                   <td className="px-6 py-4 font-bold text-sm">{c.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{c.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{c.phone || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-400">{c.email}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-400">{c.phone || '—'}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       {c.type === 'VIP' && <Crown size={14} className="text-purple-600" />}
@@ -256,9 +257,9 @@ export default function Customers() {
                   <td className="px-6 py-4 font-bold text-sm">{c.ordersCount}</td>
                   <td className="px-6 py-4 text-sm">R$ {(c.ticketMedio || 0).toFixed(2)}</td>
                   <td className="px-6 py-4 font-bold">R$ {(c.totalSpent || 0).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString('pt-BR') : '—'}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-500">{c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString('pt-BR') : '—'}</td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => openCustomerDetail(c)} className="p-2 text-gray-400 hover:text-black transition-colors" title="Ver detalhes">
+                    <button onClick={() => openCustomerDetail(c)} className="p-2 text-zinc-500 hover:text-white transition-colors" title="Ver detalhes">
                       <Eye size={16} />
                     </button>
                   </td>
@@ -269,7 +270,7 @@ export default function Customers() {
         </div>
 
         {!loading && customers.length === 0 && (
-          <div className="p-12 text-center text-gray-400">
+          <div className="p-12 text-center text-zinc-500">
             <p>Nenhum cliente encontrado.</p>
           </div>
         )}
@@ -289,27 +290,27 @@ export default function Customers() {
             </div>
 
             {detailData.addresses?.length > 0 && (
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs text-gray-400 font-bold uppercase mb-2">Endereços</p>
+              <div className="border-t border-zinc-800 pt-4">
+                <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Endereços</p>
                 {detailData.addresses.map((a, i) => (
-                  <p key={i} className="text-sm text-gray-600">{a.logradouro}, {a.numero}{a.complemento ? ` - ${a.complemento}` : ''} — {a.cidade}/{a.estado} CEP {a.cep}</p>
+                  <p key={i} className="text-sm text-zinc-400">{a.logradouro}, {a.numero}{a.complemento ? ` - ${a.complemento}` : ''} — {a.cidade}/{a.estado} CEP {a.cep}</p>
                 ))}
               </div>
             )}
 
             {detailData.orders?.length > 0 && (
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs text-gray-400 font-bold uppercase mb-2">Histórico de Pedidos</p>
+              <div className="border-t border-zinc-800 pt-4">
+                <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Histórico de Pedidos</p>
                 <div className="max-h-48 overflow-y-auto space-y-2">
                   {detailData.orders.map(o => (
-                    <div key={o.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <div key={o.id} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
                       <div>
                         <p className="text-sm font-bold">Pedido #{o.id}</p>
-                        <p className="text-xs text-gray-400">{new Date(o.date).toLocaleDateString('pt-BR')} — {o.items.length} item(s)</p>
+                        <p className="text-xs text-zinc-500">{new Date(o.date).toLocaleDateString('pt-BR')} — {o.items.length} item(s)</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold">R$ {o.total.toFixed(2)}</p>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${o.status === 'finalizado' ? 'bg-green-100 text-green-700' : o.status === 'cancelado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{o.status}</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${o.status === 'finalizado' ? 'bg-emerald-950 text-emerald-400' : o.status === 'cancelado' ? 'bg-red-950 text-red-400' : 'bg-yellow-950 text-yellow-400'}`}>{o.status}</span>
                       </div>
                     </div>
                   ))}
@@ -318,17 +319,17 @@ export default function Customers() {
             )}
           </div>
         ) : (
-          <p className="text-center text-gray-400 py-8">Carregando...</p>
+          <p className="text-center text-zinc-500 py-8">Carregando...</p>
         )}
       </Modal>
 
       {/* CUPONS */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
           <h2 className="text-lg font-bold">Gerenciar Cupons</h2>
           <button
             onClick={() => setShowCouponForm(true)}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg font-bold hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors"
           >
             <Plus size={16} /> Novo Cupom
           </button>
@@ -343,19 +344,19 @@ export default function Customers() {
                 onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
                 placeholder="Código"
                 maxLength="20"
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black font-mono font-bold bg-zinc-50"
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 font-mono font-bold text-white placeholder-zinc-500"
               />
               <input
                 type="number"
                 value={couponData.discount}
                 onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
                 placeholder="Desconto"
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
               />
               <select
                 value={couponData.type}
                 onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
               >
                 <option>Porcentagem</option>
                 <option>Valor Fixo</option>
@@ -365,19 +366,19 @@ export default function Customers() {
                 type="date"
                 value={couponData.expiry}
                 onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
-                className="p-2 border border-gray-300 rounded-lg outline-none focus:border-black bg-zinc-50"
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
               />
             </div>
             <div className="flex gap-2 mt-3">
-              <button onClick={handleAddCoupon} className="flex-1 bg-green-600 text-white py-2 font-bold hover:bg-green-700 rounded-lg">Criar Cupom</button>
-              <button onClick={() => setShowCouponForm(false)} className="px-6 py-2 border border-gray-300 font-bold hover:bg-gray-50 rounded-lg">Cancelar</button>
+              <button onClick={handleAddCoupon} className="flex-1 bg-emerald-600 text-white py-2 font-bold hover:bg-emerald-700 rounded-lg">Criar Cupom</button>
+              <button onClick={() => setShowCouponForm(false)} className="px-6 py-2 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 rounded-lg">Cancelar</button>
             </div>
           </div>
         </Modal>
 
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
+            <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
               <th className="px-6 py-4">Código</th>
               <th className="px-6 py-4">Desconto</th>
               <th className="px-6 py-4">Tipo</th>
@@ -386,18 +387,18 @@ export default function Customers() {
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-zinc-800">
             {coupons.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={c.id} className="hover:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4">
-                  <span className="font-mono bg-zinc-100 px-3 py-1 rounded font-bold text-sm">{c.code}</span>
+                  <span className="font-mono bg-zinc-800 px-3 py-1 rounded font-bold text-sm">{c.code}</span>
                 </td>
                 <td className="px-6 py-4 font-bold">{c.discount}{c.type === 'Porcentagem' ? '%' : 'R$'}</td>
                 <td className="px-6 py-4 text-sm">{c.type}</td>
                 <td className="px-6 py-4 text-sm">{c.expiry ? new Date(c.expiry).toLocaleDateString('pt-BR') : 'Sem expiração'}</td>
                 <td className="px-6 py-4 font-bold">{c.uses}</td>
                 <td className="px-6 py-4 text-right">
-                  <button onClick={() => setConfirmDeleteCoupon({ isOpen: true, id: c.id })} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                  <button onClick={() => setConfirmDeleteCoupon({ isOpen: true, id: c.id })} className="p-2 text-zinc-500 hover:text-red-400 transition-colors">
                     <Trash2 size={16} />
                   </button>
                 </td>
@@ -407,7 +408,7 @@ export default function Customers() {
         </table>
 
         {coupons.length === 0 && (
-          <div className="p-8 text-center text-gray-400"><p>Nenhum cupom cadastrado.</p></div>
+          <div className="p-8 text-center text-zinc-500"><p>Nenhum cupom cadastrado.</p></div>
         )}
 
         <AlertModal

@@ -24,7 +24,7 @@ export const getSalesData = async (req, res) => {
     if (page && limit) {
       const pageNum = Math.max(1, parseInt(page));
       const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
-      const [orders, total] = await Promise.all([
+      const [orders, total, revenueAgg, finalizedCount] = await Promise.all([
         prisma.pedidos.findMany({
           where,
           include: {
@@ -36,8 +36,22 @@ export const getSalesData = async (req, res) => {
           take: limitNum,
         }),
         prisma.pedidos.count({ where }),
+        prisma.pedidos.aggregate({ where, _sum: { total: true } }),
+        prisma.pedidos.count({ where: { ...where, status: 'finalizado' } }),
       ]);
-      return res.json({ data: orders, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) });
+      const totalRevenue = parseFloat(revenueAgg._sum.total || 0);
+      return res.json({
+        data: orders,
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+        aggregates: {
+          totalRevenue,
+          avgTicket: total > 0 ? totalRevenue / total : 0,
+          finalizados: finalizedCount,
+        },
+      });
     }
 
     const orders = await prisma.pedidos.findMany({

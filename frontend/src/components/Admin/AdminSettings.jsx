@@ -3,15 +3,15 @@ import { Save, Power, AlertCircle } from 'lucide-react';
 import AlertModal from '../AlertModal';
 import { api } from '../../services/api';
 
-const inputCls = 'w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-black transition-colors';
-const labelCls = 'text-sm font-medium mb-1 block';
+const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500 transition-colors';
+const labelCls = 'text-sm font-medium mb-1 block text-zinc-300';
 
 function Field({ label, children, error }) {
   return (
     <div>
       <label className={labelCls}>{label}</label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12} />{error}</p>}
+      {error && <p className="text-xs text-red-400 mt-1 flex items-center gap-1"><AlertCircle size={12} />{error}</p>}
     </div>
   );
 }
@@ -122,14 +122,14 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
           <h2 className="text-xl font-bold">Configurações da Loja</h2>
           {edited && (
             <button
               onClick={() => { if (validate()) setConfirmSave(true); }}
               disabled={saving}
-              className="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-zinc-800 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50"
             >
               <Save size={16} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
@@ -143,7 +143,7 @@ export default function AdminSettings() {
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
               <span className="text-xl">🏪</span> Informações da Loja
             </h3>
-            <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Nome da Loja *" error={errors.storeName}>
                   <input type="text" value={settings.storeName} onChange={e => handleChange('storeName', e.target.value)} className={inputCls} />
@@ -183,13 +183,13 @@ export default function AdminSettings() {
           {/* SEÇÃO 2 — OPERAÇÃO DA LOJA */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">⚙️</span> Operação da Loja</h3>
-            <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
               {/* Toggle Loja Ativa */}
-              <div className={`p-4 rounded-lg border-2 ${settings.lojaAtiva ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+              <div className={`p-4 rounded-lg border-2 ${settings.lojaAtiva ? 'bg-emerald-950/50 border-emerald-800' : 'bg-red-950/50 border-red-800'}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-bold">{settings.lojaAtiva ? 'Loja Ativa' : 'Loja Desativada'}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-zinc-500 mt-1">
                       {settings.lojaAtiva ? 'Aceitando pedidos normalmente.' : 'Em manutenção. Clientes verão indisponibilidade.'}
                     </p>
                   </div>
@@ -208,7 +208,7 @@ export default function AdminSettings() {
                   <input type="number" min="0" step="0.01" value={settings.freeShippingAbove} onChange={e => handleChange('freeShippingAbove', parseFloat(e.target.value) || 0)} className={inputCls} />
                 </Field>
                 <Field label="Moeda">
-                  <select value={settings.currency} onChange={e => handleChange('currency', e.target.value)} className={`${inputCls} bg-white`}>
+                  <select value={settings.currency} onChange={e => handleChange('currency', e.target.value)} className={inputCls}>
                     <option value="BRL">Real (BRL)</option>
                     <option value="USD">Dólar (USD)</option>
                     <option value="EUR">Euro (EUR)</option>
@@ -247,7 +247,7 @@ export default function AdminSettings() {
           {/* SEÇÃO 3 — COMERCIAL */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">💼</span> Comercial</h3>
-            <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Email Comercial" error={errors.emailComercial}>
                   <input type="email" value={settings.emailComercial} onChange={e => handleChange('emailComercial', e.target.value)} className={inputCls} placeholder="comercial@surface.com" />
@@ -269,18 +269,18 @@ export default function AdminSettings() {
           {/* SEÇÃO 4 — SISTEMA */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">🔧</span> Sistema</h3>
-            <div className="bg-gray-50 p-6 rounded-lg space-y-3">
+            <div className="bg-zinc-800/50 p-6 rounded-lg space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Última atualização</span>
+                <span className="text-zinc-500">Última atualização</span>
                 <span className="font-mono font-bold">
                   {settings.atualizadoEm ? new Date(settings.atualizadoEm).toLocaleString('pt-BR') : '—'}
                 </span>
               </div>
-              <div className="border-t border-gray-200 pt-3">
-                <p className="text-xs text-gray-400">Integrações futuras preparadas:</p>
+              <div className="border-t border-zinc-700 pt-3">
+                <p className="text-xs text-zinc-500">Integrações futuras preparadas:</p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {['Pagamento (Stripe/MP)', 'Email (SendGrid)', 'Nota Fiscal (NF-e)', 'Logística'].map(i => (
-                    <span key={i} className="text-[10px] font-bold px-3 py-1 bg-gray-200 text-gray-500 rounded-full">{i}</span>
+                    <span key={i} className="text-[10px] font-bold px-3 py-1 bg-zinc-700 text-zinc-400 rounded-full">{i}</span>
                   ))}
                 </div>
               </div>

@@ -8,8 +8,20 @@ import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import { useToast } from '../../context/ToastContext';
 
 const AVAILABLE_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
-const inputCls = 'w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-black transition-colors';
+const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 transition-colors text-white placeholder-zinc-500';
 const PAGE_SIZE = 15;
+
+const generateSku = (productName, size) => {
+  if (!productName) return '';
+  const base = productName.toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 4)
+    .join('-');
+  return size ? `${base}-${size}` : base;
+};
 
 export default function Products() {
   const toast = useToast();
@@ -98,7 +110,9 @@ export default function Products() {
   useEffect(() => {
     api.get('/categories').then(res => {
       setCategories((res.data || []).map(c => ({ id: c.id_categoria, nome: c.nome_categoria })));
-    }).catch(() => {});
+    }).catch(() => {
+      toast.error('Erro ao carregar categorias');
+    });
   }, []);
 
   // Reset filters
@@ -158,7 +172,19 @@ export default function Products() {
         const fd = new FormData();
         uploadFiles.forEach(f => fd.append('photos', f));
         const up = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-        payload.fotos = up.data.map(fi => ({ url: fi.url, descricao: fi.descricao }));
+        const newFotos = up.data.map(fi => ({ url: fi.url, descricao: fi.descricao }));
+        // Combine existing photos with new uploads
+        if (editingId) {
+          payload.fotos = [
+            ...existingPhotos.map(f => ({ id_foto: f.id_foto, url: f.url, descricao: f.descricao, principal: f.principal })),
+            ...newFotos,
+          ];
+        } else {
+          payload.fotos = newFotos;
+        }
+      } else if (editingId) {
+        // Always send existing photos to prevent accidental deletion
+        payload.fotos = existingPhotos.map(f => ({ id_foto: f.id_foto, url: f.url, descricao: f.descricao, principal: f.principal }));
       }
 
       if (editingId) {
@@ -225,9 +251,16 @@ export default function Products() {
   }, [markEdited]);
 
   const handleVariationChange = useCallback((index, field, value) => {
-    setVariations(prev => { const n = [...prev]; n[index] = { ...n[index], [field]: value }; return n; });
+    setVariations(prev => {
+      const n = [...prev];
+      n[index] = { ...n[index], [field]: value };
+      if (field === 'size') {
+        n[index].sku = generateSku(formData.name, value);
+      }
+      return n;
+    });
     markEdited();
-  }, [markEdited]);
+  }, [markEdited, formData.name]);
 
   const handleRemoveVariation = useCallback((index) => {
     setVariations(prev => prev.filter((_, i) => i !== index));
@@ -272,44 +305,49 @@ export default function Products() {
       <Modal isOpen={showForm} onClose={handleCloseForm} title={editingId ? 'Editar Produto' : 'Adicionar Novo Produto'} size="lg">
         <div className="space-y-6">
           {formErrors.submit && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+            <div className="bg-red-950 border border-red-800 text-red-400 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
               <AlertTriangle size={16} /> {formErrors.submit}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Nome do Produto *</label>
+              <label className="text-sm font-medium mb-2 block text-zinc-300">Nome do Produto *</label>
               <input type="text" value={formData.name}
-                onChange={(e) => { setFormData({ ...formData, name: e.target.value }); markEdited(); }}
+                onChange={(e) => {
+                  const newName = e.target.value;
+                  setFormData(f => ({ ...f, name: newName }));
+                  setVariations(prev => prev.map(v => ({ ...v, sku: generateSku(newName, v.size) })));
+                  markEdited();
+                }}
                 placeholder="Ex: Camiseta Boxy Off-White" className={inputCls} />
-              {formErrors.name && <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>}
+              {formErrors.name && <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Preço Base (R$) *</label>
+              <label className="text-sm font-medium mb-2 block text-zinc-300">Preço Base (R$) *</label>
               <input type="number" min="0" step="0.01" value={formData.price}
                 onChange={(e) => { setFormData({ ...formData, price: e.target.value }); markEdited(); }}
                 className={inputCls} />
-              {formErrors.price && <p className="text-xs text-red-500 mt-1">{formErrors.price}</p>}
+              {formErrors.price && <p className="text-xs text-red-400 mt-1">{formErrors.price}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Categoria *</label>
+              <label className="text-sm font-medium mb-2 block text-zinc-300">Categoria *</label>
               <select value={formData.category}
                 onChange={(e) => { setFormData({ ...formData, category: e.target.value }); markEdited(); }}
-                className={`${inputCls} bg-white`}>
+                className={`${inputCls}`}>
                 <option value="">Selecione...</option>
                 {categories.map(c => (<option key={c.id} value={c.id}>{c.nome}</option>))}
               </select>
-              {formErrors.category && <p className="text-xs text-red-500 mt-1">{formErrors.category}</p>}
+              {formErrors.category && <p className="text-xs text-red-400 mt-1">{formErrors.category}</p>}
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
+              <label className="text-sm font-medium mb-2 block text-zinc-300">Status</label>
               <select value={formData.status}
                 onChange={(e) => { setFormData({ ...formData, status: e.target.value }); markEdited(); }}
-                className={`${inputCls} bg-white`}>
+                className={`${inputCls}`}>
                 <option value="ativo">Ativo</option>
                 <option value="inativo">Inativo</option>
               </select>
@@ -319,30 +357,30 @@ export default function Products() {
                 <input type="checkbox" checked={formData.featured}
                   onChange={(e) => { setFormData({ ...formData, featured: e.target.checked }); markEdited(); }}
                   className="w-4 h-4" />
-                <span className="text-sm font-medium">Produto Destaque</span>
+                <span className="text-sm font-medium text-zinc-300">Produto Destaque</span>
               </label>
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Descrição</label>
+            <label className="text-sm font-medium mb-2 block text-zinc-300">Descrição</label>
             <textarea value={formData.description || ''}
               onChange={(e) => { setFormData({ ...formData, description: e.target.value }); markEdited(); }}
               placeholder="Descrição do produto..." rows={3} className={`${inputCls} resize-none`} />
           </div>
 
           {/* FOTOS */}
-          <div className="border-t border-gray-200 pt-6">
-            <label className="text-sm font-bold mb-3 block">Fotos do Produto</label>
+          <div className="border-t border-zinc-800 pt-6">
+            <label className="text-sm font-bold mb-3 block text-zinc-300">Fotos do Produto</label>
             {editingId && existingPhotos.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs text-gray-500 mb-2">Fotos atuais — clique na ⭐ para definir como principal</p>
+                <p className="text-xs text-zinc-500 mb-2">Fotos atuais — clique na ⭐ para definir como principal</p>
                 <div className="flex gap-3 flex-wrap">
                   {existingPhotos.map(f => (
                     <div key={f.id_foto} className="relative group">
-                      <img src={resolveImageUrl(f.url)} alt={f.descricao || ''} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+                      <img src={resolveImageUrl(f.url)} alt={f.descricao || ''} className="w-20 h-20 object-cover rounded-lg border border-zinc-700" />
                       <button type="button" onClick={() => handleSetPrincipal(editingId, f.id_foto)}
-                        className={`absolute -top-2 -right-2 p-1 rounded-full border transition-colors ${f.principal ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-gray-400 hover:text-yellow-500 hover:border-yellow-400'}`}
+                        className={`absolute -top-2 -right-2 p-1 rounded-full border transition-colors ${f.principal ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-zinc-800 border-zinc-600 text-zinc-400 hover:text-yellow-400 hover:border-yellow-400'}`}
                         title={f.principal ? 'Foto principal' : 'Definir como principal'}>
                         <Star size={12} fill={f.principal ? 'currentColor' : 'none'} />
                       </button>
@@ -353,41 +391,41 @@ export default function Products() {
             )}
             <input type="file" multiple accept="image/*"
               onChange={(e) => { setUploadFiles(Array.from(e.target.files)); markEdited(); }}
-              className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" />
-            {uploadFiles.length > 0 && <p className="text-xs text-gray-400 mt-2">{uploadFiles.length} arquivo(s) selecionado(s)</p>}
+              className="text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700" />
+            {uploadFiles.length > 0 && <p className="text-xs text-zinc-500 mt-2">{uploadFiles.length} arquivo(s) selecionado(s)</p>}
           </div>
 
           {/* VARIAÇÕES */}
-          <div className="border-t border-gray-200 pt-6">
-            <label className="text-sm font-bold flex items-center gap-2 mb-4">
-              <Hash size={16} className="text-gray-400" /> Variações e SKUs
+          <div className="border-t border-zinc-800 pt-6">
+            <label className="text-sm font-bold flex items-center gap-2 mb-4 text-zinc-300">
+              <Hash size={16} className="text-zinc-500" /> Variações e SKUs
             </label>
             {formErrors.variations && (
-              <p className="text-xs text-red-500 mb-3 flex items-center gap-1"><AlertTriangle size={12} />{formErrors.variations}</p>
+              <p className="text-xs text-red-400 mb-3 flex items-center gap-1"><AlertTriangle size={12} />{formErrors.variations}</p>
             )}
             <div className="space-y-3">
               {variations.map((v, i) => (
-                <div key={i} className="flex gap-2 items-end bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div key={i} className="flex gap-2 items-end bg-zinc-800 p-3 rounded-lg border border-zinc-700">
                   <div className="w-20">
-                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Tamanho</label>
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase mb-1 block">Tamanho</label>
                     <select value={v.size} onChange={(e) => handleVariationChange(i, 'size', e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded text-center font-bold text-sm bg-white">
+                      className="w-full p-2 bg-zinc-700 border border-zinc-600 rounded text-center font-bold text-sm text-white">
                       <option value="">—</option>
                       {AVAILABLE_SIZES.map(s => (<option key={s} value={s}>{s}</option>))}
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">SKU</label>
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase mb-1 block">SKU</label>
                     <input type="text" value={v.sku} onChange={(e) => handleVariationChange(i, 'sku', e.target.value)}
-                      placeholder="Ex: SRF-CAM-BOXY-M" className="w-full p-2 border border-gray-200 rounded font-mono text-sm uppercase" />
+                      placeholder="Ex: SRF-CAM-BOXY-M" className="w-full p-2 bg-zinc-700 border border-zinc-600 rounded font-mono text-sm uppercase text-white" />
                   </div>
                   <div className="w-24">
-                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Estoque</label>
+                    <label className="text-[9px] font-bold text-zinc-500 uppercase mb-1 block">Estoque</label>
                     <input type="number" value={v.stock} onChange={(e) => handleVariationChange(i, 'stock', e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded text-sm" />
+                      className="w-full p-2 bg-zinc-700 border border-zinc-600 rounded text-sm text-white" />
                   </div>
                   {variations.length > 1 && (
-                    <button onClick={() => handleRemoveVariation(i)} className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors">
+                    <button onClick={() => handleRemoveVariation(i)} className="p-2 text-red-400 hover:bg-red-950 rounded transition-colors">
                       <Trash2 size={16} />
                     </button>
                   )}
@@ -395,19 +433,19 @@ export default function Products() {
               ))}
             </div>
             <button onClick={handleAddVariation}
-              className="mt-3 flex items-center gap-2 bg-gray-100 text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors border border-gray-200">
+              className="mt-3 flex items-center gap-2 bg-zinc-800 text-zinc-300 px-4 py-2 rounded-lg text-xs font-bold hover:bg-zinc-700 transition-colors border border-zinc-700">
               <Plus size={14} /> Adicionar Variação
             </button>
           </div>
 
-          <div className="flex gap-2 pt-4 border-t border-gray-200">
+          <div className="flex gap-2 pt-4 border-t border-zinc-800">
             <button onClick={handleAddProduct} disabled={saving}
-              className="flex-1 bg-black text-white py-3 font-bold hover:bg-zinc-800 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
+              className="flex-1 bg-white text-black py-3 font-bold hover:bg-zinc-200 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center gap-2">
               {saving && <Loader2 size={16} className="animate-spin" />}
               {saving ? 'Salvando...' : editingId ? 'Atualizar Produto' : 'Criar Produto'}
             </button>
             <button onClick={handleCloseForm}
-              className="px-6 py-3 border border-gray-300 font-bold hover:bg-gray-50 transition-colors rounded-lg">
+              className="px-6 py-3 border border-zinc-700 font-bold text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors rounded-lg">
               Cancelar
             </button>
           </div>
@@ -436,65 +474,65 @@ export default function Products() {
         actionCallback={handleBulkAction} />
 
       {/* HEADER + FILTERS */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 space-y-4">
           <div className="flex gap-4 justify-between items-center">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
               <input type="text" placeholder="Buscar por nome..." value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-black outline-none" />
+                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:border-zinc-500 outline-none text-white placeholder-zinc-500" />
             </div>
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-colors ${hasActiveFilters ? 'border-black bg-black text-white' : 'border-gray-200 hover:bg-gray-50'}`}>
-              <Filter size={16} /> Filtros {hasActiveFilters && <span className="bg-white text-black rounded-full w-5 h-5 text-xs flex items-center justify-center">{[filterCategory !== 'all', filterStatus !== 'all'].filter(Boolean).length}</span>}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-colors ${hasActiveFilters ? 'border-white bg-white text-black' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`}>
+              <Filter size={16} /> Filtros {hasActiveFilters && <span className="bg-black text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">{[filterCategory !== 'all', filterStatus !== 'all'].filter(Boolean).length}</span>}
             </button>
             <button onClick={() => { resetForm(); setShowForm(true); }}
-              className="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-zinc-800 transition-colors">
+              className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors">
               <Plus size={18} /> Novo Produto
             </button>
           </div>
 
           {showFilters && (
-            <div className="flex gap-4 items-end flex-wrap pt-2 border-t border-gray-100">
+            <div className="flex gap-4 items-end flex-wrap pt-2 border-t border-zinc-800">
               <div className="min-w-[160px]">
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Categoria</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">Categoria</label>
                 <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}
-                  className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white">
                   <option value="all">Todas</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
               </div>
               <div className="min-w-[140px]">
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Status</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">Status</label>
                 <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-                  className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white">
                   <option value="all">Todos</option>
                   <option value="ativo">Ativo</option>
                   <option value="inativo">Inativo</option>
                 </select>
               </div>
               {hasActiveFilters && (
-                <button onClick={handleResetFilters} className="text-xs text-gray-500 hover:text-black underline pb-2">Limpar filtros</button>
+                <button onClick={handleResetFilters} className="text-xs text-zinc-500 hover:text-white underline pb-2">Limpar filtros</button>
               )}
             </div>
           )}
 
           {/* Bulk Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-              <span className="text-sm font-bold text-gray-600">{selectedIds.length} selecionado(s)</span>
+            <div className="flex items-center gap-3 bg-zinc-800 p-3 rounded-lg border border-zinc-700">
+              <span className="text-sm font-bold text-zinc-300">{selectedIds.length} selecionado(s)</span>
               <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}
-                className="p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white">
                 <option value="">Ação em lote...</option>
                 {BULK_ACTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
               </select>
               <button onClick={() => { if (bulkAction) setConfirmBulk(true); }}
                 disabled={!bulkAction}
-                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors">
+                className="px-4 py-2 bg-white text-black rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-200 transition-colors">
                 Aplicar
               </button>
-              <button onClick={() => setSelectedIds([])} className="text-xs text-gray-400 hover:text-black ml-auto">
+              <button onClick={() => setSelectedIds([])} className="text-xs text-zinc-500 hover:text-white ml-auto">
                 Limpar seleção
               </button>
             </div>
@@ -504,7 +542,7 @@ export default function Products() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
+              <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
                 <th className="px-4 py-4 w-10">
                   <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" />
                 </th>
@@ -517,20 +555,20 @@ export default function Products() {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-800">
               {loading ? (
-                <tr><td colSpan={8} className="py-12 text-center text-gray-400"><Loader2 size={24} className="animate-spin mx-auto" /></td></tr>
+                <tr><td colSpan={8} className="py-12 text-center text-zinc-500"><Loader2 size={24} className="animate-spin mx-auto" /></td></tr>
               ) : products.map((p) => (
-                <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${selectedIds.includes(p.id) ? 'bg-blue-50' : ''}`}>
+                <tr key={p.id} className={`hover:bg-zinc-800/50 transition-colors ${selectedIds.includes(p.id) ? 'bg-zinc-800' : ''}`}>
                   <td className="px-4 py-4">
                     <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4" />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-sm">{p.name}</div>
-                    <div className="text-[10px] text-gray-400 uppercase font-bold">{p.category}</div>
+                    <div className="font-bold text-sm text-white">{p.name}</div>
+                    <div className="text-[10px] text-zinc-500 uppercase font-bold">{p.category}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-mono bg-zinc-100 px-2 py-1 rounded text-xs text-zinc-600 font-semibold border border-zinc-200">
+                    <span className="font-mono bg-zinc-800 px-2 py-1 rounded text-xs text-zinc-400 font-semibold border border-zinc-700">
                       {p.sku}
                     </span>
                   </td>
@@ -539,18 +577,18 @@ export default function Products() {
                       {p.qty} un
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-bold">R$ {String(p.price).replace('.', ',')}</td>
+                  <td className="px-6 py-4 font-bold text-white">R$ {String(p.price).replace('.', ',')}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${p.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${p.status === 'ativo' ? 'bg-emerald-950 text-emerald-400' : 'bg-zinc-800 text-zinc-400'}`}>
                       {p.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">{p.featured ? '⭐' : '-'}</td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <button onClick={() => handleEditProduct(p)} className="p-2 text-gray-400 hover:text-black transition-colors">
+                    <button onClick={() => handleEditProduct(p)} className="p-2 text-zinc-500 hover:text-white transition-colors">
                       <Edit size={16} />
                     </button>
-                    <button onClick={() => setConfirmDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                    <button onClick={() => setConfirmDelete(p.id)} className="p-2 text-zinc-500 hover:text-red-400 transition-colors">
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -561,7 +599,7 @@ export default function Products() {
         </div>
 
         {!loading && products.length === 0 && (
-          <div className="p-12 text-center text-gray-400"><p>Nenhum produto encontrado.</p></div>
+          <div className="p-12 text-center text-zinc-500"><p>Nenhum produto encontrado.</p></div>
         )}
 
         <div className="px-6 pb-4">

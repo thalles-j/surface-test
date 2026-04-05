@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Eye, Edit, ChevronDown, ChevronUp, Filter, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Eye, ChevronDown, ChevronUp, Filter, Loader2 } from 'lucide-react';
 import Modal from '../Modal';
-import AlertModal from '../AlertModal';
 import Pagination from './Pagination';
 import { api } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -16,21 +15,12 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-  pendente: 'bg-yellow-100 text-yellow-700',
-  confirmado: 'bg-blue-100 text-blue-700',
-  em_separacao: 'bg-purple-100 text-purple-700',
-  enviado: 'bg-indigo-100 text-indigo-700',
-  finalizado: 'bg-green-100 text-green-700',
-  cancelado: 'bg-red-100 text-red-700',
-};
-
-const TRANSITIONS = {
-  pendente: ['confirmado', 'cancelado'],
-  confirmado: ['em_separacao', 'cancelado'],
-  em_separacao: ['enviado', 'cancelado'],
-  enviado: ['finalizado'],
-  finalizado: [],
-  cancelado: [],
+  pendente: 'bg-yellow-950 text-yellow-400',
+  confirmado: 'bg-blue-950 text-blue-400',
+  em_separacao: 'bg-purple-950 text-purple-400',
+  enviado: 'bg-indigo-950 text-indigo-400',
+  finalizado: 'bg-emerald-950 text-emerald-400',
+  cancelado: 'bg-red-950 text-red-400',
 };
 
 const PAGE_SIZE = 15;
@@ -52,12 +42,9 @@ export default function Sales() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
-  const [statusModal, setStatusModal] = useState({ isOpen: false, order: null, status: '' });
+  const [stats, setStats] = useState({ totalRevenue: 0, ordersCount: 0, ticketMedio: 0, finalizados: 0 });
 
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkStatus, setBulkStatus] = useState('');
-  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [orderModal, setOrderModal] = useState({ isOpen: false, order: null });
 
   useEffect(() => {
     const timer = setTimeout(() => { setDebouncedSearch(searchTerm); setPage(1); }, 400);
@@ -102,6 +89,14 @@ export default function Sales() {
         setOrders(res.data.data.map(mapOrder));
         setTotalOrders(res.data.total);
         setTotalPages(res.data.totalPages);
+        if (res.data.aggregates) {
+          setStats({
+            totalRevenue: res.data.aggregates.totalRevenue || 0,
+            ordersCount: res.data.total || 0,
+            ticketMedio: res.data.aggregates.avgTicket || 0,
+            finalizados: res.data.aggregates.finalizados || 0,
+          });
+        }
       } else {
         setOrders((res.data || []).map(mapOrder));
       }
@@ -125,151 +120,80 @@ export default function Sales() {
     setPage(1);
   }, []);
 
-  const stats = useMemo(() => {
-    const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
-    return {
-      totalRevenue,
-      ordersCount: totalOrders,
-      ticketMedio: orders.length > 0 ? totalRevenue / orders.length : 0,
-      finalizados: orders.filter(o => o.status === 'finalizado').length,
-    };
-  }, [orders, totalOrders]);
-
   const openOrderModal = useCallback((order) => setOrderModal({ isOpen: true, order }), []);
   const closeOrderModal = useCallback(() => setOrderModal({ isOpen: false, order: null }), []);
-
-  const openStatusModal = useCallback((order) => {
-    const nextStatuses = TRANSITIONS[order.status] || [];
-    setStatusModal({ isOpen: true, order, status: nextStatuses[0] || order.status });
-  }, []);
-  const closeStatusModal = useCallback(() => setStatusModal({ isOpen: false, order: null, status: '' }), []);
-
-  const saveOrderStatus = useCallback(async () => {
-    try {
-      if (!statusModal.order) return;
-      await api.patch(`/admin/orders/${statusModal.order.rawId}/status`, { status: statusModal.status });
-      toast.success('Status atualizado');
-      closeStatusModal();
-      loadOrders();
-    } catch (err) {
-      toast.error(err.response?.data?.mensagem || 'Erro ao atualizar status');
-    }
-  }, [statusModal, closeStatusModal, loadOrders, toast]);
 
   const toggleSort = useCallback(() => {
     setSortByValue(prev => prev === null ? 'desc' : prev === 'desc' ? 'asc' : null);
     setPage(1);
   }, []);
 
-  const allSelected = orders.length > 0 && selectedIds.length === orders.length;
-  const toggleSelectAll = useCallback(() => {
-    setSelectedIds(allSelected ? [] : orders.map(o => o.rawId));
-  }, [allSelected, orders]);
-
-  const toggleSelect = useCallback((id) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  }, []);
-
-  const handleBulkStatus = useCallback(async () => {
-    if (!bulkStatus || selectedIds.length === 0) return;
-    try {
-      const res = await api.patch('/admin/orders/bulk-status', { ids: selectedIds, status: bulkStatus });
-      toast.success(res.data?.mensagem || 'Status atualizados');
-      setSelectedIds([]);
-      setBulkStatus('');
-      loadOrders();
-    } catch (err) {
-      toast.error(err.response?.data?.mensagem || 'Erro na ação em lote');
-    }
-    setConfirmBulk(false);
-  }, [bulkStatus, selectedIds, loadOrders, toast]);
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Total de Vendas</p>
-          <h3 className="text-2xl font-bold mt-2">R$ {stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-300">
+          <p className="text-zinc-500 text-sm font-medium">Total de Vendas</p>
+          <h3 className="text-2xl font-bold mt-2 text-white">R$ {stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Pedidos</p>
-          <h3 className="text-2xl font-bold mt-2">{stats.ordersCount}</h3>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-300">
+          <p className="text-zinc-500 text-sm font-medium">Pedidos</p>
+          <h3 className="text-2xl font-bold mt-2 text-white">{stats.ordersCount}</h3>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Ticket Médio</p>
-          <h3 className="text-2xl font-bold mt-2">R$ {stats.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-300">
+          <p className="text-zinc-500 text-sm font-medium">Ticket Médio</p>
+          <h3 className="text-2xl font-bold mt-2 text-white">R$ {stats.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
         </div>
-        <div className="bg-white p-6 border border-gray-100 rounded-lg">
-          <p className="text-gray-500 text-sm font-medium">Finalizados</p>
-          <h3 className="text-2xl font-bold mt-2">{stats.finalizados}</h3>
+        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-300">
+          <p className="text-zinc-500 text-sm font-medium">Finalizados</p>
+          <h3 className="text-2xl font-bold mt-2 text-white">{stats.finalizados}</h3>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-100 space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-zinc-800 space-y-4">
           <div className="flex gap-4 items-center">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
               <input type="text" placeholder="Buscar por cliente..." value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-black outline-none" />
+                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:border-zinc-500 outline-none text-white placeholder-zinc-500" />
             </div>
             <select value={selectedStatus} onChange={(e) => { setSelectedStatus(e.target.value); setPage(1); }}
-              className="px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-black bg-white">
+              className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white">
               <option value="all">Todos os Status</option>
               {Object.entries(STATUS_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
               ))}
             </select>
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-colors ${hasActiveFilters ? 'border-black bg-black text-white' : 'border-gray-200 hover:bg-gray-50'}`}>
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-bold transition-colors ${hasActiveFilters ? 'border-white bg-white text-black' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`}>
               <Filter size={16} /> Filtros
             </button>
           </div>
 
           {showFilters && (
-            <div className="flex gap-4 items-end flex-wrap pt-2 border-t border-gray-100">
+            <div className="flex gap-4 items-end flex-wrap pt-2 border-t border-zinc-800">
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Data início</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">Data início</label>
                 <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1); }}
-                  className="p-2 border border-gray-200 rounded-lg text-sm" />
+                  className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white" />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Data fim</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">Data fim</label>
                 <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1); }}
-                  className="p-2 border border-gray-200 rounded-lg text-sm" />
+                  className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white" />
               </div>
               {hasActiveFilters && (
-                <button onClick={handleResetFilters} className="text-xs text-gray-500 hover:text-black underline pb-2">Limpar filtros</button>
+                <button onClick={handleResetFilters} className="text-xs text-zinc-500 hover:text-white underline pb-2">Limpar filtros</button>
               )}
-            </div>
-          )}
-
-          {selectedIds.length > 0 && (
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-              <span className="text-sm font-bold text-gray-600">{selectedIds.length} selecionado(s)</span>
-              <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)}
-                className="p-2 border border-gray-200 rounded-lg text-sm bg-white">
-                <option value="">Alterar status para...</option>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-              <button onClick={() => { if (bulkStatus) setConfirmBulk(true); }} disabled={!bulkStatus}
-                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors">Aplicar</button>
-              <button onClick={() => setSelectedIds([])} className="text-xs text-gray-400 hover:text-black ml-auto">Limpar seleção</button>
             </div>
           )}
         </div>
 
-        <AlertModal isOpen={confirmBulk} onClose={() => setConfirmBulk(false)}
-          title="Ação em lote"
-          message={`Alterar status de ${selectedIds.length} pedido(s) para "${STATUS_LABELS[bulkStatus] || bulkStatus}"?`}
-          type="warning" actionLabel="Confirmar" actionCallback={handleBulkStatus} />
-
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-100">
-                <th className="px-4 py-4 w-10"><input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" /></th>
+              <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
                 <th className="px-6 py-4">ID</th>
                 <th className="px-6 py-4">Cliente</th>
                 <th className="px-6 py-4">Itens</th>
@@ -281,23 +205,19 @@ export default function Sales() {
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-800">
               {loading ? (
-                <tr><td colSpan={8} className="py-12 text-center"><Loader2 size={24} className="animate-spin mx-auto text-gray-400" /></td></tr>
+                <tr><td colSpan={7} className="py-12 text-center"><Loader2 size={24} className="animate-spin mx-auto text-zinc-500" /></td></tr>
               ) : orders.map((order) => (
-                <tr key={order.rawId} className={`hover:bg-gray-50 transition-colors ${selectedIds.includes(order.rawId) ? 'bg-blue-50' : ''}`}>
-                  <td className="px-4 py-4"><input type="checkbox" checked={selectedIds.includes(order.rawId)} onChange={() => toggleSelect(order.rawId)} className="w-4 h-4" /></td>
-                  <td className="px-6 py-4 font-bold text-sm">{order.id}</td>
-                  <td className="px-6 py-4"><div className="font-medium text-sm">{order.client}</div><div className="text-[12px] text-gray-400">{order.email}</div></td>
-                  <td className="px-6 py-4 text-sm">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</td>
-                  <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-700'}`}>{STATUS_LABELS[order.status] || order.status}</span></td>
-                  <td className="px-6 py-4 font-bold text-sm">R$ {order.total.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button onClick={() => openOrderModal(order)} className="p-2 text-gray-400 hover:text-black transition-colors"><Eye size={16} /></button>
-                    {(TRANSITIONS[order.status] || []).length > 0 && (
-                      <button onClick={() => openStatusModal(order)} className="p-2 text-gray-400 hover:text-black transition-colors"><Edit size={16} /></button>
-                    )}
+                <tr key={order.rawId} className="hover:bg-zinc-800/50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-sm text-white">{order.id}</td>
+                  <td className="px-6 py-4"><div className="font-medium text-sm text-zinc-200">{order.client}</div><div className="text-[12px] text-zinc-500">{order.email}</div></td>
+                  <td className="px-6 py-4 text-sm text-zinc-400">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</td>
+                  <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[order.status] || 'bg-zinc-800 text-zinc-400'}`}>{STATUS_LABELS[order.status] || order.status}</span></td>
+                  <td className="px-6 py-4 font-bold text-sm text-white">R$ {order.total.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-zinc-500">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => openOrderModal(order)} className="p-2 text-zinc-500 hover:text-white transition-colors"><Eye size={16} /></button>
                   </td>
                 </tr>
               ))}
@@ -309,57 +229,42 @@ export default function Sales() {
           {orderModal.order && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div><p className="text-xs text-gray-400 font-bold uppercase">Cliente</p><p className="text-sm font-bold">{orderModal.order.client}</p></div>
-                <div><p className="text-xs text-gray-400 font-bold uppercase">Email</p><p className="text-sm">{orderModal.order.email}</p></div>
-                {orderModal.order.phone && <div><p className="text-xs text-gray-400 font-bold uppercase">Telefone</p><p className="text-sm">{orderModal.order.phone}</p></div>}
-                <div><p className="text-xs text-gray-400 font-bold uppercase">Status</p><span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[orderModal.order.status]}`}>{STATUS_LABELS[orderModal.order.status]}</span></div>
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Cliente</p><p className="text-sm font-bold text-white">{orderModal.order.client}</p></div>
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Email</p><p className="text-sm text-zinc-300">{orderModal.order.email}</p></div>
+                {orderModal.order.phone && <div><p className="text-xs text-zinc-500 font-bold uppercase">Telefone</p><p className="text-sm text-zinc-300">{orderModal.order.phone}</p></div>}
+                <div><p className="text-xs text-zinc-500 font-bold uppercase">Status</p><span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[orderModal.order.status]}`}>{STATUS_LABELS[orderModal.order.status]}</span></div>
               </div>
               {orderModal.order.address && (
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs text-gray-400 font-bold uppercase mb-2">Endereço</p>
-                  <p className="text-sm">{orderModal.order.address.logradouro}, {orderModal.order.address.numero}{orderModal.order.address.complemento ? ` - ${orderModal.order.address.complemento}` : ''}</p>
-                  <p className="text-sm text-gray-500">{orderModal.order.address.cidade} - {orderModal.order.address.estado}, CEP: {orderModal.order.address.cep}</p>
+                <div className="border-t border-zinc-800 pt-4">
+                  <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Endereço</p>
+                  <p className="text-sm text-zinc-300">{orderModal.order.address.logradouro}, {orderModal.order.address.numero}{orderModal.order.address.complemento ? ` - ${orderModal.order.address.complemento}` : ''}</p>
+                  <p className="text-sm text-zinc-500">{orderModal.order.address.cidade} - {orderModal.order.address.estado}, CEP: {orderModal.order.address.cep}</p>
                 </div>
               )}
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs text-gray-400 font-bold uppercase mb-3">Itens</p>
+              <div className="border-t border-zinc-800 pt-4">
+                <p className="text-xs text-zinc-500 font-bold uppercase mb-3">Itens</p>
                 <div className="space-y-2">
                   {orderModal.order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                      <div><p className="text-sm font-bold">{item.name}</p>{item.size && <p className="text-xs text-gray-400">Tam: {item.size}</p>}</div>
-                      <div className="text-right"><p className="text-sm font-bold">R$ {(item.price * item.qty).toFixed(2)}</p><p className="text-xs text-gray-400">{item.qty}x R$ {item.price.toFixed(2)}</p></div>
+                    <div key={idx} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
+                      <div><p className="text-sm font-bold text-white">{item.name}</p>{item.size && <p className="text-xs text-zinc-500">Tam: {item.size}</p>}</div>
+                      <div className="text-right"><p className="text-sm font-bold text-white">R$ {(item.price * item.qty).toFixed(2)}</p><p className="text-xs text-zinc-500">{item.qty}x R$ {item.price.toFixed(2)}</p></div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="border-t border-gray-100 pt-4 space-y-1">
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>R$ {orderModal.order.subtotal.toFixed(2)}</span></div>
-                {orderModal.order.desconto > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">Desconto</span><span className="text-green-600">-R$ {orderModal.order.desconto.toFixed(2)}</span></div>}
-                {orderModal.order.frete > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">Frete</span><span>R$ {orderModal.order.frete.toFixed(2)}</span></div>}
-                <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-100"><span>Total</span><span>R$ {orderModal.order.total.toFixed(2)}</span></div>
-                {orderModal.order.metodo_pagamento && <p className="text-xs text-gray-400 pt-1">Pagamento: {orderModal.order.metodo_pagamento}</p>}
+              <div className="border-t border-zinc-800 pt-4 space-y-1">
+                <div className="flex justify-between text-sm"><span className="text-zinc-500">Subtotal</span><span className="text-zinc-300">R$ {orderModal.order.subtotal.toFixed(2)}</span></div>
+                {orderModal.order.desconto > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Desconto</span><span className="text-emerald-400">-R$ {orderModal.order.desconto.toFixed(2)}</span></div>}
+                {orderModal.order.frete > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Frete</span><span className="text-zinc-300">R$ {orderModal.order.frete.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-sm font-bold pt-2 border-t border-zinc-800"><span className="text-white">Total</span><span className="text-white">R$ {orderModal.order.total.toFixed(2)}</span></div>
+                {orderModal.order.metodo_pagamento && <p className="text-xs text-zinc-500 pt-1">Pagamento: {orderModal.order.metodo_pagamento}</p>}
               </div>
             </div>
           )}
         </Modal>
 
-        <Modal isOpen={statusModal.isOpen} onClose={closeStatusModal} title={`Atualizar status ${statusModal.order?.id || ''}`}>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-gray-400 mb-2">Status atual: <strong>{STATUS_LABELS[statusModal.order?.status] || statusModal.order?.status}</strong></p>
-              <select value={statusModal.status} onChange={(e) => setStatusModal(prev => ({ ...prev, status: e.target.value }))} className="w-full p-2 border rounded">
-                {(TRANSITIONS[statusModal.order?.status] || []).map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={saveOrderStatus} className="flex-1 bg-black text-white py-2 rounded font-bold">Salvar</button>
-              <button onClick={closeStatusModal} className="px-4 py-2 border rounded">Cancelar</button>
-            </div>
-          </div>
-        </Modal>
-
         {!loading && orders.length === 0 && (
-          <div className="p-12 text-center text-gray-400"><p>Nenhum pedido encontrado.</p></div>
+          <div className="p-12 text-center text-zinc-500"><p>Nenhum pedido encontrado.</p></div>
         )}
 
         <div className="px-6 pb-4">

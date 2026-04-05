@@ -174,8 +174,11 @@ export const updateProductController = async (req, res) => {
       tipo,
       id_categoria,
       variacoes_estoque,
-      fotos = []
     } = req.body;
+
+    // fotos is optional — only process photo changes if explicitly sent
+    const fotosProvided = req.body.hasOwnProperty('fotos');
+    const fotos = fotosProvided ? (req.body.fotos || []) : null;
 
     // 1. Verifica se o produto existe
     const produtoExistente = await prisma.produtos.findUnique({
@@ -226,46 +229,55 @@ export const updateProductController = async (req, res) => {
       }
     });
 
-    // 4. Atualização das fotos ----------------------------
+    // 4. Atualização das fotos (somente se fotos foi enviado no payload) ---
 
-    const fotosEnviadasComId = fotos.filter(f => f.id_foto);  // já existentes
-    const fotosNovas = fotos.filter(f => !f.id_foto);         // criadas agora
+    if (fotosProvided && fotos !== null) {
+      const fotosEnviadasComId = fotos.filter(f => f.id_foto);  // já existentes
+      const fotosNovas = fotos.filter(f => !f.id_foto);         // criadas agora
 
-    // 4.1. Atualizar fotos existentes
-    for (const foto of fotosEnviadasComId) {
-      await prisma.fotos_produtos.update({
-        where: { id_foto: foto.id_foto },
-        data: {
-          url: foto.url,
-          descricao: foto.descricao,
-          principal: foto.principal === true,
-        }
-      });
-    }
-
-    // 4.2. Criar novas fotos
-    for (const foto of fotosNovas) {
-      await prisma.fotos_produtos.create({
-        data: {
-          url: foto.url,
-          descricao: foto.descricao,
-          principal: foto.principal === true,
-          id_produto: id
-        }
-      });
-    }
-
-    // 4.3. Remover fotos que sumiram do frontend
-    const idsEnviados = fotosEnviadasComId.map(f => f.id_foto);
-
-    await prisma.fotos_produtos.deleteMany({
-      where: {
-        id_produto: id,
-        id_foto: {
-          notIn: idsEnviados
-        }
+      // 4.1. Atualizar fotos existentes
+      for (const foto of fotosEnviadasComId) {
+        await prisma.fotos_produtos.update({
+          where: { id_foto: foto.id_foto },
+          data: {
+            url: foto.url,
+            descricao: foto.descricao,
+            principal: foto.principal === true,
+          }
+        });
       }
-    });
+
+      // 4.2. Criar novas fotos
+      for (const foto of fotosNovas) {
+        await prisma.fotos_produtos.create({
+          data: {
+            url: foto.url,
+            descricao: foto.descricao,
+            principal: foto.principal === true,
+            id_produto: id
+          }
+        });
+      }
+
+      // 4.3. Remover fotos que sumiram do frontend
+      const idsEnviados = fotosEnviadasComId.map(f => f.id_foto);
+
+      if (idsEnviados.length > 0) {
+        await prisma.fotos_produtos.deleteMany({
+          where: {
+            id_produto: id,
+            id_foto: {
+              notIn: idsEnviados
+            }
+          }
+        });
+      } else if (fotosNovas.length === 0) {
+        // Fotos array was sent as empty — delete all photos
+        await prisma.fotos_produtos.deleteMany({
+          where: { id_produto: id }
+        });
+      }
+    }
 
     //------------------------------------------------------
 
