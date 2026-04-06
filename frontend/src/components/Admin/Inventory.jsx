@@ -280,7 +280,99 @@ export default function Inventory() {
             <p>Nenhum item encontrado.</p>
           </div>
         )}
+         {/* DASHBOARD DE ESTOQUE */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <StatCard title="Itens Totais" value="428" />
+        <StatCard title="SKUs em Alerta" value="12" color="bg-red-600" />
+        <StatCard title="Giro de Drop" value="84%" />
+        <StatCard title="Valor em Stock" value="R$ 52.400" />
+      </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LISTA DE ESTOQUE CRÍTICO */}
+        <div className="lg:col-span-8 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 className="font-black uppercase text-sm tracking-tight">Saúde do Inventário</h3>
+            <div className="flex gap-2">
+               <button className="p-2 border border-gray-100 rounded hover:bg-gray-50 transition-colors"><Filter size={16}/></button>
+               <button className="bg-black text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest">+ Reposição</button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[700px]">
+              <thead>
+                <tr className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                  <th className="px-6 py-4">Produto / Variação</th>
+                  <th className="px-6 py-4">SKU</th>
+                  <th className="px-6 py-4">Quantidade</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-center">Ação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-bold text-xs uppercase tracking-tight">
+                {products.map(p => p.variations.map((v, i) => {
+                  const health = getStockHealth(v.stock);
+                  return (
+                    <tr key={`${p.id}-${i}`} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img src={p.images[0].url} className="w-8 h-8 object-cover rounded" />
+                          <div>
+                            <p className="font-black">{p.name}</p>
+                            <p className="text-[9px] text-gray-400 tracking-widest">Tamanho: {v.size}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-[10px] text-gray-400">SRF-CAM-{v.size}</td>
+                      <td className="px-6 py-4 text-sm font-black">{v.stock} un</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${health.color}`}>
+                          {health.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button className="p-2 hover:bg-black hover:text-white rounded-full transition-all">
+                          <Edit size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                }))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* LOG DE MOVIMENTAÇÃO */}
+        <div className="lg:col-span-4 bg-white border border-gray-100 rounded-xl shadow-sm p-6">
+          <h3 className="font-black uppercase text-sm tracking-tight mb-6 flex items-center gap-2">
+            <History size={18} /> Histórico de Giro
+          </h3>
+          <div className="space-y-6">
+            {[
+              { type: 'in', label: 'Reposição Drop 01', qty: '+50', date: 'Hoje, 14:20' },
+              { type: 'out', label: 'Venda Pedido #1024', qty: '-01', date: 'Hoje, 12:05' },
+              { type: 'out', label: 'Venda Pedido #1023', qty: '-02', date: 'Ontem, 18:45' },
+              { type: 'in', label: 'Devolução Cliente', qty: '+01', date: '20 Out' },
+            ].map((log, i) => (
+              <div key={i} className="flex items-start gap-3 border-l-2 border-gray-50 pl-4 relative">
+                <div className={`absolute -left-[9px] top-0 p-1 rounded-full bg-white border ${log.type === 'in' ? 'text-green-500 border-green-100' : 'text-red-500 border-red-100'}`}>
+                  {log.type === 'in' ? <ArrowUpCircle size={10} /> : <ArrowDownCircle size={10} />}
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-tight">{log.label}</p>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase">{log.date}</p>
+                </div>
+                <span className={`text-xs font-black ${log.type === 'in' ? 'text-green-600' : 'text-red-600'}`}>{log.qty}</span>
+              </div>
+            ))}
+          </div>
+          <button className="w-full mt-8 py-3 border border-gray-100 rounded text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">Ver Log Completo</button>
+        </div>
+
+      </div>
+    </div>
         <Pagination page={page} totalPages={totalPages} total={totalItems} onPageChange={setPage} limit={PAGE_SIZE} />
       </div>
     </div>

@@ -25,7 +25,12 @@ const ScrollUp = ({ children }) => {
   const { pathname } = useLocation();
   
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Em vez de (0,0), passamos um objeto com o comportamento 'smooth'
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth' // Esta é a linha que cria a animação
+    });
   }, [pathname]);
 
   return children;
@@ -64,7 +69,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Rotas públicas padrão (mantêm posição do scroll) */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<ScrollUp><LandingPage /></ScrollUp>} />
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:slug" element={<ProductDetail />} />
