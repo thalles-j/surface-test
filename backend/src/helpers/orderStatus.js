@@ -5,6 +5,8 @@ export const ORDER_STATUS = {
   ENVIADO: 'enviado',
   FINALIZADO: 'finalizado',
   CANCELADO: 'cancelado',
+  PROCESSANDO: 'processando',
+  CONCLUIDO: 'concluido',
 };
 
 export const STATUS_LABELS = {
@@ -14,6 +16,8 @@ export const STATUS_LABELS = {
   enviado: 'Enviado',
   finalizado: 'Finalizado',
   cancelado: 'Cancelado',
+  processando: 'Processando',
+  concluido: 'Concluído',
 };
 
 const TRANSITIONS = {
@@ -23,6 +27,8 @@ const TRANSITIONS = {
   enviado: ['finalizado'],
   finalizado: [],
   cancelado: [],
+  processando: ['enviado', 'finalizado', 'cancelado'],
+  concluido: [],
 };
 
 export function isValidTransition(currentStatus, newStatus) {

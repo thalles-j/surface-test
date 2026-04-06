@@ -12,6 +12,8 @@ const STATUS_LABELS = {
   enviado: 'Enviado',
   finalizado: 'Finalizado',
   cancelado: 'Cancelado',
+  processando: 'Processando',
+  concluido: 'Concluído',
 };
 
 const STATUS_COLORS = {
@@ -21,6 +23,8 @@ const STATUS_COLORS = {
   enviado: 'bg-indigo-950 text-indigo-400',
   finalizado: 'bg-emerald-950 text-emerald-400',
   cancelado: 'bg-red-950 text-red-400',
+  processando: 'bg-cyan-950 text-cyan-400',
+  concluido: 'bg-emerald-950 text-emerald-400',
 };
 
 const STATUS_TRANSITIONS = {
@@ -30,6 +34,8 @@ const STATUS_TRANSITIONS = {
   enviado: ['finalizado'],
   finalizado: [],
   cancelado: [],
+  processando: ['enviado', 'finalizado', 'cancelado'],
+  concluido: [],
 };
 
 const STATUS_ICONS = {
@@ -39,6 +45,8 @@ const STATUS_ICONS = {
   enviado: Truck,
   finalizado: CheckCircle,
   cancelado: XCircle,
+  processando: Package,
+  concluido: CheckCircle,
 };
 
 const STATUS_ACTION_COLORS = {
@@ -47,6 +55,7 @@ const STATUS_ACTION_COLORS = {
   enviado: 'bg-indigo-600 hover:bg-indigo-500 text-white',
   finalizado: 'bg-emerald-600 hover:bg-emerald-500 text-white',
   cancelado: 'bg-red-900 hover:bg-red-800 text-red-300 border border-red-800',
+  processando: 'bg-cyan-600 hover:bg-cyan-500 text-white',
 };
 
 const PAGE_SIZE = 15;
@@ -172,7 +181,7 @@ export default function Sales() {
     setUpdatingStatus(true);
     try {
       const res = await api.patch(`/admin/orders/${orderId}/status`, { status: newStatus });
-      const updatedPedido = res.data?.data?.pedido;
+      const updatedPedido = res.data?.pedido;
       toast.success(`Status atualizado para ${STATUS_LABELS[newStatus]}`);
       if (updatedPedido) {
         const mapped = mapOrder(updatedPedido);
