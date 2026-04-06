@@ -1,10 +1,15 @@
 import { createOrder, getOrdersByUser, getOrderById } from '../services/orderService.js';
+import { sendOrderConfirmation } from '../services/emailService.js';
 
 export async function createOrderController(req, res, next) {
   try {
     const userId = req.user.id;
     const { items, codigo_cupom } = req.body;
     const order = await createOrder(userId, items, codigo_cupom || null);
+
+    // Fire-and-forget — não bloqueia a resposta
+    sendOrderConfirmation(order);
+
     return res.status(201).json(order);
   } catch (error) {
     next(error);

@@ -1,6 +1,7 @@
 import prisma from '../../database/prisma.js';
 import { sucesso, erro } from '../../helpers/apiResponse.js';
 import { isValidTransition, getAllStatuses } from '../../helpers/orderStatus.js';
+import { sendOrderStatusUpdate } from '../emailService.js';
 
 export const getSalesData = async (req, res) => {
   try {
@@ -134,6 +135,13 @@ export const updateOrderStatus = async (req, res) => {
         pedidoProdutos: { include: { produto: true } },
         historico: { orderBy: { criado_em: 'desc' } },
       },
+    });
+
+    // Fire-and-forget — não bloqueia a resposta
+    sendOrderStatusUpdate({
+      order: updatedOrder,
+      statusDe: currentOrder.status,
+      statusPara: status,
     });
 
     return sucesso(res, { mensagem: 'Status atualizado', pedido: updatedOrder });
