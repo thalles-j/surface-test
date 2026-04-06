@@ -88,7 +88,7 @@ model fotos_produtos {
 // --- MODELOS DE PEDIDO E CARRINHO ---
 model pedidos {
   id_pedido           Int      @id @default(autoincrement())
-  id_usuario          Int
+  id_usuario          Int?
   data_pedido         DateTime @default(now())
   status              String   @default("pendente")
   subtotal            Decimal? @db.Decimal(10, 2)
@@ -99,8 +99,11 @@ model pedidos {
   status_pagamento    String?
   metodo_pagamento    String?
   observacoes_internas String?
+  origem              String   @default("online")
+  nome_cliente        String?
+  endereco_entrega    Json?
 
-  usuario        usuarios          @relation(fields: [id_usuario], references: [id_usuario])
+  usuario        usuarios?         @relation(fields: [id_usuario], references: [id_usuario])
   pedidoProdutos pedido_produtos[]
   historico      historico_pedidos[]
 }
@@ -169,8 +172,18 @@ model configuracoes_loja {
   fundo_landing      String?
   banner_url         String?
   loja_ativa         Boolean  @default(true)
+  data_abertura      DateTime?
+  early_access_ativo Boolean  @default(false)
   criado_em          DateTime @default(now())
   atualizado_em      DateTime @updatedAt
+}
+
+// --- EARLY ACCESS / LISTA DE ESPERA ---
+model early_access_emails {
+  id_email   Int      @id @default(autoincrement())
+  email      String   @unique
+  liberado   Boolean  @default(false)
+  criado_em  DateTime @default(now())
 }
 
 // --- COLEÇÕES E ASSOCIAÇÕES ---

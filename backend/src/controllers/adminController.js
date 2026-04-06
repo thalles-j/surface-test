@@ -6,6 +6,9 @@ import {
   getSalesByPeriod,
   updateOrderStatus,
   bulkUpdateOrderStatus,
+  updateOrderItems,
+  updateOrderAddress,
+  createInPersonSale,
   getAnalyticsOverview,
   getConversionFunnel,
   getChannelData,
@@ -46,7 +49,13 @@ import {
   createAdminUser,
   updateAdminUser,
   deleteAdminUser,
-  getActivityLogs
+  getActivityLogs,
+  subscribeEarlyAccess,
+  checkEarlyAccess,
+  getStoreLaunchInfo,
+  listEarlyAccessEmails,
+  grantEarlyAccess,
+  revokeEarlyAccess,
 } from '../services/adminService.js';
 
 import { getCategorySales, getRecentOrders } from '../services/admin/analyticsService.js';
@@ -102,4 +111,13 @@ export default {
   getActivityLogs,
   getCategorySales,
   getRecentOrders,
+  updateOrderItems,
+  updateOrderAddress,
+  createInPersonSale,
+  subscribeEarlyAccess,
+  checkEarlyAccess,
+  getStoreLaunchInfo,
+  listEarlyAccessEmails,
+  grantEarlyAccess,
+  revokeEarlyAccess,
 };

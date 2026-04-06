@@ -3,25 +3,21 @@ import { Link } from 'react-router-dom';
 import styles from './style.module.css';
 import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
 
+const createSlug = (name) =>
+  name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
 // Card com hover para trocar para a segunda imagem (mesmo comportamento da página Shop)
-function RelatedProductCard({ produto, createSlug }) {
+function RelatedProductCard({ produto }) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Ordena as fotos para que a "front" seja a primeira
-  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-  }) : [];
+  // Fotos já vêm ordenadas pelo backend (principal primeiro)
+  const fotos = produto.fotos || [];
 
-  const fotoPrincipal = sortedFotos?.[0]?.url
-    ? resolveImageUrl(sortedFotos[0].url)
+  const fotoPrincipal = fotos[0]?.url
+    ? resolveImageUrl(fotos[0].url)
     : null;
-  const fotoSecundaria = sortedFotos?.[1]?.url
-    ? resolveImageUrl(sortedFotos[1].url)
+  const fotoSecundaria = fotos[1]?.url
+    ? resolveImageUrl(fotos[1].url)
     : null;
 
   const imagemAtual = isHovered && fotoSecundaria ? fotoSecundaria : fotoPrincipal;
@@ -65,7 +61,7 @@ function RelatedProductCard({ produto, createSlug }) {
   );
 }
 
-export default function RelatedProducts({ products, baseUrl, createSlug }) {
+export default function RelatedProducts({ products }) {
   if (products.length === 0) return null;
 
   return (
@@ -76,8 +72,6 @@ export default function RelatedProducts({ products, baseUrl, createSlug }) {
           <RelatedProductCard
             key={p.id_produto}
             produto={p}
-            baseUrl={baseUrl}
-            createSlug={createSlug}
           />
         ))}
       </div>

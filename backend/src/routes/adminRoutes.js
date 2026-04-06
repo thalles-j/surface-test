@@ -14,6 +14,11 @@ router.get('/dashboard/top-products', adminController.getTopProducts);
 // Endpoint público para registrar um hit de acesso (útil para contagem de visitas)
 router.post('/analytics/visits/hit', adminController.hitVisit);
 
+// ===== EARLY ACCESS (public) =====
+router.post('/early-access/subscribe', adminController.subscribeEarlyAccess);
+router.get('/early-access/check', adminController.checkEarlyAccess);
+router.get('/early-access/launch-info', adminController.getStoreLaunchInfo);
+
 // Todas as rotas abaixo requerem autenticação
 router.use(authMiddleware);
 
@@ -22,6 +27,16 @@ router.get('/sales', adminController.getSalesData);
 router.get('/sales/by-period', adminController.getSalesByPeriod);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
+router.put('/orders/:id/items', adminController.updateOrderItems);
+router.patch('/orders/:id/address', adminController.updateOrderAddress);
+
+// ===== IN-PERSON SALES =====
+router.post('/sales/in-person', adminController.createInPersonSale);
+
+// ===== EARLY ACCESS (admin) =====
+router.get('/early-access/emails', adminController.listEarlyAccessEmails);
+router.post('/early-access/grant', adminController.grantEarlyAccess);
+router.post('/early-access/revoke', adminController.revokeEarlyAccess);
 
 // ===== ANALYTICS =====
 router.get('/analytics/overview', adminController.getAnalyticsOverview);

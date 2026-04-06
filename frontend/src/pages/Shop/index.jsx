@@ -31,19 +31,12 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
-  // Ordena as fotos para que a "front" seja a primeira
-  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-  }) : [];
+  // Fotos já vêm ordenadas pelo backend (principal primeiro)
+  const fotos = produto.fotos || [];
 
   // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = sortedFotos?.[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
-  const fotoSecundaria = sortedFotos?.[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
+  const fotoPrincipal = fotos[0]?.url ? resolveImageUrl(fotos[0].url) : null;
+  const fotoSecundaria = fotos[1]?.url ? resolveImageUrl(fotos[1].url) : null;
 
   // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
   // Caso contrário, mostra a principal.

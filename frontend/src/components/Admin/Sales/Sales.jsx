@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, ChevronDown, ChevronUp, Filter, Loader2 } from 'lucide-react';
+import { Search, Eye, ChevronDown, ChevronUp, Filter, Loader2, Edit, Save } from 'lucide-react';
 import Modal from '../../Modal';
 import Pagination from '../Pagination/Pagination';
 import { api } from '../../../services/api';
@@ -54,10 +54,11 @@ export default function Sales() {
   const mapOrder = useCallback((o) => ({
     id: `#${o.id_pedido}`,
     rawId: o.id_pedido,
-    client: o.usuario?.nome || '—',
+    client: o.usuario?.nome || o.nome_cliente || '—',
     email: o.usuario?.email || '',
     phone: o.usuario?.telefone || '',
     address: o.usuario?.enderecos?.[0] || null,
+    endereco_entrega: o.endereco_entrega || null,
     total: Number(o.total || 0),
     subtotal: Number(o.subtotal || o.total || 0),
     frete: Number(o.frete || 0),
@@ -66,11 +67,14 @@ export default function Sales() {
     date: o.data_pedido,
     metodo_pagamento: o.metodo_pagamento || '',
     codigo_cupom: o.codigo_cupom || '',
+    origem: o.origem || 'online',
     items: (o.pedidoProdutos || []).map(pp => ({
+      id_produto: pp.id_produto,
       name: pp.produto?.nome_produto || 'Produto',
       qty: pp.quantidade || 1,
       price: Number(pp.preco_unitario || pp.produto?.preco || 0),
-      size: pp.tamanho || '',
+      size: pp.sku_variacao || pp.tamanho || '',
+      sku_variacao: pp.sku_variacao || '',
     })),
   }), []);
 
@@ -121,7 +125,58 @@ export default function Sales() {
   }, []);
 
   const openOrderModal = useCallback((order) => setOrderModal({ isOpen: true, order }), []);
-  const closeOrderModal = useCallback(() => setOrderModal({ isOpen: false, order: null }), []);
+  const closeOrderModal = useCallback(() => { setOrderModal({ isOpen: false, order: null }); setEditMode(null); }, []);
+
+  const [editMode, setEditMode] = useState(null); // null | 'items' | 'address'
+  const [editItems, setEditItems] = useState([]);
+  const [editAddress, setEditAddress] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const startEditItems = useCallback((order) => {
+    setEditItems(order.items.map(i => ({ ...i })));
+    setEditMode('items');
+  }, []);
+
+  const startEditAddress = useCallback((order) => {
+    const addr = order.endereco_entrega || order.address || {};
+    setEditAddress({ logradouro: addr.logradouro || '', numero: addr.numero || '', complemento: addr.complemento || '', cidade: addr.cidade || '', estado: addr.estado || '', cep: addr.cep || '' });
+    setEditMode('address');
+  }, []);
+
+  const saveEditItems = useCallback(async (orderId) => {
+    setSavingEdit(true);
+    try {
+      await api.put(`/admin/orders/${orderId}/items`, {
+        items: editItems.map(i => ({
+          id_produto: i.id_produto,
+          sku_variacao: i.sku_variacao || i.size,
+          quantidade: Number(i.qty),
+          preco_unitario: Number(i.price),
+        })),
+      });
+      toast.success('Itens atualizados');
+      setEditMode(null);
+      loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.mensagem || 'Erro ao atualizar itens');
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [editItems, loadOrders, toast]);
+
+  const saveEditAddress = useCallback(async (orderId) => {
+    setSavingEdit(true);
+    try {
+      await api.patch(`/admin/orders/${orderId}/address`, { endereco_entrega: editAddress });
+      toast.success('Endereço atualizado');
+      setEditMode(null);
+      loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.mensagem || 'Erro ao atualizar endereço');
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [editAddress, loadOrders, toast]);
 
   const toggleSort = useCallback(() => {
     setSortByValue(prev => prev === null ? 'desc' : prev === 'desc' ? 'asc' : null);
@@ -233,25 +288,82 @@ export default function Sales() {
                 <div><p className="text-xs text-zinc-500 font-bold uppercase">Email</p><p className="text-sm text-zinc-300">{orderModal.order.email}</p></div>
                 {orderModal.order.phone && <div><p className="text-xs text-zinc-500 font-bold uppercase">Telefone</p><p className="text-sm text-zinc-300">{orderModal.order.phone}</p></div>}
                 <div><p className="text-xs text-zinc-500 font-bold uppercase">Status</p><span className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase ${STATUS_COLORS[orderModal.order.status]}`}>{STATUS_LABELS[orderModal.order.status]}</span></div>
+                {orderModal.order.origem === 'presencial' && <div><p className="text-xs text-zinc-500 font-bold uppercase">Origem</p><span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase bg-orange-950 text-orange-400">Presencial</span></div>}
               </div>
-              {orderModal.order.address && (
-                <div className="border-t border-zinc-800 pt-4">
-                  <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Endereço</p>
-                  <p className="text-sm text-zinc-300">{orderModal.order.address.logradouro}, {orderModal.order.address.numero}{orderModal.order.address.complemento ? ` - ${orderModal.order.address.complemento}` : ''}</p>
-                  <p className="text-sm text-zinc-500">{orderModal.order.address.cidade} - {orderModal.order.address.estado}, CEP: {orderModal.order.address.cep}</p>
-                </div>
-              )}
+
+              {/* ADDRESS — Editable */}
               <div className="border-t border-zinc-800 pt-4">
-                <p className="text-xs text-zinc-500 font-bold uppercase mb-3">Itens</p>
-                <div className="space-y-2">
-                  {orderModal.order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
-                      <div><p className="text-sm font-bold text-white">{item.name}</p>{item.size && <p className="text-xs text-zinc-500">Tam: {item.size}</p>}</div>
-                      <div className="text-right"><p className="text-sm font-bold text-white">R$ {(item.price * item.qty).toFixed(2)}</p><p className="text-xs text-zinc-500">{item.qty}x R$ {item.price.toFixed(2)}</p></div>
-                    </div>
-                  ))}
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs text-zinc-500 font-bold uppercase">Endereço de Entrega</p>
+                  {editMode !== 'address' && (
+                    <button onClick={() => startEditAddress(orderModal.order)} className="text-xs text-zinc-500 hover:text-white flex items-center gap-1"><Edit size={12} /> Editar</button>
+                  )}
                 </div>
+                {editMode === 'address' ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input value={editAddress.logradouro} onChange={e => setEditAddress(a => ({ ...a, logradouro: e.target.value }))} placeholder="Logradouro" className="p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                      <input value={editAddress.numero} onChange={e => setEditAddress(a => ({ ...a, numero: e.target.value }))} placeholder="Número" className="p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                    </div>
+                    <input value={editAddress.complemento} onChange={e => setEditAddress(a => ({ ...a, complemento: e.target.value }))} placeholder="Complemento" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input value={editAddress.cidade} onChange={e => setEditAddress(a => ({ ...a, cidade: e.target.value }))} placeholder="Cidade" className="p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                      <input value={editAddress.estado} onChange={e => setEditAddress(a => ({ ...a, estado: e.target.value }))} placeholder="UF" className="p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                      <input value={editAddress.cep} onChange={e => setEditAddress(a => ({ ...a, cep: e.target.value }))} placeholder="CEP" className="p-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white" />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={() => saveEditAddress(orderModal.order.rawId)} disabled={savingEdit} className="flex items-center gap-1 px-3 py-1 bg-white text-black rounded text-xs font-bold disabled:opacity-50"><Save size={12} /> Salvar</button>
+                      <button onClick={() => setEditMode(null)} className="px-3 py-1 border border-zinc-700 text-zinc-400 rounded text-xs font-bold">Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  (() => {
+                    const addr = orderModal.order.endereco_entrega || orderModal.order.address;
+                    return addr ? (
+                      <>
+                        <p className="text-sm text-zinc-300">{addr.logradouro}, {addr.numero}{addr.complemento ? ` - ${addr.complemento}` : ''}</p>
+                        <p className="text-sm text-zinc-500">{addr.cidade} - {addr.estado}, CEP: {addr.cep}</p>
+                      </>
+                    ) : <p className="text-sm text-zinc-500">Sem endereço cadastrado</p>;
+                  })()
+                )}
               </div>
+
+              {/* ITEMS — Editable */}
+              <div className="border-t border-zinc-800 pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-xs text-zinc-500 font-bold uppercase">Itens</p>
+                  {editMode !== 'items' && (
+                    <button onClick={() => startEditItems(orderModal.order)} className="text-xs text-zinc-500 hover:text-white flex items-center gap-1"><Edit size={12} /> Editar</button>
+                  )}
+                </div>
+                {editMode === 'items' ? (
+                  <div className="space-y-2">
+                    {editItems.map((item, idx) => (
+                      <div key={idx} className="flex gap-2 items-center bg-zinc-800 p-2 rounded-lg">
+                        <span className="text-sm text-white flex-1 truncate">{item.name}</span>
+                        <input value={item.qty} onChange={e => setEditItems(prev => { const n = [...prev]; n[idx] = { ...n[idx], qty: e.target.value }; return n; })} type="number" min="1" className="w-16 p-1 bg-zinc-700 border border-zinc-600 rounded text-sm text-center text-white" />
+                        <span className="text-xs text-zinc-500">x R$</span>
+                        <input value={item.price} onChange={e => setEditItems(prev => { const n = [...prev]; n[idx] = { ...n[idx], price: e.target.value }; return n; })} type="number" step="0.01" className="w-24 p-1 bg-zinc-700 border border-zinc-600 rounded text-sm text-white" />
+                      </div>
+                    ))}
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={() => saveEditItems(orderModal.order.rawId)} disabled={savingEdit} className="flex items-center gap-1 px-3 py-1 bg-white text-black rounded text-xs font-bold disabled:opacity-50"><Save size={12} /> Salvar</button>
+                      <button onClick={() => setEditMode(null)} className="px-3 py-1 border border-zinc-700 text-zinc-400 rounded text-xs font-bold">Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {orderModal.order.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
+                        <div><p className="text-sm font-bold text-white">{item.name}</p>{item.size && <p className="text-xs text-zinc-500">Tam: {item.size}</p>}</div>
+                        <div className="text-right"><p className="text-sm font-bold text-white">R$ {(item.price * item.qty).toFixed(2)}</p><p className="text-xs text-zinc-500">{item.qty}x R$ {item.price.toFixed(2)}</p></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-zinc-800 pt-4 space-y-1">
                 <div className="flex justify-between text-sm"><span className="text-zinc-500">Subtotal</span><span className="text-zinc-300">R$ {orderModal.order.subtotal.toFixed(2)}</span></div>
                 {orderModal.order.desconto > 0 && <div className="flex justify-between text-sm"><span className="text-zinc-500">Desconto</span><span className="text-emerald-400">-R$ {orderModal.order.desconto.toFixed(2)}</span></div>}

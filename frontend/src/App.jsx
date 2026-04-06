@@ -7,6 +7,8 @@ import AppRoutes from './routes';
 import PageLoader from "./components/PageLoader";
 import { CartProvider } from './context/CartContext.jsx';
 import CartDrawer from "./components/CartDrawer";
+import StoreClosed from "./components/StoreClosed";
+import { setOnMaintenance, setEarlyAccessEmail } from './services/api';
 
 // Componente que renderiza condicionalmente Header/Footer
 function AppLayout() {
@@ -28,6 +30,19 @@ function AppLayout() {
 export default function App() {
 
   const [loading, setLoading] = useState(true);
+  const [storeClosed, setStoreClosed] = useState(false);
+
+  useEffect(() => {
+    // Listen for 503 maintenance responses
+    setOnMaintenance(() => {
+      setStoreClosed(true);
+    });
+  }, []);
+
+  const handleEarlyAccess = (email) => {
+    setEarlyAccessEmail(email);
+    setStoreClosed(false);
+  };
 
   useEffect(() => {
 
@@ -64,7 +79,11 @@ export default function App() {
       <Router> 
         <CartProvider>
           {loading && <PageLoader />}
-          <AppLayout />
+          {storeClosed ? (
+            <StoreClosed onEarlyAccess={handleEarlyAccess} />
+          ) : (
+            <AppLayout />
+          )}
         </CartProvider>
       </Router>
     </AuthProvider>

@@ -13,6 +13,7 @@ export default function ProductInfo({
 
   const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
   const isSoldOut = selectedSize && selectedVariacao?.estoque === 0;
+  const isAllSoldOut = produto.status === 'inativo' || (variacoes.length > 0 && variacoes.every(v => v.estoque === 0));
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -116,17 +117,25 @@ export default function ProductInfo({
 
       {/* BOTÕES DE AÇÃO */}
       <div className={styles.actions}>
-        <button 
-          className={`${styles.buyBtn} ${isSoldOut ? styles.soldOut : ""}`}
-          onClick={handleAddToCart}
-          disabled={!selectedSize || isSoldOut}
-        >
-          {!selectedSize ? "SELECIONE UM TAMANHO" : isSoldOut ? "ESGOTADO" : "COMPRAR"}
-        </button>
-        
-        <button className={styles.cartBtn} onClick={handleAddToCart} disabled={!selectedSize || isSoldOut}>
-          🛒 ADICIONAR AO CARRINHO
-        </button>
+        {isAllSoldOut ? (
+          <button className={`${styles.buyBtn} ${styles.soldOut}`} disabled>
+            ESGOTADO
+          </button>
+        ) : (
+          <>
+            <button 
+              className={`${styles.buyBtn} ${isSoldOut ? styles.soldOut : ""}`}
+              onClick={handleAddToCart}
+              disabled={!selectedSize || isSoldOut}
+            >
+              {!selectedSize ? "SELECIONE UM TAMANHO" : isSoldOut ? "ESGOTADO" : "COMPRAR"}
+            </button>
+            
+            <button className={styles.cartBtn} onClick={handleAddToCart} disabled={!selectedSize || isSoldOut}>
+              🛒 ADICIONAR AO CARRINHO
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X, ExternalLink } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X, ExternalLink, ShoppingBag } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -23,6 +23,7 @@ export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClo
       items: [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
         { id: 'sales', icon: ShoppingCart, label: 'Vendas' },
+        { id: 'in-person-sales', icon: ShoppingBag, label: 'Venda Presencial' },
       ]
     },
     {

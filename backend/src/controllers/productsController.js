@@ -37,8 +37,9 @@ export const getProductController = async (req, res) => {
       where.status = status;
     }
     if (destaque === 'true') where.destaque = true;
-    if (oculto === 'true') where.oculto = true;
-    else if (oculto === 'false') where.oculto = false;
+    if (oculto === 'all') { /* admin: sem filtro */ }
+    else if (oculto === 'true') where.oculto = true;
+    else where.oculto = false;
 
     // Paginated response
     if (page && limit) {
@@ -75,6 +76,7 @@ export const getProductBySlugController = async (req, res) => {
 
     // Busca apenas nomes para encontrar o match, evitando carregar todos os dados
     const allNames = await prisma.produtos.findMany({
+      where: { oculto: false },
       select: { id_produto: true, nome_produto: true, id_categoria: true },
     });
 
@@ -91,11 +93,12 @@ export const getProductBySlugController = async (req, res) => {
       include: productInclude,
     });
 
-    // Buscar relacionados (mesma categoria, exceto o proprio)
+    // Buscar relacionados (mesma categoria, exceto o proprio, nao ocultos)
     const related = await prisma.produtos.findMany({
       where: {
         id_categoria: match.id_categoria,
         id_produto: { not: match.id_produto },
+        oculto: false,
       },
       include: productInclude,
       take: 4,
@@ -150,7 +153,11 @@ export const createProductController = async (req, res) => {
           tipo: p.tipo || null,
           id_categoria: Number(p.id_categoria),
           variacoes_estoque: p.variacoes_estoque || [],
-          status: p.status || 'ativo',
+          status: (() => {
+            const vars = p.variacoes_estoque || [];
+            const totalStock = Array.isArray(vars) ? vars.reduce((s, v) => s + (Number(v.estoque) || 0), 0) : 0;
+            return totalStock === 0 ? 'inativo' : (p.status || 'ativo');
+          })(),
           destaque: p.destaque === true,
           oculto: p.oculto === true,
           tags: p.tags || null,
@@ -229,7 +236,13 @@ export const updateProductController = async (req, res) => {
         tipo,
         id_categoria: Number(id_categoria),
         variacoes_estoque,
-        ...(status !== undefined && { status }),
+        ...(() => {
+          const vars = variacoes_estoque || [];
+          const totalStock = Array.isArray(vars) ? vars.reduce((s, v) => s + (Number(v.estoque) || 0), 0) : 0;
+          if (totalStock === 0) return { status: 'inativo' };
+          if (status !== undefined) return { status };
+          return {};
+        })(),
         ...(destaque !== undefined && { destaque: destaque === true }),
         ...(oculto !== undefined && { oculto: oculto === true }),
         ...(tags !== undefined && { tags }),

@@ -82,7 +82,7 @@ export default function Products() {
   const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: PAGE_SIZE });
+      const params = new URLSearchParams({ page, limit: PAGE_SIZE, oculto: 'all' });
       if (debouncedSearch) params.set('search', debouncedSearch);
       if (filterCategory !== 'all') params.set('category', filterCategory);
       if (filterStatus !== 'all') params.set('status', filterStatus);

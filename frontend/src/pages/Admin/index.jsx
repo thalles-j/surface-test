@@ -15,6 +15,7 @@ import Analytics from '../../components/Admin/Analytics/Analytics';
 import Customization from '../../components/Admin/Customization/Customization';
 import AdminSettings from '../../components/Admin/AdminSettings/AdminSettings';
 import AdminPanel from '../../components/Admin/AdminPanel/AdminPanel';
+import InPersonSales from '../../components/Admin/InPersonSales/InPersonSales';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,6 +41,8 @@ export default function AdminPage() {
         return <Dashboard onCreateCollection={openCollectionsAndCreate} />;
       case 'sales':
         return <Sales />;
+      case 'in-person-sales':
+        return <InPersonSales />;
       case 'products':
         return <Products />;
       case 'collections':
@@ -67,6 +70,7 @@ export default function AdminPage() {
     const titles = {
       dashboard: 'Painel de Controle',
       sales: 'Gerenciar Vendas',
+      'in-person-sales': 'Vendas Presenciais',
       products: 'Catálogo de Produtos',
       collections: 'Drops & Coleções',
       categories: 'Categorias',

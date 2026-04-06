@@ -18,27 +18,12 @@ export default function ProductDetail() {
   
   const [selectedSize, setSelectedSize] = useState(null);
 
-  // Função para criar slug a partir do nome
-  const createSlug = (name) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-
-
   useEffect(() => {
     const fetchProduto = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/products');
-        const data = res.data;
-        
-        // Buscar produto pelo slug (nome convertido)
-        const found = data.find(p => createSlug(p.nome_produto) === slug);
+        const res = await api.get(`/products/slug/${slug}`);
+        const { produto: found, related } = res.data;
         
         if (!found) {
           setError("Produto não encontrado");
@@ -46,17 +31,15 @@ export default function ProductDetail() {
         }
         
         setProduto(found);
-        
-        // Buscar produtos relacionados (mesma categoria ou destaque)
-        const related = data
-          .filter(p => p.id_produto !== found.id_produto && 
-                      (p.id_categoria === found.id_categoria || p.destaque))
-          .slice(0, 4);
-        setRelatedProducts(related);
+        setRelatedProducts(related || []);
         
       } catch (err) {
         console.error("Erro ao carregar produto:", err);
-        setError(err.message || "Erro ao carregar produto");
+        if (err.response?.status === 404) {
+          setError("Produto não encontrado");
+        } else {
+          setError(err.message || "Erro ao carregar produto");
+        }
       } finally {
         setLoading(false);
       }
@@ -102,7 +85,6 @@ export default function ProductDetail() {
 
       <RelatedProducts 
         products={relatedProducts}
-        createSlug={createSlug}
       />
     </div>
   );
