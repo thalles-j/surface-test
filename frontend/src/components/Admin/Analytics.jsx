@@ -87,7 +87,7 @@ export default function Analytics() {
                 <circle cx="18" cy="18" r="16" fill="none" stroke="#27272a" strokeWidth="3" />
                 {(() => {
                   const total = categorySales.reduce((s, c) => s + c.value, 0);
-                  const colors = ['#fff', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'];
+                  const colors = ['#ff0000', '#7700ff', '#0000ff', '#020271', '#3f3f46'];
                   let offset = 0;
                   return categorySales.map((cat, i) => {
                     const pct = total > 0 ? (cat.value / total) * 100 : 0;
@@ -105,7 +105,7 @@ export default function Analytics() {
             <div className="w-full space-y-2">
               {(() => {
                 const total = categorySales.reduce((s, c) => s + c.value, 0);
-                const colors = ['#ffffff', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'];
+                const colors = ['#ff0000', '#3e00aa', '#71717a', '#52525b', '#3f3f46'];
                 const cats = categorySales.length > 0 ? categorySales : [{ name: 'Sem dados', value: 0 }];
                 return cats.map((cat, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
