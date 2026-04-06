@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Edit, Percent, Clock } from 'lucide-react';
 import Modal from '../../Modal';
 import AlertModal from '../../AlertModal';
+import { ModalFormGroup, inputClass, selectClass, primaryBtnClass, secondaryBtnClass } from '../AdminModalParts';
 
 export default function Marketing() {
   const [coupons, setCoupons] = useState([
@@ -82,53 +83,62 @@ export default function Marketing() {
           </button>
         </div>
 
-        <Modal isOpen={showCouponForm} onClose={() => setShowCouponForm(false)} title="Criar Novo Cupom">
-          <div className="p-2">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <input
-                type="text"
-                value={couponData.code}
-                onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
-                placeholder="Código"
-                maxLength="20"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 font-mono font-bold text-white placeholder-zinc-500"
-              />
-              <input
-                type="number"
-                value={couponData.discount}
-                onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
-                placeholder="Desconto"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
-              />
-              <select
-                value={couponData.type}
-                onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
-              >
-                <option>Porcentagem</option>
-                <option>Valor Fixo</option>
-                <option>Frete</option>
-              </select>
-              <input
-                type="date"
-                value={couponData.expiry}
-                onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
-              />
-            </div>
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={handleAddCoupon}
-                className="flex-1 bg-emerald-600 text-white py-2 font-bold hover:bg-emerald-700 rounded-lg"
-              >
-                Criar Cupom
-              </button>
-              <button
-                onClick={() => setShowCouponForm(false)}
-                className="px-6 py-2 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 rounded-lg"
-              >
-                Cancelar
-              </button>
+        <Modal
+          isOpen={showCouponForm}
+          onClose={() => setShowCouponForm(false)}
+          title="Criar Novo Cupom"
+          variant="dark"
+          footer={
+            <>
+              <button onClick={() => setShowCouponForm(false)} className={secondaryBtnClass}>Cancelar</button>
+              <button onClick={handleAddCoupon} className={primaryBtnClass}>Criar Cupom</button>
+            </>
+          }
+        >
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ModalFormGroup label="Código do Cupom" htmlFor="mkt-coupon-code">
+                <input
+                  id="mkt-coupon-code"
+                  type="text"
+                  value={couponData.code}
+                  onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
+                  placeholder="Ex: SURFACE10"
+                  maxLength="20"
+                  className={`${inputClass} font-mono font-bold`}
+                />
+              </ModalFormGroup>
+              <ModalFormGroup label="Valor do Desconto" htmlFor="mkt-coupon-discount">
+                <input
+                  id="mkt-coupon-discount"
+                  type="number"
+                  value={couponData.discount}
+                  onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
+                  placeholder="Ex: 10"
+                  className={inputClass}
+                />
+              </ModalFormGroup>
+              <ModalFormGroup label="Tipo de Desconto" htmlFor="mkt-coupon-type">
+                <select
+                  id="mkt-coupon-type"
+                  value={couponData.type}
+                  onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
+                  className={selectClass}
+                >
+                  <option>Porcentagem</option>
+                  <option>Valor Fixo</option>
+                  <option>Frete</option>
+                </select>
+              </ModalFormGroup>
+              <ModalFormGroup label="Validade" htmlFor="mkt-coupon-expiry">
+                <input
+                  id="mkt-coupon-expiry"
+                  type="date"
+                  value={couponData.expiry}
+                  onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
+                  className={inputClass}
+                />
+              </ModalFormGroup>
             </div>
           </div>
         </Modal>

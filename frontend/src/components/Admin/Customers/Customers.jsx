@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, Crown, Plus, Trash2, Eye } from 'lucide-react';
+import { Search, Crown, Plus, Trash2, Eye, Mail, Phone, Calendar, ShoppingBag, DollarSign, MapPin, Tag } from 'lucide-react';
 import Modal from '../../Modal';
 import AlertModal from '../../AlertModal';
 import Pagination from '../Pagination/Pagination';
+import { ModalSection, ModalField, ModalFormGroup, inputClass, selectClass, primaryBtnClass, secondaryBtnClass } from '../AdminModalParts';
 import { useToast } from '../../../context/ToastContext';
 import { api } from '../../../services/api';
 
@@ -279,47 +280,91 @@ export default function Customers() {
       </div>
 
       {/* Customer Detail Modal */}
-      <Modal isOpen={detailModal.isOpen} onClose={closeDetailModal} title={`Cliente: ${detailModal.customer?.name || ''}`} size="lg">
+      <Modal isOpen={detailModal.isOpen} onClose={closeDetailModal} title={detailModal.customer?.name || 'Cliente'} size="lg" variant="dark">
         {detailData ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><p className="text-xs text-gray-400 font-bold uppercase">Email</p><p className="text-sm">{detailData.email}</p></div>
-              <div><p className="text-xs text-gray-400 font-bold uppercase">Telefone</p><p className="text-sm">{detailData.phone || '—'}</p></div>
-              <div><p className="text-xs text-gray-400 font-bold uppercase">Cadastro</p><p className="text-sm">{new Date(detailData.registered).toLocaleDateString('pt-BR')}</p></div>
-              <div><p className="text-xs text-gray-400 font-bold uppercase">Ticket Médio</p><p className="text-sm font-bold">R$ {(detailData.ticketMedio || 0).toFixed(2)}</p></div>
+          <div className="space-y-6">
+            {/* Header card */}
+            <div className="flex items-start gap-4 p-4 bg-zinc-800/40 rounded-xl border border-zinc-800/50">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-zinc-700/50 flex items-center justify-center text-lg font-bold text-zinc-300">
+                {(detailData.name || detailData.email || '?')[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base font-bold text-white truncate">{detailData.name || detailData.email}</h4>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-zinc-400">
+                  <span className="flex items-center gap-1"><Mail size={12} />{detailData.email}</span>
+                  {detailData.phone && <span className="flex items-center gap-1"><Phone size={12} />{detailData.phone}</span>}
+                  <span className="flex items-center gap-1"><Calendar size={12} />Desde {new Date(detailData.registered).toLocaleDateString('pt-BR')}</span>
+                </div>
+              </div>
+              {detailModal.customer?.type && (
+                <span className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${detailModal.customer.type === 'VIP' ? 'bg-purple-950 text-purple-400' : detailModal.customer.type === 'Novo' ? 'bg-emerald-950 text-emerald-400' : 'bg-blue-950 text-blue-400'}`}>
+                  {detailModal.customer.type === 'VIP' && <Crown size={10} className="inline mr-1 -mt-px" />}{detailModal.customer.type}
+                </span>
+              )}
             </div>
 
-            {detailData.addresses?.length > 0 && (
-              <div className="border-t border-zinc-800 pt-4">
-                <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Endereços</p>
-                {detailData.addresses.map((a, i) => (
-                  <p key={i} className="text-sm text-zinc-400">{a.logradouro}, {a.numero}{a.complemento ? ` - ${a.complemento}` : ''} — {a.cidade}/{a.estado} CEP {a.cep}</p>
-                ))}
+            {/* Metrics */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
+                <ShoppingBag size={16} className="mx-auto text-zinc-500 mb-1.5" />
+                <p className="text-lg font-bold text-white">{detailData.ordersCount || 0}</p>
+                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Pedidos</p>
               </div>
+              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
+                <Tag size={16} className="mx-auto text-zinc-500 mb-1.5" />
+                <p className="text-lg font-bold text-white">R$ {(detailData.ticketMedio || 0).toFixed(2)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Ticket Médio</p>
+              </div>
+              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
+                <DollarSign size={16} className="mx-auto text-zinc-500 mb-1.5" />
+                <p className="text-lg font-bold text-white">R$ {(detailData.totalSpent || 0).toFixed(2)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Total Gasto</p>
+              </div>
+            </div>
+
+            {/* Addresses */}
+            {detailData.addresses?.length > 0 && (
+              <ModalSection title="Endereços">
+                <div className="space-y-2">
+                  {detailData.addresses.map((a, i) => (
+                    <div key={i} className="flex items-start gap-2.5 p-3 bg-zinc-800/30 border border-zinc-800/50 rounded-lg">
+                      <MapPin size={14} className="text-zinc-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-zinc-300">{a.logradouro}, {a.numero}{a.complemento ? ` - ${a.complemento}` : ''} — {a.cidade}/{a.estado} CEP {a.cep}</p>
+                    </div>
+                  ))}
+                </div>
+              </ModalSection>
             )}
 
+            {/* Order History */}
             {detailData.orders?.length > 0 && (
-              <div className="border-t border-zinc-800 pt-4">
-                <p className="text-xs text-zinc-500 font-bold uppercase mb-2">Histórico de Pedidos</p>
-                <div className="max-h-48 overflow-y-auto space-y-2">
+              <ModalSection title="Histórico de Pedidos">
+                <div className="space-y-2 max-h-56 overflow-y-auto admin-scroll pr-1">
                   {detailData.orders.map(o => (
-                    <div key={o.id} className="flex justify-between items-center bg-zinc-800 p-3 rounded-lg">
-                      <div>
-                        <p className="text-sm font-bold">Pedido #{o.id}</p>
-                        <p className="text-xs text-zinc-500">{new Date(o.date).toLocaleDateString('pt-BR')} — {o.items.length} item(s)</p>
+                    <div key={o.id} className="flex items-center justify-between p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-lg hover:bg-zinc-800/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-700/50 flex items-center justify-center">
+                          <ShoppingBag size={14} className="text-zinc-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Pedido #{o.id}</p>
+                          <p className="text-xs text-zinc-500">{new Date(o.date).toLocaleDateString('pt-BR')} — {o.items.length} item(s)</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold">R$ {o.total.toFixed(2)}</p>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${o.status === 'finalizado' ? 'bg-emerald-950 text-emerald-400' : o.status === 'cancelado' ? 'bg-red-950 text-red-400' : 'bg-yellow-950 text-yellow-400'}`}>{o.status}</span>
+                      <div className="text-right flex items-center gap-3">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${o.status === 'finalizado' || o.status === 'concluido' ? 'bg-emerald-950/60 text-emerald-400' : o.status === 'cancelado' ? 'bg-red-950/60 text-red-400' : 'bg-yellow-950/60 text-yellow-400'}`}>{o.status}</span>
+                        <p className="text-sm font-bold text-white min-w-[80px] text-right">R$ {o.total.toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </ModalSection>
             )}
           </div>
         ) : (
-          <p className="text-center text-zinc-500 py-8">Carregando...</p>
+          <div className="flex items-center justify-center py-12">
+            <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+          </div>
         )}
       </Modal>
 
@@ -335,43 +380,62 @@ export default function Customers() {
           </button>
         </div>
 
-        <Modal isOpen={showCouponForm} onClose={() => setShowCouponForm(false)} title="Criar Novo Cupom">
-          <div className="p-2">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <input
-                type="text"
-                value={couponData.code}
-                onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
-                placeholder="Código"
-                maxLength="20"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 font-mono font-bold text-white placeholder-zinc-500"
-              />
-              <input
-                type="number"
-                value={couponData.discount}
-                onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
-                placeholder="Desconto"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
-              />
-              <select
-                value={couponData.type}
-                onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
-              >
-                <option>Porcentagem</option>
-                <option>Valor Fixo</option>
-                <option>Frete</option>
-              </select>
-              <input
-                type="date"
-                value={couponData.expiry}
-                onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
-              />
-            </div>
-            <div className="flex gap-2 mt-3">
-              <button onClick={handleAddCoupon} className="flex-1 bg-emerald-600 text-white py-2 font-bold hover:bg-emerald-700 rounded-lg">Criar Cupom</button>
-              <button onClick={() => setShowCouponForm(false)} className="px-6 py-2 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 rounded-lg">Cancelar</button>
+        <Modal
+          isOpen={showCouponForm}
+          onClose={() => setShowCouponForm(false)}
+          title="Criar Novo Cupom"
+          variant="dark"
+          footer={
+            <>
+              <button onClick={() => setShowCouponForm(false)} className={secondaryBtnClass}>Cancelar</button>
+              <button onClick={handleAddCoupon} className={primaryBtnClass}>Criar Cupom</button>
+            </>
+          }
+        >
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ModalFormGroup label="Código do Cupom" htmlFor="coupon-code">
+                <input
+                  id="coupon-code"
+                  type="text"
+                  value={couponData.code}
+                  onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
+                  placeholder="Ex: SURFACE10"
+                  maxLength="20"
+                  className={`${inputClass} font-mono font-bold`}
+                />
+              </ModalFormGroup>
+              <ModalFormGroup label="Valor do Desconto" htmlFor="coupon-discount">
+                <input
+                  id="coupon-discount"
+                  type="number"
+                  value={couponData.discount}
+                  onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
+                  placeholder="Ex: 10"
+                  className={inputClass}
+                />
+              </ModalFormGroup>
+              <ModalFormGroup label="Tipo de Desconto" htmlFor="coupon-type">
+                <select
+                  id="coupon-type"
+                  value={couponData.type}
+                  onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
+                  className={selectClass}
+                >
+                  <option>Porcentagem</option>
+                  <option>Valor Fixo</option>
+                  <option>Frete</option>
+                </select>
+              </ModalFormGroup>
+              <ModalFormGroup label="Validade" htmlFor="coupon-expiry">
+                <input
+                  id="coupon-expiry"
+                  type="date"
+                  value={couponData.expiry}
+                  onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
+                  className={inputClass}
+                />
+              </ModalFormGroup>
             </div>
           </div>
         </Modal>
