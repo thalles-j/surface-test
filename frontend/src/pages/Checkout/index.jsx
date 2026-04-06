@@ -1,14 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import useAuth from "../../hooks/useAuth";
+import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { buildWhatsAppCheckoutUrl } from "../../utils/whatsapp";
 
 export default function Checkout() {
   const { cartItems, createOrder, checkoutLoading } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+  const orderCompletedRef = useRef(false);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(null);
@@ -58,11 +62,13 @@ export default function Checkout() {
   );
 
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !orderCompletedRef.current) {
       navigate("/shop");
       return;
     }
-    fetchPreview(couponApplied);
+    if (cartItems.length > 0) {
+      fetchPreview(couponApplied);
+    }
   }, [cartItems.length]);
 
   const handleApplyCoupon = async () => {
@@ -92,9 +98,29 @@ export default function Checkout() {
   };
 
   const handleFinalize = async () => {
-    const order = await createOrder(couponApplied);
-    if (order) {
-      navigate("/account");
+    if (checkoutLoading) return;
+    const itemsSnapshot = [...cartItems];
+    try {
+      orderCompletedRef.current = true;
+      const order = await createOrder(couponApplied);
+      if (order) {
+        const whatsappUrl = buildWhatsAppCheckoutUrl({
+          customerName: user?.nome || user?.name || "Cliente",
+          items: itemsSnapshot,
+          total: preview?.total ?? order.total,
+          orderId: order.id_pedido,
+          subtotal: preview?.subtotal ?? order.subtotal,
+          desconto: preview?.desconto ?? order.desconto ?? 0,
+          frete: preview?.frete ?? order.frete ?? 0,
+          codigoCupom: couponApplied,
+        });
+        window.open(whatsappUrl, "_blank");
+        toast.success("Pedido criado! Redirecionando para o WhatsApp...");
+        navigate("/account");
+      }
+    } catch (err) {
+      orderCompletedRef.current = false;
+      toast.error(err.response?.data?.mensagem || err.message || "Erro ao criar pedido.");
     }
   };
 
@@ -105,18 +131,9 @@ export default function Checkout() {
 
   const getFrontImage = (fotos) => {
     if (!fotos || !Array.isArray(fotos) || fotos.length === 0) return null;
-    const sorted = [...fotos].sort((a, b) => {
-      const isFrontA =
-        (a.descricao || "").toLowerCase().includes("front") ||
-        (a.url || "").toLowerCase().includes("front");
-      const isFrontB =
-        (b.descricao || "").toLowerCase().includes("front") ||
-        (b.url || "").toLowerCase().includes("front");
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-    });
-    return sorted[0]?.url;
+    const principal = fotos.find((f) => f.principal);
+    if (principal) return principal.url;
+    return fotos[0]?.url;
   };
 
   if (!user) {
@@ -124,7 +141,7 @@ export default function Checkout() {
     return null;
   }
 
-  if (cartItems.length === 0) {
+  if (cartItems.length === 0 && !orderCompletedRef.current) {
     return null;
   }
 
@@ -328,9 +345,10 @@ export default function Checkout() {
             color: "#fff",
             border: "none",
             borderRadius: 4,
-            cursor: "pointer",
+            cursor: checkoutLoading || previewLoading ? "not-allowed" : "pointer",
             fontSize: "1rem",
             fontWeight: 600,
+            opacity: checkoutLoading || previewLoading ? 0.6 : 1,
           }}
         >
           {checkoutLoading ? "Processando..." : "Finalizar via WhatsApp"}

@@ -30,6 +30,7 @@ export const getSalesData = async (req, res) => {
           include: {
             usuario: { include: { enderecos: true } },
             pedidoProdutos: { include: { produto: true } },
+            historico: { orderBy: { criado_em: 'desc' } },
           },
           orderBy,
           skip: (pageNum - 1) * limitNum,
@@ -58,6 +59,7 @@ export const getSalesData = async (req, res) => {
       include: {
         usuario: { include: { enderecos: true } },
         pedidoProdutos: { include: { produto: true } },
+        historico: { orderBy: { criado_em: 'desc' } },
       },
       orderBy,
     });
@@ -102,12 +104,39 @@ export const updateOrderStatus = async (req, res) => {
       return erro(res, `Transição de status inválida: "${currentOrder.status}" → "${status}".`);
     }
 
-    const order = await prisma.pedidos.update({
+    const [order] = await prisma.$transaction([
+      prisma.pedidos.update({
+        where: { id_pedido: parseInt(id) },
+        data: { status },
+        include: {
+          usuario: { include: { enderecos: true } },
+          pedidoProdutos: { include: { produto: true } },
+          historico: { orderBy: { criado_em: 'desc' } },
+        },
+      }),
+      prisma.historico_pedidos.create({
+        data: {
+          id_pedido: parseInt(id),
+          tipo: 'status_change',
+          descricao: `Status alterado de "${currentOrder.status}" para "${status}"`,
+          status_de: currentOrder.status,
+          status_para: status,
+          autor: 'admin',
+        },
+      }),
+    ]);
+
+    // Re-fetch to get freshly created historico entry
+    const updatedOrder = await prisma.pedidos.findUnique({
       where: { id_pedido: parseInt(id) },
-      data: { status },
+      include: {
+        usuario: { include: { enderecos: true } },
+        pedidoProdutos: { include: { produto: true } },
+        historico: { orderBy: { criado_em: 'desc' } },
+      },
     });
 
-    return sucesso(res, { mensagem: 'Status atualizado', pedido: order });
+    return sucesso(res, { mensagem: 'Status atualizado', pedido: updatedOrder });
   } catch (error) {
     return erro(res, error.message, 500);
   }

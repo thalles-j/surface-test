@@ -14,6 +14,7 @@ import Atendimento from '../pages/Atendimento';
 import TrocasDevolucoes from '../pages/TrocasDevolucoes';
 import TermosDeUso from '../pages/TermosDeUso';
 import Privacidade from '../pages/Privacidade';
+import Checkout from '../pages/Checkout';
 
 // ======================
 // ProtectedRoute
@@ -73,6 +74,15 @@ export default function AppRoutes() {
       <Route path="/trocas-devolucoes" element={<TrocasDevolucoes />} />
       <Route path="/termos-de-uso" element={<TermosDeUso />} />
       <Route path="/privacidade" element={<Privacidade />} />
+
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
 
       <Route 
         path="/admin/*" 

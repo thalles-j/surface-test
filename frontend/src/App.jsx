@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"; // Adicionei useState
 import { BrowserRouter as Router, useLocation } from 'react-router-dom'; 
-import { AuthProvider } from './context/AuthContext.jsx'; 
+import { AuthProvider } from './context/AuthContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import AppRoutes from './routes';
@@ -76,16 +77,18 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <Router> 
-        <CartProvider>
-          {loading && <PageLoader />}
-          {storeClosed ? (
-            <StoreClosed onEarlyAccess={handleEarlyAccess} />
-          ) : (
-            <AppLayout />
-          )}
-        </CartProvider>
-      </Router>
+      <ToastProvider>
+        <Router> 
+          <CartProvider>
+            {loading && <PageLoader />}
+            {storeClosed ? (
+              <StoreClosed onEarlyAccess={handleEarlyAccess} />
+            ) : (
+              <AppLayout />
+            )}
+          </CartProvider>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

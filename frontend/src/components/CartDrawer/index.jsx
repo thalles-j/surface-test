@@ -21,26 +21,16 @@ export default function CartDrawer() {
 
   const getFrontImage = (fotos) => {
     if (!fotos || !Array.isArray(fotos) || fotos.length === 0) return null;
-
-    // Ordena usando a mesma lógica da Shop/ProductDetail
-    const sorted = [...fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-    });
-
-    return sorted[0]?.url;
+    const principal = fotos.find((f) => f.principal);
+    if (principal) return principal.url;
+    return fotos[0]?.url;
   };
 
   if (!isCartOpen) return null;
 
   const handleCheckout = () => {
-    // Implement checkout logic here or navigate to checkout page
-    // For now, maybe just alert or navigate to a checkout route if it existed
-    alert("Funcionalidade de checkout a ser implementada!");
+    toggleCart();
+    navigate('/checkout');
   };
 
   return (

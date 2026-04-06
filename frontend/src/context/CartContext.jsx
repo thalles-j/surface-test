@@ -1,6 +1,7 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
+import { api } from "../services/api";
 import AlertModal from "../components/AlertModal";
 
 export const CartContext = createContext({});
@@ -92,6 +93,26 @@ export function CartProvider({ children }) {
 
   const cartTotal = cartItems.reduce((total, item) => total + Number(item.preco) * item.quantity, 0);
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const createOrder = useCallback(async (codigoCupom = null) => {
+    if (cartItems.length === 0) return null;
+    setCheckoutLoading(true);
+    try {
+      const items = cartItems.map(item => ({
+        id_produto: item.id_produto,
+        selectedSize: item.selectedSize,
+        sku_variacao: item.sku_variacao || null,
+        quantity: item.quantity,
+      }));
+      const { data } = await api.post('/orders', { items, codigo_cupom: codigoCupom });
+      clearCart();
+      return data;
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [cartItems]);
+
   return (
     <CartContext.Provider
       value={{
@@ -105,6 +126,8 @@ export function CartProvider({ children }) {
         cartTotal,
         showAlertModal,
         hideAlertModal,
+        createOrder,
+        checkoutLoading,
       }}
     >
       {children}
