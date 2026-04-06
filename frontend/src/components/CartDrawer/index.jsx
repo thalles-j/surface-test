@@ -14,6 +14,8 @@ export default function CartDrawer() {
     cartTotal,
   } = useCart();
   
+  const navigate = useNavigate();
+
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/80?text=No+Image";
     return resolveImageUrl(path);

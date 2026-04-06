@@ -5,7 +5,6 @@ import useAuth from "../../hooks/useAuth";
 import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
-import { buildWhatsAppCheckoutUrl } from "../../utils/whatsapp";
 
 export default function Checkout() {
   const { cartItems, createOrder, checkoutLoading } = useCart();
@@ -99,24 +98,18 @@ export default function Checkout() {
 
   const handleFinalize = async () => {
     if (checkoutLoading) return;
-    const itemsSnapshot = [...cartItems];
     try {
       orderCompletedRef.current = true;
-      const order = await createOrder(couponApplied);
-      if (order) {
-        const whatsappUrl = buildWhatsAppCheckoutUrl({
-          customerName: user?.nome || user?.name || "Cliente",
-          items: itemsSnapshot,
-          total: preview?.total ?? order.total,
-          orderId: order.id_pedido,
-          subtotal: preview?.subtotal ?? order.subtotal,
-          desconto: preview?.desconto ?? order.desconto ?? 0,
-          frete: preview?.frete ?? order.frete ?? 0,
-          codigoCupom: couponApplied,
-        });
-        window.open(whatsappUrl, "_blank");
-        toast.success("Pedido criado! Redirecionando para o WhatsApp...");
-        navigate("/account");
+      const result = await createOrder(couponApplied);
+      if (result) {
+        toast.success("Pedido criado com sucesso!");
+
+        // Redireciona para WhatsApp (URL gerada pelo backend)
+        if (result.whatsappUrl) {
+          window.location.href = result.whatsappUrl;
+        } else {
+          navigate("/account");
+        }
       }
     } catch (err) {
       orderCompletedRef.current = false;
