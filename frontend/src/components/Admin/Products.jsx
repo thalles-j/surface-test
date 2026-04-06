@@ -312,22 +312,7 @@ export default function Catalog() {
     <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8 font-sans selection:bg-black selection:text-white">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
-        <div className="flex justify-between items-start mb-10">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase text-black">Catálogo de Produtos</h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Gestão de Inventário e Catálogo</p>
-          </div>
-          <div className="flex items-center gap-4 bg-white p-2 pr-5 rounded-2xl border border-gray-200 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-               <div className="bg-black/5 w-full h-full" />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-xs font-black uppercase leading-tight text-black">Admin System</p>
-              <p className="text-[9px] text-gray-500 font-bold uppercase">Gerente</p>
-            </div>
-          </div>
-        </div>
+        {/* SEM Header */}
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -444,7 +429,7 @@ export default function Catalog() {
                           )}
                         </div>
                         <div>
-                          <p className="flex items-center gap-2 text-gray-500 text-[9px] font-mono font-bold">
+                          <p className="flex items-center gap-2 text-gray-500 text-[15px] font-mono font-bold">
                             #{product.id_produto} 
                             {product.destaque && <span className="text-yellow-500 text-xs">★</span>}
                             {product.oculto && <span className="bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded text-[8px] uppercase font-black tracking-widest">Oculto</span>}

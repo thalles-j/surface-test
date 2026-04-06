@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Info, Truck, RotateCcw, ShieldCheck, Mail, ArrowRight, MessageCircle, ChevronDown, ExternalLink } from 'lucide-react';
+import { Info, Truck, RotateCcw, ShieldCheck, Mail, ArrowRight, ArrowLeft, MessageCircle, ChevronDown, ExternalLink } from 'lucide-react';
 import styles from './style.module.css';
+import { useNavigate } from 'react-router-dom';
 
 const AccordionItem = ({ title, content }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +19,16 @@ const AccordionItem = ({ title, content }) => {
 };
 
 export default function Atendimento() {
+  const navigate = useNavigate();
   return (
     <main className={`${styles.page} ${styles.fadeInSection}`}>
       <div className="px-6 md:px-16 pt-20 pb-20 border-b border-gray-50">
+         <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-12 hover:opacity-50 transition-opacity"
+        >
+          <ArrowLeft size={16} /> Voltar
+        </button>
         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">Atendimento ao <br/>Cliente.</h1>
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">Como podemos ajudar a sua experiência?</p>
       </div>

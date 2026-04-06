@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // Importado useEffect
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuth from "../hooks/useAuth";
 
@@ -18,15 +18,27 @@ import Privacidade from '../pages/Privacidade';
 import Checkout from '../pages/Checkout';
 
 // ============================
+// Component: ScrollUp
+// ============================
+// Força o scroll para o topo apenas quando este wrapper é utilizado
+const ScrollUp = ({ children }) => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return children;
+};
+
+// ============================
 // Component: RequireAuth
 // ============================
-// role: number | undefined -> se definido, valida o role do usuário
 function RequireAuth({ children, role }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    // UX de carregamento (utilizando classes do Tailwind)
     return (
       <div className="flex justify-center items-center h-[60vh] text-gray-500">
         <span className="animate-pulse">Verificando sessão...</span>
@@ -35,12 +47,10 @@ function RequireAuth({ children, role }) {
   }
 
   if (!user) {
-    // Redireciona para login, salvando a rota original na qual o usuário tentou entrar
     return <Navigate to="/entrar" state={{ from: location }} replace />;
   }
 
   if (role && Number(user.role) !== role) {
-    // Redireciona para a home se não tiver a permissão necessária (ex: não for admin)
     return <Navigate to="/" replace />;
   }
 
@@ -53,16 +63,18 @@ function RequireAuth({ children, role }) {
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Rotas públicas */}
+      {/* Rotas públicas padrão (mantêm posição do scroll) */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:slug" element={<ProductDetail />} />
-      <Route path="/about-us" element={<About />} />
-      <Route path="/atendimento" element={<Atendimento />} />
-      <Route path="/trocas-devolucoes" element={<TrocasDevolucoes />} />
-      <Route path="/termos-de-uso" element={<TermosDeUso />} />
-      <Route path="/privacidade" element={<Privacidade />} />
+
+      {/* Rotas ESPECÍFICAS que resetam o scroll para o topo */}
+      <Route path="/atendimento" element={<ScrollUp><Atendimento /></ScrollUp>} />
+      <Route path="/trocas-devolucoes" element={<ScrollUp><TrocasDevolucoes /></ScrollUp>} />
+      <Route path="/termos-de-uso" element={<ScrollUp><TermosDeUso /></ScrollUp>} />
+      <Route path="/privacidade" element={<ScrollUp><Privacidade /></ScrollUp>} />
+      <Route path="/about-us" element={<ScrollUp><About /></ScrollUp>} />
 
       {/* Rotas protegidas (Usuários logados) */}
       <Route 

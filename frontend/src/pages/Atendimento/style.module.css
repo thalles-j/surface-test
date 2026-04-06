@@ -14,6 +14,7 @@
     min-height: 100vh;
     color: var(--brand-black);
     margin: 8rem 0 0;
+    scroll-behavior: smooth;
 }
 
 @media (max-width: 553px) {

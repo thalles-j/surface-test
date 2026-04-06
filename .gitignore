@@ -3,3 +3,4 @@ node_modules
 # Sonar / análise local
 .scannerwork/
 sonar-report/
+backend/prisma/seeds/pedidos.js
