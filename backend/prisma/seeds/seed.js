@@ -1,5 +1,5 @@
 // seed.js
-import prisma from "./src/database/prisma.js";
+import prisma from "../../src/database/prisma.js";
 import bcrypt from "bcryptjs";
 
 // Função para gerar SKU a partir do nome do produto e tamanho
