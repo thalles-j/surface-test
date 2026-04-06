@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, ChevronDown, ChevronUp, Filter, Loader2 } from 'lucide-react';
-import Modal from '../Modal';
-import Pagination from './Pagination';
-import { api } from '../../services/api';
-import { useToast } from '../../context/ToastContext';
+import Modal from '../../Modal';
+import Pagination from '../Pagination/Pagination';
+import { api } from '../../../services/api';
+import { useToast } from '../../../context/ToastContext';
 
 const STATUS_LABELS = {
   pendente: 'Pendente',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Power, AlertCircle } from 'lucide-react';
-import AlertModal from '../AlertModal';
-import { api } from '../../services/api';
+import AlertModal from '../../AlertModal';
+import { api } from '../../../services/api';
 
 const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500 transition-colors';
 const labelCls = 'text-sm font-medium mb-1 block text-zinc-300';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, Zap } from 'lucide-react';
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
 
 const CustomBarChart = ({ data }) => {
   if (!Array.isArray(data) || data.length === 0) return <div className="text-center py-8 text-sm text-zinc-500">Sem dados suficientes</div>;

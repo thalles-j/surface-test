@@ -3,18 +3,18 @@ import { LogOut } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
 // Import Components
-import Sidebar from '../../components/Admin/Sidebar';
-import Dashboard from '../../components/Admin/Dashboard';
-import Sales from '../../components/Admin/Sales';
-import Products from '../../components/Admin/Products';
-import Collections from '../../components/Admin/Collections';
-import Categories from '../../components/Admin/Categories';
-import Inventory from '../../components/Admin/Inventory';
-import Customers from '../../components/Admin/Customers';
-import Analytics from '../../components/Admin/Analytics';
-import Customization from '../../components/Admin/Customization';
-import AdminSettings from '../../components/Admin/AdminSettings';
-import AdminPanel from '../../components/Admin/AdminPanel';
+import Sidebar from '../../components/Admin/Sidebar/Sidebar';
+import Dashboard from '../../components/Admin/Dashboard/Dashboard';
+import Sales from '../../components/Admin/Sales/Sales';
+import Products from '../../components/Admin/Products/Products';
+import Collections from '../../components/Admin/Collections/Collections';
+import Categories from '../../components/Admin/Categories/Categories';
+import Inventory from '../../components/Admin/Inventory/Inventory';
+import Customers from '../../components/Admin/Customers/Customers';
+import Analytics from '../../components/Admin/Analytics/Analytics';
+import Customization from '../../components/Admin/Customization/Customization';
+import AdminSettings from '../../components/Admin/AdminSettings/AdminSettings';
+import AdminPanel from '../../components/Admin/AdminPanel/AdminPanel';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');

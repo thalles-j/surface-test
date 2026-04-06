@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Plus, Trash2, Edit, Search, Hash, Star, Loader2, AlertTriangle, Filter, ChevronDown } from 'lucide-react';
-import Modal from '../Modal';
-import AlertModal from '../AlertModal';
-import Pagination from './Pagination';
-import { api } from '../../services/api';
-import { resolveImageUrl } from '../../utils/resolveImageUrl';
-import { useToast } from '../../context/ToastContext';
+import Modal from '../../Modal';
+import AlertModal from '../../AlertModal';
+import Pagination from '../Pagination/Pagination';
+import { api } from '../../../services/api';
+import { resolveImageUrl } from '../../../utils/resolveImageUrl';
+import { useToast } from '../../../context/ToastContext';
 
 const AVAILABLE_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
 const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 transition-colors text-white placeholder-zinc-500';

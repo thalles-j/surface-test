@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Edit, Search } from 'lucide-react';
-import Modal from '../Modal';
-import AlertModal from '../AlertModal';
-import { useToast } from '../../context/ToastContext';
-import { api } from '../../services/api';
+import Modal from '../../Modal';
+import AlertModal from '../../AlertModal';
+import { useToast } from '../../../context/ToastContext';
+import { api } from '../../../services/api';
 
 const mapCategory = c => ({ id: c.id_categoria, name: c.nome_categoria, description: c.descricao, productCount: c._count?.produtos || 0 });
 

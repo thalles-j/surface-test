@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Plus, Trash2, Edit, Shield, Activity, Clock } from 'lucide-react';
-import Modal from '../Modal';
-import AlertModal from '../AlertModal';
-import { api } from '../../services/api';
-import { AuthContext } from '../../context/AuthContext';
+import Modal from '../../Modal';
+import AlertModal from '../../AlertModal';
+import { api } from '../../../services/api';
+import { AuthContext } from '../../../context/AuthContext';
 
 export default function AdminPanel() {
   const [admins, setAdmins] = useState([]);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpRight, ArrowDownRight, Lock, Unlock, TrendingUp, Zap, Clock, Eye } from 'lucide-react';
-import { api } from '../../services/api';
-import { resolveImageUrl } from '../../utils/resolveImageUrl';
-import { useToast } from '../../context/ToastContext';
+import { api } from '../../../services/api';
+import { resolveImageUrl } from '../../../utils/resolveImageUrl';
+import { useToast } from '../../../context/ToastContext';
 
 const StatCard = ({ title, value, change, isPositive }) => (
   <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-300">
@@ -26,17 +26,29 @@ export default function Dashboard({ onCreateCollection }) {
   const [recentOrders, setRecentOrders] = useState([]);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       try {
-        const [statsRes, topRes, ordersRes, settingsRes] = await Promise.all([
+        // Faz hit de visita sem esperar resposta
+        api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' }).catch(() => {});
+
+        const [statsRes, topRes, ordersRes, settingsRes, visitsRes, catRes] = await Promise.all([
           api.get('/admin/dashboard/stats'),
           api.get('/admin/dashboard/top-products'),
           api.get('/admin/analytics/recent-orders').catch(() => ({ data: [] })),
           api.get('/admin/settings').catch(() => ({ data: {} })),
+          api.get('/admin/analytics/visits').catch(() => ({ data: [] })),
+          api.get('/admin/analytics/category-sales').catch(() => ({ data: [] })),
         ]);
+
+        if (cancelled) return;
 
         setRecentOrders(ordersRes.data || []);
         setIsDropLocked(settingsRes.data?.loja_ativa === false);
+
+        const visitsTotal = (visitsRes.data || []).reduce((s, it) => s + (it.count || 0), 0);
+        setVisitsCount(visitsTotal);
+        setCategorySales(catRes.data || []);
 
         const stats = statsRes.data || {};
 
@@ -52,8 +64,7 @@ export default function Dashboard({ onCreateCollection }) {
           };
         });
 
-        setDashboardData(prev => ({
-          ...prev,
+        setDashboardData({
           monthlyRevenue: Number(stats.monthlyRevenue || 0),
           orders: stats.ordersCount || stats.orders || 0,
           avgTicket: Number(stats.avgTicket || 0),
@@ -62,29 +73,17 @@ export default function Dashboard({ onCreateCollection }) {
           ordersGrowth: stats.ordersGrowth || '0%',
           avgTicketGrowth: stats.avgTicketGrowth || '0%',
           topProducts,
-        }));
-
-        try {
-          await api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' });
-        } catch (e) { /* ignore */ }
-
-        try {
-          const v = await api.get('/admin/analytics/visits');
-          const total = (v.data || []).reduce((s, it) => s + (it.count || 0), 0);
-          setVisitsCount(total);
-        } catch (e) { /* ignore */ }
-
-        try {
-          const catRes = await api.get('/admin/analytics/category-sales');
-          setCategorySales(catRes.data || []);
-        } catch (e) { /* ignore */ }
+        });
       } catch (err) {
-        console.error('Erro ao carregar dashboard:', err);
-        toast.error('Erro ao carregar dados do dashboard');
+        if (!cancelled) {
+          console.error('Erro ao carregar dashboard:', err);
+          toast.error('Erro ao carregar dados do dashboard');
+        }
       }
     };
     fetchData();
-  }, []);
+    return () => { cancelled = true; };
+  }, [toast]);
 
   if (!dashboardData) {
     return <div className="text-center py-12">Carregando...</div>;

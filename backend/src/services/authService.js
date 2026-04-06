@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../database/prisma.js";
 import ErroBase from "../errors/ErroBase.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
 
 /* ======================================================
   LOGIN SERVICE

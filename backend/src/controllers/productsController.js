@@ -73,21 +73,33 @@ export const getProductBySlugController = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const produtos = await prisma.produtos.findMany({
-      include: productInclude,
+    // Busca apenas nomes para encontrar o match, evitando carregar todos os dados
+    const allNames = await prisma.produtos.findMany({
+      select: { id_produto: true, nome_produto: true, id_categoria: true },
     });
 
     const normalize = (name) =>
       name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-    const produto = produtos.find(p => normalize(p.nome_produto) === slug);
+    const match = allNames.find(p => normalize(p.nome_produto) === slug);
 
-    if (!produto) return res.status(404).json({ error: "Produto nao encontrado" });
+    if (!match) return res.status(404).json({ error: "Produto nao encontrado" });
+
+    // Busca o produto completo pelo ID
+    const produto = await prisma.produtos.findUnique({
+      where: { id_produto: match.id_produto },
+      include: productInclude,
+    });
 
     // Buscar relacionados (mesma categoria, exceto o proprio)
-    const related = produtos
-      .filter(p => p.id_produto !== produto.id_produto && p.id_categoria === produto.id_categoria)
-      .slice(0, 4);
+    const related = await prisma.produtos.findMany({
+      where: {
+        id_categoria: match.id_categoria,
+        id_produto: { not: match.id_produto },
+      },
+      include: productInclude,
+      take: 4,
+    });
 
     return res.status(200).json({ produto, related });
   } catch (error) {

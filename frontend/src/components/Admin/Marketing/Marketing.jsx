@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit, Percent, Clock } from 'lucide-react';
-import Modal from '../Modal';
-import AlertModal from '../AlertModal';
+import Modal from '../../Modal';
+import AlertModal from '../../AlertModal';
 
 export default function Marketing() {
   const [coupons, setCoupons] = useState([

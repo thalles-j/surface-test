@@ -7,11 +7,23 @@ import ErroBase from "../errors/ErroBase.js";
 ============================================ */
 export const getMeController = async (req, res, next) => {
   try {
+    // Se ?light=true, retorna apenas dados básicos (usado pelo AuthContext)
+    if (req.query.light === 'true') {
+      const usuario = await prisma.usuarios.findUnique({
+        where: { id_usuario: req.user.id },
+        select: { id_usuario: true, nome: true, email: true, telefone: true, id_role: true },
+      });
+      if (!usuario) throw new ErroBase("Usuário não encontrado", 404);
+      return res.json({ usuario: { ...usuario, role: usuario.id_role } });
+    }
+
     const usuario = await prisma.usuarios.findUnique({
       where: { id_usuario: req.user.id },
       include: {
         enderecos: true,
         pedidos: {
+          orderBy: { data_pedido: 'desc' },
+          take: 20,
           include: {
             pedidoProdutos: {
               include: {
@@ -22,6 +34,7 @@ export const getMeController = async (req, res, next) => {
                     preco: true,
                     fotos: {
                       select: { url: true },
+                      take: 1,
                     },
                   },
                 },

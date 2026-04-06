@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AlertCircle, Search, RotateCcw, History } from 'lucide-react';
-import Modal from '../Modal';
-import Pagination from './Pagination';
-import { useToast } from '../../context/ToastContext';
-import { api } from '../../services/api';
+import Modal from '../../Modal';
+import Pagination from '../Pagination/Pagination';
+import { useToast } from '../../../context/ToastContext';
+import { api } from '../../../services/api';
 
 const PAGE_SIZE = 20;
 

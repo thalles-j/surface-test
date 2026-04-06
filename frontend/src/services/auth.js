@@ -12,7 +12,7 @@ export async function apiRegister(payload) {
 
 export async function apiMe() {
 
-    const response = await api.get("/conta");
+    const response = await api.get("/conta?light=true");
     return response.data;
 }
 
