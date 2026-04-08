@@ -1,490 +1,475 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, Crown, Plus, Trash2, Eye, Mail, Phone, Calendar, ShoppingBag, DollarSign, MapPin, Tag } from 'lucide-react';
-import Modal from '../../Modal';
-import AlertModal from '../../AlertModal';
-import Pagination from '../Pagination/Pagination';
-import { ModalSection, ModalField, ModalFormGroup, inputClass, selectClass, primaryBtnClass, secondaryBtnClass } from '../AdminModalParts';
-import { useToast } from '../../../context/ToastContext';
-import { api } from '../../../services/api';
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Search, Crown, Plus, Trash2, Eye, UserPlus, 
+  ShoppingBag, Mail, Phone, Calendar, DollarSign,
+  Tag, Percent, X, ChevronRight, User, Filter,
+  TrendingUp, Users, ArrowRight
+} from 'lucide-react';
 
-const PAGE_SIZE = 15;
+// --- MOCK DATA (Inicial) ---
+const INITIAL_CUSTOMERS = [
+  { id: '1', name: 'Ana Oliveira', email: 'ana@email.com', phone: '(11) 99999-8888', type: 'VIP', ordersCount: 12, totalSpent: 2450.50, createdAt: '2023-10-15' },
+  { id: '2', name: 'Bruno Santos', email: 'bruno@email.com', phone: '(21) 98888-7777', type: 'Novo', ordersCount: 1, totalSpent: 89.90, createdAt: '2024-03-01' },
+  { id: '3', name: 'Carla Lima', email: 'carla@email.com', phone: '(31) 97777-6666', type: 'Recorrente', ordersCount: 5, totalSpent: 560.00, createdAt: '2024-01-10' },
+];
 
-export default function Customers() {
-  const { addToast } = useToast();
+const INITIAL_ORDERS = [
+  { id: 'ORD-001', customerId: '1', date: '2024-03-15', total: 150.00, status: 'Entregue' },
+  { id: 'ORD-002', customerId: '1', date: '2024-03-02', total: 220.50, status: 'Entregue' },
+  { id: 'ORD-003', customerId: '3', date: '2024-03-20', total: 120.00, status: 'Processando' },
+];
 
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const INITIAL_COUPONS = [
+  { id: '1', code: 'BEMVINDO10', discount: 10, type: 'Porcentagem', expiry: '2025-12-31', uses: 45, active: true },
+  { id: '2', code: 'PRIMEIRA20', discount: 20, type: 'Valor Fixo', expiry: '2024-06-01', uses: 12, active: true },
+];
+
+// --- COMPONENTES AUXILIARES ---
+
+const Badge = ({ children, variant = 'default' }) => {
+  const styles = {
+    VIP: 'bg-purple-100 text-purple-700 border-purple-200',
+    Novo: 'bg-blue-100 text-blue-700 border-blue-200',
+    Recorrente: 'bg-green-100 text-green-700 border-green-200',
+    default: 'bg-gray-100 text-gray-700 border-gray-200'
+  };
+  return (
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[variant] || styles.default}`}>
+      {children}
+    </span>
+  );
+};
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+            <X size={20} className="text-gray-500" />
+          </button>
+        </div>
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- COMPONENTE PRINCIPAL ---
+
+export default function App() {
+  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+  const [coupons, setCoupons] = useState(INITIAL_COUPONS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedType, setSelectedType] = useState('todos');
-  const [sortBy, setSortBy] = useState('');
-  const [sortDir, setSortDir] = useState('desc');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  
+  // Modais
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  const [detailModal, setDetailModal] = useState({ isOpen: false, customer: null });
-  const [detailData, setDetailData] = useState(null);
+  // Form States
+  const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '', type: 'Novo' });
+  const [newCoupon, setNewCoupon] = useState({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
 
-  // --- Coupons ---
-  const [coupons, setCoupons] = useState([]);
-  const [showCouponForm, setShowCouponForm] = useState(false);
-  const [couponData, setCouponData] = useState({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
-  const [confirmDeleteCoupon, setConfirmDeleteCoupon] = useState({ isOpen: false, id: null });
+  // --- LÓGICA DE CLIENTES ---
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  const handleAddCustomer = (e) => {
+    e.preventDefault();
+    const customer = {
+      ...newCustomer,
+      id: Math.random().toString(36).substr(2, 9),
+      ordersCount: 0,
+      totalSpent: 0,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    setCustomers([customer, ...customers]);
+    setNewCustomer({ name: '', email: '', phone: '', type: 'Novo' });
+    setIsUserModalOpen(false);
+  };
 
-  // Reset page on filter change
-  useEffect(() => { setPage(1); }, [debouncedSearch, selectedType]);
+  const openDetails = (customer) => {
+    setSelectedCustomer(customer);
+    setIsDetailModalOpen(true);
+  };
 
-  const loadCustomers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      params.set('page', page);
-      params.set('limit', PAGE_SIZE);
-      if (debouncedSearch) params.set('search', debouncedSearch);
-      if (selectedType !== 'todos') params.set('type', selectedType);
-      if (sortBy) {
-        params.set('sortBy', sortBy);
-        params.set('sortDir', sortDir);
-      }
+  const filteredCustomers = customers.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      const res = await api.get(`/admin/customers?${params}`);
-      if (res.data?.data) {
-        setCustomers(res.data.data);
-        setTotalPages(res.data.totalPages || 1);
-        setTotalItems(res.data.total || 0);
-      } else {
-        setCustomers(res.data || []);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar clientes:', err);
-      addToast('Erro ao carregar clientes', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, debouncedSearch, selectedType, sortBy, sortDir, addToast]);
+  // --- LÓGICA DE CUPONS ---
 
-  const loadCoupons = useCallback(async () => {
-    try {
-      const res = await api.get('/admin/marketing/coupons');
-      setCoupons((res.data || []).map(c => ({
-        id: c.id_cupom,
-        code: c.codigo,
-        discount: Number(c.desconto),
-        type: c.tipo,
-        expiry: c.validade,
-        uses: c.usos || 0,
-        active: c.ativo,
-      })));
-    } catch (err) {
-      console.error('Erro ao carregar cupons:', err);
-      addToast('Erro ao carregar cupons', 'error');
-    }
-  }, []);
+  const handleAddCoupon = (e) => {
+    e.preventDefault();
+    const coupon = {
+      ...newCoupon,
+      id: Math.random().toString(36).substr(2, 9),
+      uses: 0,
+      active: true
+    };
+    setCoupons([coupon, ...coupons]);
+    setNewCoupon({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
+    setIsCouponModalOpen(false);
+  };
 
-  useEffect(() => { loadCustomers(); }, [loadCustomers]);
-  useEffect(() => { loadCoupons(); }, [loadCoupons]);
+  const deleteCoupon = (id) => {
+    setCoupons(coupons.filter(c => c.id !== id));
+  };
 
-  const getTypeColor = useCallback((type) => {
-    switch (type) {
-      case 'VIP': return 'bg-purple-950 text-purple-400';
-      case 'Recorrente': return 'bg-blue-950 text-blue-400';
-      case 'Novo': return 'bg-emerald-950 text-emerald-400';
-      default: return 'bg-zinc-800 text-zinc-400';
-    }
-  }, []);
-
-  const stats = useMemo(() => ({
-    total: totalItems,
-    vip: customers.filter(c => c.type === 'VIP').length,
-    novo: customers.filter(c => c.type === 'Novo').length,
-    totalSpent: customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0),
-  }), [customers, totalItems]);
-
-  const openCustomerDetail = useCallback(async (customer) => {
-    setDetailModal({ isOpen: true, customer });
-    try {
-      const res = await api.get(`/admin/customers/${customer.id}`);
-      setDetailData(res.data);
-    } catch (err) {
-      console.error('Erro ao carregar detalhes:', err);
-      addToast('Erro ao carregar detalhes do cliente', 'error');
-    }
-  }, [addToast]);
-
-  const closeDetailModal = useCallback(() => {
-    setDetailModal({ isOpen: false, customer: null });
-    setDetailData(null);
-  }, []);
-
-  const handleToggleSort = useCallback((field) => {
-    if (sortBy === field) {
-      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortDir('desc');
-    }
-  }, [sortBy]);
-
-  // --- Cupons ---
-  const handleAddCoupon = useCallback(async () => {
-    if (!couponData.code || !couponData.discount) {
-      addToast('Preencha código e desconto', 'warning');
-      return;
-    }
-    try {
-      await api.post('/admin/marketing/coupons', {
-        codigo: couponData.code,
-        desconto: Number(couponData.discount),
-        tipo: couponData.type,
-        validade: couponData.expiry || null,
-        ativo: true,
-      });
-      addToast('Cupom criado com sucesso!', 'success');
-      await loadCoupons();
-      setCouponData({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
-      setShowCouponForm(false);
-    } catch (err) {
-      console.error('Erro ao criar cupom:', err);
-      addToast('Erro ao criar cupom', 'error');
-    }
-  }, [couponData, addToast, loadCoupons]);
-
-  const performConfirmDeleteCoupon = useCallback(async () => {
-    if (!confirmDeleteCoupon.id) return;
-    try {
-      await api.delete(`/admin/marketing/coupons/${confirmDeleteCoupon.id}`);
-      setConfirmDeleteCoupon({ isOpen: false, id: null });
-      addToast('Cupom excluído', 'success');
-      await loadCoupons();
-    } catch (err) {
-      console.error('Erro ao deletar cupom:', err);
-      addToast('Erro ao deletar cupom', 'error');
-    }
-  }, [confirmDeleteCoupon.id, addToast, loadCoupons]);
-
-  if (loading && customers.length === 0) return <div className="text-center py-12">Carregando clientes...</div>;
+  // --- RENDERIZAÇÃO ---
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* RESUMO */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
-          <p className="text-zinc-500 text-sm font-medium">Total de Clientes</p>
-          <h3 className="text-3xl font-bold mt-2">{ stats.total}</h3>
-        </div>
-        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
-          <p className="text-zinc-500 text-sm font-medium">Clientes VIP</p>
-          <h3 className="text-3xl font-bold mt-2 text-purple-400">{stats.vip}</h3>
-          <p className="text-xs text-zinc-600 mt-1">nesta página</p>
-        </div>
-        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
-          <p className="text-zinc-500 text-sm font-medium">Novos Clientes</p>
-          <h3 className="text-3xl font-bold mt-2 text-emerald-400">{stats.novo}</h3>
-          <p className="text-xs text-zinc-600 mt-1">nesta página</p>
-        </div>
-        <div className="bg-zinc-900 p-6 border border-zinc-800 rounded-xl">
-          <p className="text-zinc-500 text-sm font-medium">Receita (página)</p>
-          <h3 className="text-2xl font-bold mt-2">R$ {stats.totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
+      <div className="max-w-7xl mx-auto px-4 py-8">
 
-      {/* TABELA */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar por nome, email ou telefone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:border-zinc-500 outline-none text-white placeholder-zinc-500"
-            />
+        {/* --- SEÇÃO DE CLIENTES --- */}
+        <section className="space-y-6 mb-16">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <Users className="text-indigo-600" size={24} /> 
+              Base de Clientes
+            </h2>
           </div>
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
-          >
-            <option value="todos">Todas as Categorias</option>
-            <option value="VIP">VIP</option>
-            <option value="Recorrente">Recorrente</option>
-            <option value="Novo">Novo</option>
-          </select>
-        </div>
 
-        {loading && <div className="p-4 text-center text-zinc-500 text-sm">Atualizando...</div>}
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
-                <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Telefone</th>
-                <th className="px-6 py-4">Tipo</th>
-                <th className="px-6 py-4 cursor-pointer select-none" onClick={() => handleToggleSort('ordersCount')}>
-                  Pedidos {sortBy === 'ordersCount' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
-                </th>
-                <th className="px-6 py-4">Ticket Médio</th>
-                <th className="px-6 py-4 cursor-pointer select-none" onClick={() => handleToggleSort('totalSpent')}>
-                  Total Gasto {sortBy === 'totalSpent' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
-                </th>
-                <th className="px-6 py-4">Última Compra</th>
-                <th className="px-6 py-4 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-zinc-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-sm">{c.name}</td>
-                  <td className="px-6 py-4 text-sm text-zinc-400">{c.email}</td>
-                  <td className="px-6 py-4 text-sm text-zinc-400">{c.phone || '—'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {c.type === 'VIP' && <Crown size={14} className="text-purple-600" />}
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getTypeColor(c.type)}`}>
-                        {c.type}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-bold text-sm">{c.ordersCount}</td>
-                  <td className="px-6 py-4 text-sm">R$ {(c.ticketMedio || 0).toFixed(2)}</td>
-                  <td className="px-6 py-4 font-bold">R$ {(c.totalSpent || 0).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-zinc-500">{c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString('pt-BR') : '—'}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button onClick={() => openCustomerDetail(c)} className="p-2 text-zinc-500 hover:text-white transition-colors" title="Ver detalhes">
-                      <Eye size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {!loading && customers.length === 0 && (
-          <div className="p-12 text-center text-zinc-500">
-            <p>Nenhum cliente encontrado.</p>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><Users size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Total Clientes</p><h3 className="text-2xl font-bold">{customers.length}</h3></div>
+            </div>
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><Crown size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">VIPs</p><h3 className="text-2xl font-bold">{customers.filter(c => c.type === 'VIP').length}</h3></div>
+            </div>
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><DollarSign size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Receita Total</p><h3 className="text-2xl font-bold">R$ {customers.reduce((acc, c) => acc + c.totalSpent, 0).toLocaleString()}</h3></div>
+            </div>
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><TrendingUp size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Novos (Mês)</p><h3 className="text-2xl font-bold">{customers.filter(c => c.type === 'Novo').length}</h3></div>
+            </div>
           </div>
-        )}
 
-        <Pagination page={page} totalPages={totalPages} total={totalItems} onPageChange={setPage} limit={PAGE_SIZE} />
-      </div>
-
-      {/* Customer Detail Modal */}
-      <Modal isOpen={detailModal.isOpen} onClose={closeDetailModal} title={detailModal.customer?.name || 'Cliente'} size="lg" variant="dark">
-        {detailData ? (
-          <div className="space-y-6">
-            {/* Header card */}
-            <div className="flex items-start gap-4 p-4 bg-zinc-800/40 rounded-xl border border-zinc-800/50">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-zinc-700/50 flex items-center justify-center text-lg font-bold text-zinc-300">
-                {(detailData.name || detailData.email || '?')[0].toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-base font-bold text-white truncate">{detailData.name || detailData.email}</h4>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1"><Mail size={12} />{detailData.email}</span>
-                  {detailData.phone && <span className="flex items-center gap-1"><Phone size={12} />{detailData.phone}</span>}
-                  <span className="flex items-center gap-1"><Calendar size={12} />Desde {new Date(detailData.registered).toLocaleDateString('pt-BR')}</span>
-                </div>
-              </div>
-              {detailModal.customer?.type && (
-                <span className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${detailModal.customer.type === 'VIP' ? 'bg-purple-950 text-purple-400' : detailModal.customer.type === 'Novo' ? 'bg-emerald-950 text-emerald-400' : 'bg-blue-950 text-blue-400'}`}>
-                  {detailModal.customer.type === 'VIP' && <Crown size={10} className="inline mr-1 -mt-px" />}{detailModal.customer.type}
-                </span>
-              )}
+          {/* toolbar Clientes */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Pesquisar por nome ou email..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+            <button 
+              onClick={() => setIsUserModalOpen(true)}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all w-full md:w-auto justify-center"
+            >
+              <UserPlus size={18} /> Novo Cliente
+            </button>
+          </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
-                <ShoppingBag size={16} className="mx-auto text-zinc-500 mb-1.5" />
-                <p className="text-lg font-bold text-white">{detailData.ordersCount || 0}</p>
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Pedidos</p>
-              </div>
-              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
-                <Tag size={16} className="mx-auto text-zinc-500 mb-1.5" />
-                <p className="text-lg font-bold text-white">R$ {(detailData.ticketMedio || 0).toFixed(2)}</p>
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Ticket Médio</p>
-              </div>
-              <div className="p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-xl text-center">
-                <DollarSign size={16} className="mx-auto text-zinc-500 mb-1.5" />
-                <p className="text-lg font-bold text-white">R$ {(detailData.totalSpent || 0).toFixed(2)}</p>
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Total Gasto</p>
-              </div>
+          {/* Table Clientes */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Categoria</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Pedidos</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Total Gasto</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredCustomers.map(customer => (
+                    <tr key={customer.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                            {customer.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{customer.name}</p>
+                            <p className="text-xs text-gray-500">{customer.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={customer.type}>{customer.type}</Badge>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-700">{customer.ordersCount}</td>
+                      <td className="px-6 py-4 font-bold text-gray-900">R$ {customer.totalSpent.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => openDetails(customer)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                          title="Ver Detalhes"
+                        >
+                          <Eye size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            {/* Addresses */}
-            {detailData.addresses?.length > 0 && (
-              <ModalSection title="Endereços">
-                <div className="space-y-2">
-                  {detailData.addresses.map((a, i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-3 bg-zinc-800/30 border border-zinc-800/50 rounded-lg">
-                      <MapPin size={14} className="text-zinc-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-zinc-300">{a.logradouro}, {a.numero}{a.complemento ? ` - ${a.complemento}` : ''} — {a.cidade}/{a.estado} CEP {a.cep}</p>
-                    </div>
-                  ))}
-                </div>
-              </ModalSection>
-            )}
-
-            {/* Order History */}
-            {detailData.orders?.length > 0 && (
-              <ModalSection title="Histórico de Pedidos">
-                <div className="space-y-2 max-h-56 overflow-y-auto admin-scroll pr-1">
-                  {detailData.orders.map(o => (
-                    <div key={o.id} className="flex items-center justify-between p-3.5 bg-zinc-800/30 border border-zinc-800/50 rounded-lg hover:bg-zinc-800/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-zinc-700/50 flex items-center justify-center">
-                          <ShoppingBag size={14} className="text-zinc-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">Pedido #{o.id}</p>
-                          <p className="text-xs text-zinc-500">{new Date(o.date).toLocaleDateString('pt-BR')} — {o.items.length} item(s)</p>
-                        </div>
-                      </div>
-                      <div className="text-right flex items-center gap-3">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${o.status === 'finalizado' || o.status === 'concluido' ? 'bg-emerald-950/60 text-emerald-400' : o.status === 'cancelado' ? 'bg-red-950/60 text-red-400' : 'bg-yellow-950/60 text-yellow-400'}`}>{o.status}</span>
-                        <p className="text-sm font-bold text-white min-w-[80px] text-right">R$ {o.total.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ModalSection>
+            {filteredCustomers.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="mx-auto w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4"><Search size={32} /></div>
+                <h4 className="text-lg font-bold text-gray-800">Nenhum cliente encontrado</h4>
+                <p className="text-gray-500">Tente ajustar seus termos de busca.</p>
+              </div>
             )}
           </div>
-        ) : (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+        </section>
+
+        {/* --- SEÇÃO DE CUPONS --- */}
+        <section className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <Tag className="text-emerald-600" size={24} /> 
+              Cupons e Campanhas
+            </h2>
+            <button 
+              onClick={() => setIsCouponModalOpen(true)}
+              className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-gray-200"
+            >
+              <Plus size={18} /> Criar Cupom
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Código</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Desconto</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Usos</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {coupons.map(coupon => (
+                    <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <code className="bg-amber-50 text-amber-700 px-3 py-1 rounded-md font-mono font-bold border border-amber-100 uppercase tracking-tight">{coupon.code}</code>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-900">
+                        {coupon.type === 'Porcentagem' ? `${coupon.discount}%` : `R$ ${coupon.discount}`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 italic">{coupon.type}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 font-bold text-gray-700 text-xs">
+                          {coupon.uses}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${coupon.active ? 'text-green-600' : 'text-red-600'}`}>
+                          <span className={`w-2 h-2 rounded-full ${coupon.active ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                          {coupon.active ? 'Ativo' : 'Pausado'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => deleteCoupon(coupon.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* MODAL: ADICIONAR CLIENTE */}
+      <Modal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} title="Cadastrar Novo Cliente">
+        <form onSubmit={handleAddCustomer} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-gray-700 mb-1">Nome Completo</label>
+              <input 
+                required
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                placeholder="Ex: João Silva"
+                value={newCustomer.name}
+                onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">E-mail</label>
+              <input 
+                required
+                type="email"
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                placeholder="joao@email.com"
+                value={newCustomer.email}
+                onChange={e => setNewCustomer({...newCustomer, email: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Telefone</label>
+              <input 
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                placeholder="(00) 00000-0000"
+                value={newCustomer.phone}
+                onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})}
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-bold text-gray-700 mb-1">Categoria</label>
+              <select 
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={newCustomer.type}
+                onChange={e => setNewCustomer({...newCustomer, type: e.target.value})}
+              >
+                <option value="Novo">Novo</option>
+                <option value="Recorrente">Recorrente</option>
+                <option value="VIP">VIP</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-100">
+            Criar Cliente
+          </button>
+        </form>
+      </Modal>
+
+      {/* MODAL: DETALHES DO CLIENTE */}
+      <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Perfil do Cliente">
+        {selectedCustomer && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row gap-6 items-start pb-6 border-b border-gray-100">
+              <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-xl shadow-indigo-100">
+                {selectedCustomer.name.charAt(0)}
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedCustomer.name}</h2>
+                  <Badge variant={selectedCustomer.type}>{selectedCustomer.type}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500 font-medium">
+                  <span className="flex items-center gap-1.5"><Mail size={16} /> {selectedCustomer.email}</span>
+                  <span className="flex items-center gap-1.5"><Phone size={16} /> {selectedCustomer.phone}</span>
+                  <span className="flex items-center gap-1.5"><Calendar size={16} /> Cliente desde: {new Date(selectedCustomer.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                  <p className="text-indigo-600 text-xs font-bold uppercase tracking-wider mb-1">Gasto Acumulado</p>
+                  <p className="text-2xl font-black text-indigo-900">R$ {selectedCustomer.totalSpent.toFixed(2)}</p>
+               </div>
+               <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                  <p className="text-amber-600 text-xs font-bold uppercase tracking-wider mb-1">Ticket Médio</p>
+                  <p className="text-2xl font-black text-amber-900">
+                    R$ {selectedCustomer.ordersCount > 0 ? (selectedCustomer.totalSpent / selectedCustomer.ordersCount).toFixed(2) : "0.00"}
+                  </p>
+               </div>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><ShoppingBag size={18} className="text-indigo-600" /> Histórico de Pedidos</h4>
+              <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-600 border-b border-gray-200">
+                      <th className="px-4 py-2 font-bold uppercase text-[10px]">ID</th>
+                      <th className="px-4 py-2 font-bold uppercase text-[10px]">Data</th>
+                      <th className="px-4 py-2 font-bold uppercase text-[10px]">Status</th>
+                      <th className="px-4 py-2 font-bold uppercase text-[10px] text-right">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {INITIAL_ORDERS.filter(o => o.customerId === selectedCustomer.id).map(order => (
+                      <tr key={order.id} className="text-gray-700">
+                        <td className="px-4 py-3 font-mono text-xs">{order.id}</td>
+                        <td className="px-4 py-3">{new Date(order.date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3">
+                           <span className="bg-white border px-2 py-0.5 rounded text-[10px] font-bold">{order.status}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">R$ {order.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {INITIAL_ORDERS.filter(o => o.customerId === selectedCustomer.id).length === 0 && (
+                      <tr><td colSpan="4" className="px-4 py-6 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </Modal>
 
-      {/* CUPONS */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-          <h2 className="text-lg font-bold">Gerenciar Cupons</h2>
-          <button
-            onClick={() => setShowCouponForm(true)}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors"
-          >
-            <Plus size={16} /> Novo Cupom
-          </button>
-        </div>
-
-        <Modal
-          isOpen={showCouponForm}
-          onClose={() => setShowCouponForm(false)}
-          title="Criar Novo Cupom"
-          variant="dark"
-          footer={
-            <>
-              <button onClick={() => setShowCouponForm(false)} className={secondaryBtnClass}>Cancelar</button>
-              <button onClick={handleAddCoupon} className={primaryBtnClass}>Criar Cupom</button>
-            </>
-          }
-        >
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ModalFormGroup label="Código do Cupom" htmlFor="coupon-code">
-                <input
-                  id="coupon-code"
-                  type="text"
-                  value={couponData.code}
-                  onChange={(e) => setCouponData({ ...couponData, code: e.target.value.toUpperCase() })}
-                  placeholder="Ex: SURFACE10"
-                  maxLength="20"
-                  className={`${inputClass} font-mono font-bold`}
-                />
-              </ModalFormGroup>
-              <ModalFormGroup label="Valor do Desconto" htmlFor="coupon-discount">
-                <input
-                  id="coupon-discount"
-                  type="number"
-                  value={couponData.discount}
-                  onChange={(e) => setCouponData({ ...couponData, discount: e.target.value })}
-                  placeholder="Ex: 10"
-                  className={inputClass}
-                />
-              </ModalFormGroup>
-              <ModalFormGroup label="Tipo de Desconto" htmlFor="coupon-type">
-                <select
-                  id="coupon-type"
-                  value={couponData.type}
-                  onChange={(e) => setCouponData({ ...couponData, type: e.target.value })}
-                  className={selectClass}
-                >
-                  <option>Porcentagem</option>
-                  <option>Valor Fixo</option>
-                  <option>Frete</option>
-                </select>
-              </ModalFormGroup>
-              <ModalFormGroup label="Validade" htmlFor="coupon-expiry">
-                <input
-                  id="coupon-expiry"
-                  type="date"
-                  value={couponData.expiry}
-                  onChange={(e) => setCouponData({ ...couponData, expiry: e.target.value })}
-                  className={inputClass}
-                />
-              </ModalFormGroup>
+      {/* MODAL: CRIAR CUPOM */}
+      <Modal isOpen={isCouponModalOpen} onClose={() => setIsCouponModalOpen(false)} title="Configurar Novo Cupom">
+        <form onSubmit={handleAddCoupon} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Código do Cupom</label>
+            <input 
+              required
+              className="w-full p-2.5 rounded-lg border border-gray-200 font-mono focus:ring-2 focus:ring-indigo-500 outline-none uppercase placeholder:lowercase" 
+              placeholder="Ex: DESCONTO20"
+              value={newCoupon.code}
+              onChange={e => setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Tipo de Desconto</label>
+              <select 
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={newCoupon.type}
+                onChange={e => setNewCoupon({...newCoupon, type: e.target.value})}
+              >
+                <option value="Porcentagem">Porcentagem (%)</option>
+                <option value="Valor Fixo">Valor Fixo (R$)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Valor</label>
+              <input 
+                required
+                type="number"
+                className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+                placeholder="10"
+                value={newCoupon.discount}
+                onChange={e => setNewCoupon({...newCoupon, discount: e.target.value})}
+              />
             </div>
           </div>
-        </Modal>
-
-        <table className="w-full">
-          <thead>
-            <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
-              <th className="px-6 py-4">Código</th>
-              <th className="px-6 py-4">Desconto</th>
-              <th className="px-6 py-4">Tipo</th>
-              <th className="px-6 py-4">Validade</th>
-              <th className="px-6 py-4">Usos</th>
-              <th className="px-6 py-4 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800">
-            {coupons.map((c) => (
-              <tr key={c.id} className="hover:bg-zinc-800/50 transition-colors">
-                <td className="px-6 py-4">
-                  <span className="font-mono bg-zinc-800 px-3 py-1 rounded font-bold text-sm">{c.code}</span>
-                </td>
-                <td className="px-6 py-4 font-bold">{c.discount}{c.type === 'Porcentagem' ? '%' : 'R$'}</td>
-                <td className="px-6 py-4 text-sm">{c.type}</td>
-                <td className="px-6 py-4 text-sm">{c.expiry ? new Date(c.expiry).toLocaleDateString('pt-BR') : 'Sem expiração'}</td>
-                <td className="px-6 py-4 font-bold">{c.uses}</td>
-                <td className="px-6 py-4 text-right">
-                  <button onClick={() => setConfirmDeleteCoupon({ isOpen: true, id: c.id })} className="p-2 text-zinc-500 hover:text-red-400 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {coupons.length === 0 && (
-          <div className="p-8 text-center text-zinc-500"><p>Nenhum cupom cadastrado.</p></div>
-        )}
-
-        <AlertModal
-          isOpen={confirmDeleteCoupon.isOpen}
-          onClose={() => setConfirmDeleteCoupon({ isOpen: false, id: null })}
-          title="Confirmar exclusão"
-          message="Deseja realmente excluir este cupom?"
-          type="warning"
-          actionLabel="Excluir"
-          actionCallback={performConfirmDeleteCoupon}
-        />
-      </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Validade (Opcional)</label>
+            <input 
+              type="date"
+              className="w-full p-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" 
+              value={newCoupon.expiry}
+              onChange={e => setNewCoupon({...newCoupon, expiry: e.target.value})}
+            />
+          </div>
+          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-100">
+            Ativar Cupom
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }
