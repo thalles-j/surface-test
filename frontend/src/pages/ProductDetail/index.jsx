@@ -122,9 +122,23 @@ export default function ProductDetail() {
     }
     if (restockLoading || hasRequestedRestock) return;
 
+    let emailToSend = user?.email || "";
     if (!signed) {
-      setShowRestockLoginModal(true);
-      return;
+      const typedEmail = window.prompt(
+        "Digite seu email para avisarmos quando este tamanho voltar ao estoque:"
+      );
+
+      if (!typedEmail) {
+        setShowRestockLoginModal(true);
+        return;
+      }
+
+      emailToSend = typedEmail.trim();
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToSend);
+      if (!isValid) {
+        toast.error("Email invalido.");
+        return;
+      }
     }
 
     setRestockLoading(true);
@@ -132,7 +146,7 @@ export default function ProductDetail() {
       await api.post("/products/restock-request", {
         produto_id: produto.id_produto,
         variacao: selectedSize,
-        email: user?.email,
+        email: emailToSend || undefined,
       });
       setRestockRequests((prev) => ({ ...prev, [selectedSize]: true }));
       toast.success("Avisaremos quando este tamanho voltar ao estoque");

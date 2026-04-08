@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { clearToken } from "./token";
 
 export async function apiLogin(payload) {
     const response = await api.post("/auth/login", payload);
@@ -22,6 +23,6 @@ export async function apiUpdateMe(payload) {
 }
 
 export async function apiLogout() {
-    localStorage.removeItem("token");
+    clearToken();
     return true;
 }

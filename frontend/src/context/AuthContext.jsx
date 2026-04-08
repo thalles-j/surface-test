@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect } from "react";
-import { api } from "../services/api"; 
-import { apiMe, apiLogin, apiLogout } from "../services/auth.js";
+import { createContext, useEffect, useState } from "react";
+import { api } from "../services/api";
+import { apiLogin, apiLogout, apiMe } from "../services/auth.js";
+import { clearToken, getStoredToken, saveToken } from "../services/token.js";
 
 export const AuthContext = createContext({});
 
@@ -10,74 +11,60 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function loadUser() {
-      const token = localStorage.getItem("token");
+      const token = getStoredToken();
 
       if (token) {
         try {
-
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          api.defaults.headers.common.Authorization = `Bearer ${token}`;
           const data = await apiMe();
           setUser(data.usuario || data);
-
         } catch (err) {
-          console.error("Token inválido:", err);
-          // Se o token expirou, limpa tudo
-          localStorage.removeItem("token");
-          api.defaults.headers.common['Authorization'] = undefined;
+          // Token invalido/expirado nao deve quebrar a aplicacao.
+          if (err?.response?.status !== 401) {
+            console.error("Falha ao carregar sessao:", err);
+          }
+          clearToken();
+          api.defaults.headers.common.Authorization = undefined;
           setUser(null);
         }
       }
-      
+
       setLoading(false);
     }
 
     loadUser();
   }, []);
 
-  // --- LOGIN ---
   async function login(payload) {
     const res = await apiLogin(payload);
-
-
-    const tokenRecebido = res.token; 
+    const tokenRecebido = res.token;
     const usuarioRecebido = res.usuario;
 
     if (tokenRecebido) {
-      // 1. Salva no Storage
-      localStorage.setItem("token", tokenRecebido);
-      
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${tokenRecebido}`;
-      
-
+      saveToken(tokenRecebido);
+      api.defaults.headers.common.Authorization = `Bearer ${tokenRecebido}`;
       setUser(usuarioRecebido);
       return usuarioRecebido;
     }
+
+    return null;
   }
 
-  // --- LOGOUT ---
-async function logout() {
+  async function logout() {
     setUser(null);
-    localStorage.removeItem("token");
-    api.defaults.headers.common['Authorization'] = undefined; // Limpa o Axios
+    clearToken();
+    api.defaults.headers.common.Authorization = undefined;
 
     try {
-      await apiLogout(); 
-    } catch (error) {
-      // Silencioso
+      await apiLogout();
+    } catch (_error) {
+      // Sem impacto de UX no logout local.
     }
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      signed: !!user, 
-      loading, 
-      login, 
-      logout 
-    }}>
+    <AuthContext.Provider value={{ user, signed: !!user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
-

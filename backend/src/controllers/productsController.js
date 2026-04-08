@@ -415,8 +415,8 @@ export const bulkUpdateProductsController = async (req, res) => {
 export const createRestockRequestController = async (req, res) => {
   try {
     const produtoId = Number(req.body?.produto_id);
-    const variacao = req.body?.variacao;
-    const emailFromBody = req.body?.email;
+    const variacao = String(req.body?.variacao || "").trim();
+    const emailFromBody = String(req.body?.email || "").trim();
     const email = req.user?.email || emailFromBody || null;
     const userId = req.user?.id || null;
 
@@ -424,7 +424,7 @@ export const createRestockRequestController = async (req, res) => {
       return res.status(400).json({ error: "produto_id e obrigatorio" });
     }
 
-    if (!variacao || !String(variacao).trim()) {
+    if (!variacao) {
       return res.status(400).json({ error: "variacao e obrigatoria" });
     }
 

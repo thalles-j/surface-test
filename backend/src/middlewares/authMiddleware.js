@@ -66,9 +66,10 @@ export function isOwnerOrAdmin(req, res, next) {
 
 function getTokenPayload(req) {
     const authHeader = req.headers["authorization"];
-    const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.split(" ")[1]
-        : authHeader;
+    const normalizedHeader = String(authHeader || "").trim();
+    const token = /^bearer\s+/i.test(normalizedHeader)
+        ? normalizedHeader.replace(/^bearer\s+/i, "").trim()
+        : normalizedHeader.replace(/^"|"$/g, "").trim();
 
     if (!token) return null;
 

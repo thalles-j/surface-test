@@ -1,12 +1,16 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../database/prisma.js";
 
+let restockUserColumnAvailable;
+
 export async function createRestockRequest({ produtoId, variacao, email, userId }) {
+  const normalizedProdutoId = Number(produtoId);
   const normalizedEmail = normalizeEmail(email);
   const normalizedVariacao = String(variacao).trim();
   const normalizedUserId = userId ? Number(userId) : null;
 
   const produto = await prisma.produtos.findUnique({
-    where: { id_produto: produtoId },
+    where: { id_produto: normalizedProdutoId },
     select: { id_produto: true },
   });
 
@@ -14,48 +18,85 @@ export async function createRestockRequest({ produtoId, variacao, email, userId 
     return { error: "Produto nao encontrado", status: 404 };
   }
 
-  const dedupeWhere = normalizedUserId
-    ? {
-        id_produto: produtoId,
-        variacao: normalizedVariacao,
-        id_usuario: normalizedUserId,
-      }
-    : {
-        id_produto: produtoId,
-        variacao: normalizedVariacao,
-        email: normalizedEmail,
-      };
+  const canUseUserColumn = await isRestockUserColumnAvailable();
+  const effectiveUserId = canUseUserColumn ? normalizedUserId : null;
 
-  const existingRequest = await prisma.restock_requests.findFirst({
-    where: dedupeWhere,
+  const dedupeWhere = buildDedupeWhere({
+    produtoId: normalizedProdutoId,
+    variacao: normalizedVariacao,
+    email: normalizedEmail,
+    userId: effectiveUserId,
   });
 
+  const existingRequest = await prisma.restock_requests.findFirst({ where: dedupeWhere });
   if (existingRequest) {
     return { request: existingRequest, created: false };
   }
 
-  const request = await prisma.restock_requests.create({
-    data: {
-      id_produto: produtoId,
-      variacao: normalizedVariacao,
-      id_usuario: normalizedUserId,
-      email: normalizedEmail,
-    },
-  });
+  const createData = {
+    id_produto: normalizedProdutoId,
+    variacao: normalizedVariacao,
+    email: normalizedEmail,
+    ...(effectiveUserId ? { id_usuario: effectiveUserId } : {}),
+  };
 
-  return { request, created: true };
+  try {
+    const request = await prisma.restock_requests.create({ data: createData });
+    return { request, created: true };
+  } catch (error) {
+    if (isMissingRestockUserColumnError(error)) {
+      restockUserColumnAvailable = false;
+
+      const fallbackWhere = buildDedupeWhere({
+        produtoId: normalizedProdutoId,
+        variacao: normalizedVariacao,
+        email: normalizedEmail,
+        userId: null,
+      });
+
+      const existingFallback = await prisma.restock_requests.findFirst({ where: fallbackWhere });
+      if (existingFallback) {
+        return { request: existingFallback, created: false };
+      }
+
+      const fallbackRequest = await prisma.restock_requests.create({
+        data: {
+          id_produto: normalizedProdutoId,
+          variacao: normalizedVariacao,
+          email: normalizedEmail,
+        },
+      });
+
+      return { request: fallbackRequest, created: true };
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const existing = await prisma.restock_requests.findFirst({ where: dedupeWhere });
+      if (existing) {
+        return { request: existing, created: false };
+      }
+    }
+
+    throw error;
+  }
 }
 
 export async function getRestockRequestsGroupedByProduct() {
+  const canUseUserColumn = await isRestockUserColumnAvailable();
+
   const requests = await prisma.restock_requests.findMany({
     include: {
-      usuario: {
-        select: {
-          id_usuario: true,
-          nome: true,
-          email: true,
-        },
-      },
+      ...(canUseUserColumn
+        ? {
+            usuario: {
+              select: {
+                id_usuario: true,
+                nome: true,
+                email: true,
+              },
+            },
+          }
+        : {}),
       produto: {
         select: {
           id_produto: true,
@@ -111,9 +152,47 @@ export async function getRestockRequestsGroupedByProduct() {
 
   return {
     total_registros: requests.length,
-    produtos: Array.from(groupedMap.values()).sort(
-      (a, b) => b.total_interesses - a.total_interesses
-    ),
+    produtos: Array.from(groupedMap.values()).sort((a, b) => b.total_interesses - a.total_interesses),
+  };
+}
+
+async function isRestockUserColumnAvailable() {
+  if (typeof restockUserColumnAvailable === "boolean") {
+    return restockUserColumnAvailable;
+  }
+
+  try {
+    const result = await prisma.$queryRaw`
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+      AND table_name = 'restock_requests'
+      AND column_name = 'id_usuario'
+      LIMIT 1
+    `;
+
+    restockUserColumnAvailable = Array.isArray(result) && result.length > 0;
+  } catch (_error) {
+    // Em caso de falha de introspeccao, mantemos o caminho mais seguro.
+    restockUserColumnAvailable = true;
+  }
+
+  return restockUserColumnAvailable;
+}
+
+function buildDedupeWhere({ produtoId, variacao, email, userId }) {
+  if (userId) {
+    return {
+      id_produto: produtoId,
+      variacao,
+      id_usuario: userId,
+    };
+  }
+
+  return {
+    id_produto: produtoId,
+    variacao,
+    email,
   };
 }
 
@@ -121,4 +200,12 @@ function normalizeEmail(email) {
   if (!email) return null;
   const value = String(email).trim().toLowerCase();
   return value || null;
+}
+
+function isMissingRestockUserColumnError(error) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2022" &&
+    String(error?.meta?.column || "").includes("id_usuario")
+  );
 }
