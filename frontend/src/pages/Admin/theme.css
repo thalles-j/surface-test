@@ -1,0 +1,172 @@
+.admin-theme {
+  min-height: 100vh;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.admin-theme-dark {
+  background: #0a0a0a;
+  color: #f4f4f5;
+}
+
+.admin-theme-light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.admin-theme-light .admin-main-content {
+  color: #0f172a;
+}
+
+.admin-theme-light .admin-theme-toggle {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #d5dee8;
+}
+
+.admin-theme-light .admin-theme-toggle:hover {
+  background: #f8fafc;
+  border-color: #bfcbda;
+}
+
+/* Sidebar */
+.admin-theme-light aside {
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.admin-theme-light aside h1,
+.admin-theme-light aside h3,
+.admin-theme-light aside p,
+.admin-theme-light aside span {
+  color: #0f172a !important;
+}
+
+/* Surface old utility colors used in admin components */
+.admin-theme-light .bg-zinc-950 {
+  background-color: #e2e8f0 !important;
+}
+
+.admin-theme-light .bg-zinc-900 {
+  background-color: #ffffff !important;
+}
+
+.admin-theme-light .bg-zinc-800 {
+  background-color: #f8fafc !important;
+}
+
+.admin-theme-light .bg-zinc-700 {
+  background-color: #e9eff6 !important;
+}
+
+.admin-theme-light .bg-zinc-800\/50 {
+  background-color: rgba(226, 232, 240, 0.55) !important;
+}
+
+.admin-theme-light .bg-zinc-900\/50 {
+  background-color: rgba(241, 245, 249, 0.65) !important;
+}
+
+.admin-theme-light .border-zinc-800 {
+  border-color: #d9e1ea !important;
+}
+
+.admin-theme-light .border-zinc-700 {
+  border-color: #c9d4e0 !important;
+}
+
+.admin-theme-light .border-zinc-600 {
+  border-color: #b8c7d8 !important;
+}
+
+.admin-theme-light .text-zinc-600 {
+  color: #64748b !important;
+}
+
+.admin-theme-light .text-zinc-500 {
+  color: #64748b !important;
+}
+
+.admin-theme-light .text-zinc-400 {
+  color: #475569 !important;
+}
+
+.admin-theme-light .text-zinc-300 {
+  color: #334155 !important;
+}
+
+.admin-theme-light .text-zinc-200 {
+  color: #1e293b !important;
+}
+
+.admin-theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.admin-theme-light .hover\:bg-zinc-800:hover {
+  background-color: #edf2f7 !important;
+}
+
+.admin-theme-light .hover\:bg-zinc-700:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.admin-theme-light .hover\:bg-zinc-200:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.admin-theme-light .hover\:bg-zinc-800\/50:hover {
+  background-color: rgba(226, 232, 240, 0.65) !important;
+}
+
+.admin-theme-light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+.admin-theme-light .hover\:border-zinc-500:hover {
+  border-color: #9fb0c3 !important;
+}
+
+.admin-theme-light .bg-black {
+  background-color: #0f172a !important;
+}
+
+.admin-theme-light .bg-black .text-white,
+.admin-theme-light .bg-black.text-white,
+.admin-theme-light .bg-black * {
+  color: #f8fafc !important;
+}
+
+.admin-theme-light .bg-white {
+  background-color: #0f172a !important;
+}
+
+.admin-theme-light .bg-white,
+.admin-theme-light .bg-white .text-black,
+.admin-theme-light .bg-white.text-black {
+  color: #f8fafc !important;
+}
+
+.admin-theme-light input,
+.admin-theme-light select,
+.admin-theme-light textarea {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.admin-theme-light input::placeholder,
+.admin-theme-light textarea::placeholder {
+  color: #7c8da1 !important;
+}
+
+.admin-theme-light table {
+  color: #0f172a;
+}
+
+.admin-theme-light .divide-zinc-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #dbe4ed !important;
+}
+
+.admin-theme-light .ring-white\/10 {
+  --tw-ring-color: rgba(15, 23, 42, 0.1) !important;
+}
