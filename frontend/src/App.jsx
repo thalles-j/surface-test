@@ -7,6 +7,7 @@ import AppRoutes from './routes';
 import PageLoader from "./components/PageLoader";
 import { CartProvider } from './context/CartContext.jsx';
 import CartDrawer from "./components/CartDrawer";
+import { ToastProvider } from "./context/ToastContext.jsx";
 
 // Componente que renderiza condicionalmente Header/Footer
 function AppLayout() {
@@ -61,12 +62,14 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <Router> 
-        <CartProvider>
-          {loading && <PageLoader />}
-          <AppLayout />
-        </CartProvider>
-      </Router>
+      <ToastProvider>
+        <Router> 
+          <CartProvider>
+            {loading && <PageLoader />}
+            <AppLayout />
+          </CartProvider>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

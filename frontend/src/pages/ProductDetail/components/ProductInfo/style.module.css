@@ -161,6 +161,16 @@
   text-decoration: line-through;
 }
 
+.sizeBtn.allowSoldOutSelection {
+  cursor: pointer;
+}
+
+.sizeBtn.allowSoldOutSelection.disabled {
+  color: #888;
+  border-color: #bbb;
+  text-decoration: none;
+}
+
 /* --- TABELA DE MEDIDAS --- */
 .sizeGuide {
   background: #f9f9f9;
@@ -241,6 +251,15 @@
 .buyBtn.soldOut {
   background: #e74c3c;
   color: #fff;
+}
+
+.buyBtn.notifyBtn {
+  background: #111;
+  color: #fff;
+}
+
+.buyBtn.notifyBtn:hover:not(:disabled) {
+  background: #2b2b2b;
 }
 
 .cartBtn {

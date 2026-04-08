@@ -7,14 +7,20 @@ import ProductInfo from "./components/ProductInfo";
 import RelatedProducts from "./components/RelatedProducts";
 import { useCart } from "../../context/CartContext";
 import { api } from "../../services/api";
+import useAuth from "../../hooks/useAuth";
+import { useToast } from "../../context/ToastContext";
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const { addToCart } = useCart();
+  const { signed, user } = useAuth();
+  const toast = useToast();
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [restockLoading, setRestockLoading] = useState(false);
+  const [restockRequests, setRestockRequests] = useState({});
   
   const [selectedSize, setSelectedSize] = useState(null);
 
@@ -70,6 +76,10 @@ export default function ProductDetail() {
   if (!produto) return <div className={styles.error}>Produto não encontrado</div>;
 
   const variacoes = produto.variacoes_estoque || [];
+  const isProductSoldOut =
+    variacoes.length > 0 && variacoes.every((v) => Number(v?.estoque || 0) <= 0);
+  const restockKey = selectedSize || "produto";
+  const hasRequestedRestock = Boolean(restockRequests[restockKey]);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -81,6 +91,54 @@ export default function ProductDetail() {
     if (selectedVariacao?.estoque === 0) return;
     
     addToCart({ ...produto, selectedSize });
+  };
+
+  const handleRestockRequest = async () => {
+    if (restockLoading || hasRequestedRestock) return;
+
+    let variacao = selectedSize;
+    if (!variacao && variacoes.length === 1) {
+      variacao = variacoes[0].tamanho || variacoes[0].sku || "unico";
+      setSelectedSize(variacao);
+    }
+
+    if (!variacao) {
+      toast.warning("Selecione o tamanho para ser avisado.");
+      return;
+    }
+
+    let email = user?.email || null;
+    if (!signed) {
+      const promptedEmail = window.prompt("Digite seu e-mail para avisarmos quando voltar:");
+      if (!promptedEmail) return;
+      email = promptedEmail.trim().toLowerCase();
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error("E-mail invalido.");
+        return;
+      }
+    }
+
+    setRestockLoading(true);
+    try {
+      await api.post("/products/restock-request", {
+        produto_id: produto.id_produto,
+        variacao,
+        ...(email ? { email } : {}),
+      });
+
+      setRestockRequests((prev) => ({ ...prev, [variacao]: true }));
+      toast.success("Avisaremos quando voltar");
+    } catch (err) {
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.mensagem ||
+        "Nao foi possivel registrar seu interesse.";
+      toast.error(message);
+    } finally {
+      setRestockLoading(false);
+    }
   };
 
   return (
@@ -97,6 +155,10 @@ export default function ProductDetail() {
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
           handleAddToCart={handleAddToCart}
+          isProductSoldOut={isProductSoldOut}
+          onRestockRequest={handleRestockRequest}
+          restockLoading={restockLoading}
+          hasRequestedRestock={hasRequestedRestock}
         />
       </div>
 
