@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import styles from "./style.module.css";
 import PageLoader from "../../components/PageLoader";
@@ -15,51 +15,48 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { signed, user } = useAuth();
   const toast = useToast();
+
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [selectedSize, setSelectedSize] = useState(null);
   const [restockLoading, setRestockLoading] = useState(false);
   const [restockRequests, setRestockRequests] = useState({});
-  
-  const [selectedSize, setSelectedSize] = useState(null);
+  const [showGuestEmailInput, setShowGuestEmailInput] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
 
-  // Função para criar slug a partir do nome
   const createSlug = (name) => {
     return name
       .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
   };
-
-
 
   useEffect(() => {
     const fetchProduto = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/products');
+        const res = await api.get("/products");
         const data = res.data;
-        
-        // Buscar produto pelo slug (nome convertido)
-        const found = data.find(p => createSlug(p.nome_produto) === slug);
-        
+
+        const found = data.find((p) => createSlug(p.nome_produto) === slug);
         if (!found) {
-          setError("Produto não encontrado");
+          setError("Produto nao encontrado");
           return;
         }
-        
+
         setProduto(found);
-        
-        // Buscar produtos relacionados (mesma categoria ou destaque)
+
         const related = data
-          .filter(p => p.id_produto !== found.id_produto && 
-                      (p.id_categoria === found.id_categoria || p.destaque))
+          .filter(
+            (p) => p.id_produto !== found.id_produto && (p.id_categoria === found.id_categoria || p.destaque)
+          )
           .slice(0, 4);
         setRelatedProducts(related);
-        
       } catch (err) {
         console.error("Erro ao carregar produto:", err);
         setError(err.message || "Erro ao carregar produto");
@@ -71,65 +68,80 @@ export default function ProductDetail() {
     fetchProduto();
   }, [slug]);
 
+  const variacoes = produto?.variacoes_estoque || [];
+
+  const selectedVariacao = useMemo(
+    () => variacoes.find((v) => v.tamanho === selectedSize),
+    [variacoes, selectedSize]
+  );
+  const isSelectedSizeSoldOut = Boolean(
+    selectedSize && Number(selectedVariacao?.estoque || 0) <= 0
+  );
+  const hasRequestedRestock = Boolean(selectedSize && restockRequests[selectedSize]);
+
+  useEffect(() => {
+    setShowGuestEmailInput(false);
+    setGuestEmail("");
+  }, [selectedSize]);
+
   if (loading) return <PageLoader />;
   if (error) return <div className={styles.error}>{error}</div>;
-  if (!produto) return <div className={styles.error}>Produto não encontrado</div>;
-
-  const variacoes = produto.variacoes_estoque || [];
-  const isProductSoldOut =
-    variacoes.length > 0 && variacoes.every((v) => Number(v?.estoque || 0) <= 0);
-  const restockKey = selectedSize || "produto";
-  const hasRequestedRestock = Boolean(restockRequests[restockKey]);
+  if (!produto) return <div className={styles.error}>Produto nao encontrado</div>;
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Por favor, selecione um tamanho");
+      toast.warning("Selecione um tamanho.");
       return;
     }
-    
-    const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
-    if (selectedVariacao?.estoque === 0) return;
-    
+
+    if (Number(selectedVariacao?.estoque || 0) <= 0) return;
+
     addToCart({ ...produto, selectedSize });
   };
 
-  const handleRestockRequest = async () => {
+  const handleRestockButtonClick = async () => {
+    if (!isSelectedSizeSoldOut) return;
+    if (!selectedSize) {
+      toast.warning("Selecione um tamanho.");
+      return;
+    }
     if (restockLoading || hasRequestedRestock) return;
 
-    let variacao = selectedSize;
-    if (!variacao && variacoes.length === 1) {
-      variacao = variacoes[0].tamanho || variacoes[0].sku || "unico";
-      setSelectedSize(variacao);
-    }
-
-    if (!variacao) {
-      toast.warning("Selecione o tamanho para ser avisado.");
+    if (!signed) {
+      setShowGuestEmailInput(true);
       return;
     }
 
-    let email = user?.email || null;
-    if (!signed) {
-      const promptedEmail = window.prompt("Digite seu e-mail para avisarmos quando voltar:");
-      if (!promptedEmail) return;
-      email = promptedEmail.trim().toLowerCase();
+    await submitRestockRequest();
+  };
 
+  const submitRestockRequest = async (guestEmailInput = "") => {
+    if (!selectedSize || !isSelectedSizeSoldOut || restockLoading || hasRequestedRestock) return;
+
+    const payload = {
+      produto_id: produto.id_produto,
+      variacao: selectedSize,
+    };
+
+    if (signed) {
+      if (user?.email) payload.email = user.email;
+    } else {
+      const email = String(guestEmailInput || guestEmail).trim().toLowerCase();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        toast.error("E-mail invalido.");
+        toast.error("Digite um e-mail valido.");
         return;
       }
+      payload.email = email;
     }
 
     setRestockLoading(true);
     try {
-      await api.post("/products/restock-request", {
-        produto_id: produto.id_produto,
-        variacao,
-        ...(email ? { email } : {}),
-      });
-
-      setRestockRequests((prev) => ({ ...prev, [variacao]: true }));
-      toast.success("Avisaremos quando voltar");
+      await api.post("/products/restock-request", payload);
+      setRestockRequests((prev) => ({ ...prev, [selectedSize]: true }));
+      setShowGuestEmailInput(false);
+      setGuestEmail("");
+      toast.success("Avisaremos quando este tamanho voltar ao estoque");
     } catch (err) {
       const message =
         err.response?.data?.error ||
@@ -144,28 +156,27 @@ export default function ProductDetail() {
   return (
     <div className={styles.productDetail}>
       <div className={styles.container}>
-        <ImageGallery 
-          fotos={produto.fotos} 
-          productName={produto.nome_produto}
-        />
+        <ImageGallery fotos={produto.fotos} productName={produto.nome_produto} />
 
-        <ProductInfo 
+        <ProductInfo
           produto={produto}
           variacoes={variacoes}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
           handleAddToCart={handleAddToCart}
-          isProductSoldOut={isProductSoldOut}
-          onRestockRequest={handleRestockRequest}
+          isSelectedSizeSoldOut={isSelectedSizeSoldOut}
+          onRestockRequest={handleRestockButtonClick}
+          onGuestRestockSubmit={() => submitRestockRequest()}
           restockLoading={restockLoading}
           hasRequestedRestock={hasRequestedRestock}
+          signed={signed}
+          showGuestEmailInput={showGuestEmailInput}
+          guestEmail={guestEmail}
+          setGuestEmail={setGuestEmail}
         />
       </div>
 
-      <RelatedProducts 
-        products={relatedProducts}
-        createSlug={createSlug}
-      />
+      <RelatedProducts products={relatedProducts} createSlug={createSlug} />
     </div>
   );
 }

@@ -7,16 +7,18 @@ export default function ProductInfo({
   selectedSize,
   setSelectedSize,
   handleAddToCart,
-  isProductSoldOut,
+  isSelectedSizeSoldOut,
   onRestockRequest,
+  onGuestRestockSubmit,
   restockLoading,
   hasRequestedRestock,
+  signed,
+  showGuestEmailInput,
+  guestEmail,
+  setGuestEmail,
 }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
-
-  const selectedVariacao = variacoes.find((v) => v.tamanho === selectedSize);
-  const isSelectedSizeSoldOut = selectedSize && selectedVariacao?.estoque === 0;
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -29,17 +31,10 @@ export default function ProductInfo({
 
       <div className={styles.accordions}>
         <div className={styles.accordion}>
-          <button
-            className={styles.accordionHeader}
-            onClick={() => toggleSection("description")}
-          >
+          <button className={styles.accordionHeader} onClick={() => toggleSection("description")}>
             <span>Descricao</span>
-            <span
-              className={
-                expandedSection === "description" ? styles.chevronUp : styles.chevronDown
-              }
-            >
-              ▼
+            <span className={expandedSection === "description" ? styles.chevronUp : styles.chevronDown}>
+              v
             </span>
           </button>
           {expandedSection === "description" && (
@@ -52,10 +47,8 @@ export default function ProductInfo({
         <div className={styles.accordion}>
           <button className={styles.accordionHeader} onClick={() => toggleSection("care")}>
             <span>Instrucoes de Lavagem</span>
-            <span
-              className={expandedSection === "care" ? styles.chevronUp : styles.chevronDown}
-            >
-              ▼
+            <span className={expandedSection === "care" ? styles.chevronUp : styles.chevronDown}>
+              v
             </span>
           </button>
           {expandedSection === "care" && (
@@ -75,10 +68,7 @@ export default function ProductInfo({
         <div className={styles.sizeSection}>
           <div className={styles.sizeHeader}>
             <span className={styles.sizeLabel}>Tamanho</span>
-            <button
-              className={styles.sizeGuideBtn}
-              onClick={() => setShowSizeGuide(!showSizeGuide)}
-            >
+            <button className={styles.sizeGuideBtn} onClick={() => setShowSizeGuide(!showSizeGuide)}>
               Tabela de Medidas
             </button>
           </div>
@@ -90,10 +80,9 @@ export default function ProductInfo({
                 <button
                   key={v.sku || v.tamanho}
                   className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ""} ${
-                    outOfStock ? styles.disabled : ""
-                  } ${isProductSoldOut ? styles.allowSoldOutSelection : ""}`}
-                  onClick={() => (!outOfStock || isProductSoldOut) && setSelectedSize(v.tamanho)}
-                  disabled={outOfStock && !isProductSoldOut}
+                    outOfStock ? styles.soldOutOption : ""
+                  }`}
+                  onClick={() => setSelectedSize(v.tamanho)}
                 >
                   {v.tamanho}
                 </button>
@@ -115,63 +104,64 @@ export default function ProductInfo({
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>P</td>
-                <td>48</td>
-                <td>68</td>
-              </tr>
-              <tr>
-                <td>M</td>
-                <td>52</td>
-                <td>71</td>
-              </tr>
-              <tr>
-                <td>G</td>
-                <td>56</td>
-                <td>74</td>
-              </tr>
-              <tr>
-                <td>GG</td>
-                <td>60</td>
-                <td>77</td>
-              </tr>
+              <tr><td>P</td><td>48</td><td>68</td></tr>
+              <tr><td>M</td><td>52</td><td>71</td></tr>
+              <tr><td>G</td><td>56</td><td>74</td></tr>
+              <tr><td>GG</td><td>60</td><td>77</td></tr>
             </tbody>
           </table>
         </div>
       )}
 
       <div className={styles.actions}>
-        {isProductSoldOut ? (
-          <button
-            className={`${styles.buyBtn} ${styles.notifyBtn}`}
-            onClick={onRestockRequest}
-            disabled={restockLoading || hasRequestedRestock}
-          >
-            {restockLoading
-              ? "ENVIANDO..."
-              : hasRequestedRestock
-              ? "AVISO REGISTRADO"
-              : "AVISE-ME"}
-          </button>
+        {isSelectedSizeSoldOut ? (
+          <>
+            <button
+              className={`${styles.buyBtn} ${styles.notifyBtn}`}
+              onClick={onRestockRequest}
+              disabled={restockLoading || hasRequestedRestock}
+            >
+              {restockLoading
+                ? "ENVIANDO..."
+                : hasRequestedRestock
+                ? "AVISO REGISTRADO"
+                : "AVISE-ME"}
+            </button>
+
+            {!signed && showGuestEmailInput && !hasRequestedRestock && (
+              <div className={styles.restockEmailBox}>
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  placeholder="Digite seu email"
+                  className={styles.restockEmailInput}
+                />
+                <button
+                  className={styles.restockEmailSubmit}
+                  onClick={onGuestRestockSubmit}
+                  disabled={restockLoading}
+                >
+                  Confirmar
+                </button>
+              </div>
+            )}
+
+            <p className={styles.restockHint}>
+              Avisaremos quando este tamanho voltar ao estoque.
+            </p>
+          </>
         ) : (
           <>
             <button
-              className={`${styles.buyBtn} ${isSelectedSizeSoldOut ? styles.soldOut : ""}`}
+              className={styles.buyBtn}
               onClick={handleAddToCart}
-              disabled={!selectedSize || isSelectedSizeSoldOut}
+              disabled={!selectedSize}
             >
-              {!selectedSize
-                ? "SELECIONE UM TAMANHO"
-                : isSelectedSizeSoldOut
-                ? "ESGOTADO"
-                : "COMPRAR"}
+              {!selectedSize ? "SELECIONE UM TAMANHO" : "COMPRAR"}
             </button>
 
-            <button
-              className={styles.cartBtn}
-              onClick={handleAddToCart}
-              disabled={!selectedSize || isSelectedSizeSoldOut}
-            >
+            <button className={styles.cartBtn} onClick={handleAddToCart} disabled={!selectedSize}>
               ADICIONAR AO CARRINHO
             </button>
           </>
@@ -180,3 +170,5 @@ export default function ProductInfo({
     </div>
   );
 }
+
+
