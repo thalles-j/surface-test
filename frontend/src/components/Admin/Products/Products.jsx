@@ -90,6 +90,10 @@ export default function Catalog() {
       if (debouncedSearch) params.set('search', debouncedSearch);
       if (filterCategory !== 'all') params.set('category', filterCategory);
       if (filterStatus !== 'all') params.set('status', filterStatus);
+      
+      // ADICIONE ESTA LINHA:
+      // Isso avisa o backend para pular o filtro e trazer TUDO (incluindo ocultos)
+      params.set('oculto', 'all'); 
 
       const res = await api.get(`/products?${params}`);
       
@@ -394,13 +398,12 @@ export default function Catalog() {
                   return (
                   <tr 
                     key={product.id_produto} 
-                    className={`${styles.tableRow} ${
-                      isSelected 
-                        ? styles.tableRowSelected 
-                        : product.oculto 
-                          ? styles.tableRowHidden 
-                          : styles.tableRowDefault
-                    }`}
+                    className={[
+                      styles.tableRow,
+                      product.oculto ? styles.tableRowHidden : '',
+                      isSelected ? styles.tableRowSelected : '',
+                      !product.oculto && !isSelected ? styles.tableRowDefault : ''
+                    ].filter(Boolean).join(' ')}
                   >
                     <td style={{ textAlign: 'center' }}>
                       <input 

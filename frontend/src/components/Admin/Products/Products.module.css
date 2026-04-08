@@ -154,11 +154,30 @@
 .tableHead { border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 900; background-color: rgba(249, 250, 251, 0.5); }
 .tableHead th { padding: 1.5rem; }
 .tableBody { border-top: 1px solid #f3f4f6; }
-.tableRow { transition: background-color 0.2s; }
-.tableRowSelected { background-color: rgba(239, 246, 255, 0.3); }
-.tableRowHidden { background-color: #f3f4f6; opacity: 0.6; }
-.tableRowHidden:hover { opacity: 1; background-color: rgba(229, 231, 235, 0.5); }
-.tableRowDefault:hover { background-color: #f9fafb; }
+
+/* Animações e Linhas */
+.tableRow { 
+  transition: all 0.3s ease; 
+}
+.tableRowDefault:hover { 
+  background-color: #f9fafb; 
+}
+.tableRowSelected { 
+  background-color: rgba(239, 246, 255, 0.6) !important; 
+}
+
+/* ESTADO OCULTO: Efeito visual aplicado */
+.tableRowHidden { 
+  background-color: #f9fafb; 
+  opacity: 0.45; /* Deixa bem transparente */
+  filter: grayscale(100%); /* Remove as cores da imagem e dos textos */
+}
+.tableRowHidden:hover { 
+  opacity: 0.9; /* Melhora a leitura ao passar o mouse */
+  background-color: #f3f4f6; 
+  filter: grayscale(0%); /* Devolve a cor no hover */
+}
+
 .table td { padding: 1.5rem; }
 
 /* Checkbox Personalizado */

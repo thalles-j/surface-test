@@ -24,6 +24,7 @@ export const getProductController = async (req, res) => {
       if (!produto) return res.status(404).json({ error: "Produto nao encontrado" });
       return res.status(200).json(produto);
     }
+    
 
     // Build where clause
     const where = {};

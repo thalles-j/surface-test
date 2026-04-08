@@ -5,24 +5,35 @@ import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
 import { useCart } from "../../context/CartContext";
 import { FaCartPlus } from "react-icons/fa";
+import { Check } from "lucide-react"; 
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import { api } from "../../services/api";
+import ProductModal from "../../components/ProductModal";
 
 const categoryMap = {
   1: "Exclusivo",
   2: "Times",
 };
 
-// ---------------------------------------------------------
-// 1. NOVO COMPONENTE: ProductCard
-// Ele gerencia qual imagem mostrar baseado no mouse
-// ---------------------------------------------------------
-const ProductCard = ({ produto }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
 
-  // Função para criar slug a partir do nome
+
+// ---------------------------------------------------------
+// 1. COMPONENTE: ProductCard 
+// ---------------------------------------------------------
+const ProductCard = ({ produto, onQuickAdd }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { shouldOpenCart, toggleCart, setShouldOpenCart } = useCart();
+  useEffect(() => {
+    if (shouldOpenCart) {
+      toggleCart();
+      setShouldOpenCart(false);
+    }
+  }, [shouldOpenCart]);
+
+  
   const createSlug = (name) => {
+    if (!name) return "";
     return name
       .toLowerCase()
       .normalize('NFD')
@@ -31,21 +42,14 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
-  // Fotos já vêm ordenadas pelo backend (principal primeiro)
-  const fotos = produto.fotos || [];
-
-  // Pega a primeira e a segunda imagem (se existir)
+  const fotos = produto?.fotos || [];
   const fotoPrincipal = fotos[0]?.url ? resolveImageUrl(fotos[0].url) : null;
   const fotoSecundaria = fotos[1]?.url ? resolveImageUrl(fotos[1].url) : null;
-
-  // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
-  // Caso contrário, mostra a principal.
   const imagemAtual = (isHovered && fotoSecundaria) ? fotoSecundaria : fotoPrincipal;
 
   return (
     <div 
       className={styles.card}
-      // Eventos para detectar o mouse
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -67,9 +71,9 @@ const ProductCard = ({ produto }) => {
           <button 
             className={styles.cartIconButton}
             onClick={(e) => {
-              e.preventDefault();
+              e.preventDefault(); 
               e.stopPropagation();
-              addToCart(produto);
+              onQuickAdd(produto); 
             }}
             title="Adicionar ao Carrinho"
           >
@@ -83,7 +87,7 @@ const ProductCard = ({ produto }) => {
           </span>
           <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
           <p className={styles.produtoPreco}>
-            R$ {parseFloat(produto.preco).toFixed(2)}
+            R$ {parseFloat(produto.preco || 0).toFixed(2)}
           </p>
         </div>
       </Link>
@@ -93,6 +97,7 @@ const ProductCard = ({ produto }) => {
 // ---------------------------------------------------------
 
 export default function Shop() {
+  const { addToCart } = useCart(); 
   const [loading, setLoading] = useState(true);
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
@@ -100,10 +105,17 @@ export default function Shop() {
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
+  // Estados para Modal e Notificação
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     api.get('/products')
-      .then(res => setRawProdutos(res.data || []))
+      .then(res => {
+        setRawProdutos(res.data || []);
+      })
       .catch((err) => console.error("Erro ao carregar produtos:", err))
       .finally(() => setLoading(false));
   }, []);
@@ -167,6 +179,26 @@ export default function Shop() {
     setProdutos(list);
   }, [rawProdutos, selectedCategory, selectedType, sortOption]);
 
+  const handleOpenModal = (produto) => {
+    setSelectedProduct(produto);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
+    // Monta o objeto final. A chave 'tamanho' é enviada de forma explícita.
+    const produtoFinalParaCarrinho = {
+      ...produto,
+      tamanho: tamanhoSelecionado || "Único" // Fallback seguro
+    };
+    
+    addToCart(produtoFinalParaCarrinho);
+    
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000); 
+  };
+
   if (loading) {
     return <PageLoader />;
   }
@@ -193,15 +225,34 @@ export default function Shop() {
               <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
-                {/* 2. USANDO O NOVO COMPONENTE AQUI */}
                 {produtos.map((produto) => (
-                  <ProductCard key={produto.id_produto} produto={produto} />
+                  <ProductCard 
+                    key={produto.id_produto} 
+                    produto={produto} 
+                    onQuickAdd={handleOpenModal} 
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <ProductModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        produto={selectedProduct}
+        onAddToCart={handleConfirmAddToCart}
+      />
+
+      {showNotification && (
+        <div className="fixed bottom-8 right-8 bg-black text-white px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]">
+          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
+            <Check className="w-4 h-4" strokeWidth={3} />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-wider">Adicionado ao carrinho</span>
+        </div>
+      )}
     </section>
   );
 }
