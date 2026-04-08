@@ -2,6 +2,7 @@ import { Router } from "express";
 import { validateBody } from "../middlewares/vaildateBody.js";
 import {
     createProductController,
+    createRestockRequestController,
     getProductController,
     getProductBySlugController,
     updateProductController,
@@ -9,7 +10,7 @@ import {
     setPrincipalPhotoController,
     bulkUpdateProductsController
 } from "../controllers/productsController.js";
-import { authMiddleware, adminMiddleware } from "../middlewares/authMiddleware.js";
+import { authMiddleware, adminMiddleware, optionalAuthMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ const router = Router();
 router.get("/", getProductController);
 router.get("/slug/:slug", getProductBySlugController);
 router.get("/:id", getProductController);
+router.post("/restock-request", optionalAuthMiddleware, createRestockRequestController);
 
 // ROTAS PROTEGIDAS — SOMENTE ADMIN
 router.post("/", authMiddleware, adminMiddleware, validateBody, createProductController);

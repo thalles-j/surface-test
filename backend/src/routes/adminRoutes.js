@@ -1,6 +1,6 @@
 import express from 'express';
 import adminController from '../controllers/adminController.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
+import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.post('/analytics/visits/hit', adminController.hitVisit);
 
 // Todas as rotas abaixo requerem autenticação
 router.use(authMiddleware);
+router.get('/restock-requests', adminMiddleware, adminController.getRestockRequests);
 
 // ===== SALES / ORDERS =====
 router.get('/sales', adminController.getSalesData);

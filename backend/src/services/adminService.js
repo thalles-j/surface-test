@@ -8,4 +8,5 @@ export { getCollections, createCollection, updateCollection, deleteCollection, t
 export { getCategories, createCategory, updateCategory, deleteCategory, getCoupons, createCoupon, deleteCoupon, getCampaigns, createCampaign } from './admin/marketingService.js';
 export { getStoreSettings, updateStoreSettings, toggleStoreStatus, getCustomizationSettings, updateCustomization, uploadBanner } from './admin/settingsService.js';
 export { getAdminUsers, createAdminUser, updateAdminUser, deleteAdminUser, getActivityLogs } from './admin/adminUserService.js';
+export { getRestockRequests } from './admin/restockService.js';
 

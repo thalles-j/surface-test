@@ -46,7 +46,8 @@ import {
   createAdminUser,
   updateAdminUser,
   deleteAdminUser,
-  getActivityLogs
+  getActivityLogs,
+  getRestockRequests
 } from '../services/adminService.js';
 
 import { getCategorySales, getRecentOrders } from '../services/admin/analyticsService.js';
@@ -100,6 +101,7 @@ export default {
   updateAdminUser,
   deleteAdminUser,
   getActivityLogs,
+  getRestockRequests,
   getCategorySales,
   getRecentOrders,
 };

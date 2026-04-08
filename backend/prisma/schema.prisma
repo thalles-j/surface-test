@@ -71,6 +71,7 @@ model produtos {
   pedidos           pedido_produtos[]
   colecoes          colecao_produtos[]
   movimentacoes     movimentacoes_estoque[]
+  restock_requests  restock_requests[]
 }
 
 model fotos_produtos {
@@ -237,4 +238,18 @@ model historico_pedidos {
   pedido pedidos @relation(fields: [id_pedido], references: [id_pedido])
 
   @@index([id_pedido])
+}
+
+model restock_requests {
+  id          Int      @id @default(autoincrement())
+  id_produto  Int
+  variacao    String
+  email       String?
+  created_at  DateTime @default(now())
+
+  produto produtos @relation(fields: [id_produto], references: [id_produto], onDelete: Cascade)
+
+  @@unique([id_produto, variacao, email])
+  @@index([id_produto])
+  @@index([created_at])
 }

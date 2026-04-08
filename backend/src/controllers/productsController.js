@@ -1,6 +1,7 @@
 import prisma from "../database/prisma.js";
 import * as crudService from "../services/crudServices.js";
 import * as crudController from "./crudController.js";
+import { createRestockRequest } from "../services/restockService.js";
 
 const productInclude = {
   fotos: {
@@ -410,3 +411,48 @@ export const bulkUpdateProductsController = async (req, res) => {
     return res.status(500).json({ error: "Erro interno do servidor." });
   }
 };
+
+export const createRestockRequestController = async (req, res) => {
+  try {
+    const produtoId = Number(req.body?.produto_id);
+    const variacao = req.body?.variacao;
+    const emailFromBody = req.body?.email;
+    const email = req.user?.email || emailFromBody || null;
+
+    if (!produtoId || Number.isNaN(produtoId)) {
+      return res.status(400).json({ error: "produto_id e obrigatorio" });
+    }
+
+    if (!variacao || !String(variacao).trim()) {
+      return res.status(400).json({ error: "variacao e obrigatoria" });
+    }
+
+    if (email && !isValidEmail(String(email).trim())) {
+      return res.status(400).json({ error: "email invalido" });
+    }
+
+    const result = await createRestockRequest({
+      produtoId,
+      variacao,
+      email,
+    });
+
+    if (result.error) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
+
+    return res.status(result.created ? 201 : 200).json({
+      message: result.created
+        ? "Interesse registrado com sucesso"
+        : "Interesse ja registrado para este produto e variacao",
+      data: result.request,
+    });
+  } catch (error) {
+    console.error("Erro ao criar solicitacao de reposicao:", error);
+    return res.status(500).json({ error: "Erro interno do servidor." });
+  }
+};
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}

@@ -9,32 +9,15 @@ import {
 dotenv.config();
 
 if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET não definido nas variáveis de ambiente");
+    throw new Error("JWT_SECRET nao definido nas variaveis de ambiente");
 }
 
 export const authMiddleware = (req, res, next) => {
     try {
-        const authHeader = req.headers["authorization"];
-        const token = authHeader?.startsWith("Bearer ")
-            ? authHeader.split(" ")[1]
-            : authHeader;
+        const payload = getTokenPayload(req);
+        if (!payload) throw new ErroSemToken();
 
-        if (!token) throw new ErroSemToken();
-
-        let payload;
-        try {
-            payload = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (err) {
-            if (err.name === "TokenExpiredError") throw new ErroTokenExpirado();
-            throw new ErroTokenInvalido();
-        }
-
-        req.user = {
-            id: payload.id,
-            email: payload.email,
-            id_role: payload.id_role,
-        };
-
+        req.user = mapPayloadToUser(payload);
         next();
     } catch (error) {
         if (error.status) return error.enviarResposta(res);
@@ -42,12 +25,24 @@ export const authMiddleware = (req, res, next) => {
     }
 };
 
-export const adminMiddleware = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({ message: "Usuário não autenticado" });
+export const optionalAuthMiddleware = (req, _res, next) => {
+    try {
+        const payload = getTokenPayload(req);
+        if (payload) {
+            req.user = mapPayloadToUser(payload);
+        }
+    } catch (_error) {
+        // Ignore invalid/expired token in optional-auth routes.
     }
 
-    // ✅ apenas ID
+    return next();
+};
+
+export const adminMiddleware = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ message: "Usuario nao autenticado" });
+    }
+
     if (req.user.id_role === 1) {
         return next();
     }
@@ -56,15 +51,39 @@ export const adminMiddleware = (req, res, next) => {
         message: "Acesso negado. Apenas administradores podem acessar.",
     });
 };
+
 export function isOwnerOrAdmin(req, res, next) {
     const userId = req.user.id;
     const targetId = Number(req.params.id);
 
-    // ✅ admin é quem tem id_role === 1
     if (req.user.id_role === 1) return next();
     if (userId === targetId) return next();
 
     return res.status(403).json({
-        mensagem: "Acesso negado: você não pode alterar outro usuário.",
+        mensagem: "Acesso negado: voce nao pode alterar outro usuario.",
     });
+}
+
+function getTokenPayload(req) {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : authHeader;
+
+    if (!token) return null;
+
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        if (err.name === "TokenExpiredError") throw new ErroTokenExpirado();
+        throw new ErroTokenInvalido();
+    }
+}
+
+function mapPayloadToUser(payload) {
+    return {
+        id: payload.id,
+        email: payload.email,
+        id_role: payload.id_role,
+    };
 }
