@@ -1,8 +1,9 @@
 import prisma from "../database/prisma.js";
 
-export async function createRestockRequest({ produtoId, variacao, email }) {
+export async function createRestockRequest({ produtoId, variacao, email, userId }) {
   const normalizedEmail = normalizeEmail(email);
   const normalizedVariacao = String(variacao).trim();
+  const normalizedUserId = userId ? Number(userId) : null;
 
   const produto = await prisma.produtos.findUnique({
     where: { id_produto: produtoId },
@@ -13,12 +14,20 @@ export async function createRestockRequest({ produtoId, variacao, email }) {
     return { error: "Produto nao encontrado", status: 404 };
   }
 
+  const dedupeWhere = normalizedUserId
+    ? {
+        id_produto: produtoId,
+        variacao: normalizedVariacao,
+        id_usuario: normalizedUserId,
+      }
+    : {
+        id_produto: produtoId,
+        variacao: normalizedVariacao,
+        email: normalizedEmail,
+      };
+
   const existingRequest = await prisma.restock_requests.findFirst({
-    where: {
-      id_produto: produtoId,
-      variacao: normalizedVariacao,
-      email: normalizedEmail,
-    },
+    where: dedupeWhere,
   });
 
   if (existingRequest) {
@@ -29,6 +38,7 @@ export async function createRestockRequest({ produtoId, variacao, email }) {
     data: {
       id_produto: produtoId,
       variacao: normalizedVariacao,
+      id_usuario: normalizedUserId,
       email: normalizedEmail,
     },
   });
@@ -39,6 +49,13 @@ export async function createRestockRequest({ produtoId, variacao, email }) {
 export async function getRestockRequestsGroupedByProduct() {
   const requests = await prisma.restock_requests.findMany({
     include: {
+      usuario: {
+        select: {
+          id_usuario: true,
+          nome: true,
+          email: true,
+        },
+      },
       produto: {
         select: {
           id_produto: true,
@@ -70,12 +87,22 @@ export async function getRestockRequestsGroupedByProduct() {
     current.total_interesses += 1;
 
     const variacaoItem = current.variacoes.find((v) => v.variacao === variacao);
+    const interesse = {
+      id: item.id,
+      email: item.email || item.usuario?.email || null,
+      user_id: item.id_usuario || null,
+      user_nome: item.usuario?.nome || null,
+      created_at: item.created_at,
+    };
+
     if (variacaoItem) {
       variacaoItem.quantidade_interesses += 1;
+      variacaoItem.interesses.push(interesse);
     } else {
       current.variacoes.push({
         variacao,
         quantidade_interesses: 1,
+        interesses: [interesse],
       });
     }
 

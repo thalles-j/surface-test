@@ -5,6 +5,7 @@ import useAuth from "../hooks/useAuth";
 import LandingPage from '../pages/LandingPage';
 import Shop from '../pages/Shop';
 import ProductDetail from '../pages/ProductDetail';
+import Checkout from '../pages/Checkout';
 import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
 import Profile from '../pages/Profile';
@@ -68,6 +69,14 @@ export default function AppRoutes() {
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/produto/:slug" element={<ProductDetail />} />
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/about-us" element={<About />} />
       <Route path="/atendimento" element={<Atendimento />} />
       <Route path="/trocas-devolucoes" element={<TrocasDevolucoes />} />

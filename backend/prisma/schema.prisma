@@ -25,6 +25,7 @@ model usuarios {
   role          roles    @relation(fields: [id_role], references: [id_role])
   enderecos     enderecos[]
   pedidos       pedidos[]
+  restock_requests restock_requests[]
 }
 
 model enderecos {
@@ -89,7 +90,7 @@ model fotos_produtos {
 // --- MODELOS DE PEDIDO E CARRINHO ---
 model pedidos {
   id_pedido           Int      @id @default(autoincrement())
-  id_usuario          Int
+  id_usuario          Int?
   data_pedido         DateTime @default(now())
   status              String   @default("pendente")
   subtotal            Decimal? @db.Decimal(10, 2)
@@ -100,8 +101,12 @@ model pedidos {
   status_pagamento    String?
   metodo_pagamento    String?
   observacoes_internas String?
+  cliente_nome        String?
+  cliente_email       String?
+  venda_presencial    Boolean  @default(false)
+  endereco_entrega    Json?
 
-  usuario        usuarios          @relation(fields: [id_usuario], references: [id_usuario])
+  usuario        usuarios?         @relation(fields: [id_usuario], references: [id_usuario])
   pedidoProdutos pedido_produtos[]
   historico      historico_pedidos[]
 }
@@ -243,13 +248,15 @@ model historico_pedidos {
 model restock_requests {
   id          Int      @id @default(autoincrement())
   id_produto  Int
+  id_usuario  Int?
   variacao    String
   email       String?
   created_at  DateTime @default(now())
 
+  usuario usuarios? @relation(fields: [id_usuario], references: [id_usuario], onDelete: SetNull)
   produto produtos @relation(fields: [id_produto], references: [id_produto], onDelete: Cascade)
 
-  @@unique([id_produto, variacao, email])
+  @@index([id_usuario])
   @@index([id_produto])
   @@index([created_at])
 }

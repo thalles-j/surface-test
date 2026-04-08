@@ -138,8 +138,8 @@ export const getRecentOrders = async (req, res) => {
     });
     const result = orders.map(o => ({
       id: o.id_pedido,
-      client: o.usuario?.nome || '—',
-      email: o.usuario?.email || '',
+      client: o.usuario?.nome || o.cliente_nome || 'Venda presencial',
+      email: o.usuario?.email || o.cliente_email || '',
       total: Number(o.total),
       status: o.status,
       date: o.data_pedido,

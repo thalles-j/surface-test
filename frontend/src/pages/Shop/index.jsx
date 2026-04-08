@@ -76,7 +76,10 @@ const ProductCard = ({ produto }) => {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              addToCart(produto);
+              const variacoes = Array.isArray(produto.variacoes_estoque) ? produto.variacoes_estoque : [];
+              const primeiraDisponivel = variacoes.find(v => Number(v?.estoque || 0) > 0);
+              const tamanhoSelecionado = primeiraDisponivel?.tamanho || variacoes[0]?.tamanho || null;
+              addToCart({ ...produto, selectedSize: tamanhoSelecionado });
             }}
             title="Adicionar ao Carrinho"
           >

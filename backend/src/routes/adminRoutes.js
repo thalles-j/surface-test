@@ -23,6 +23,9 @@ router.get('/sales', adminController.getSalesData);
 router.get('/sales/by-period', adminController.getSalesByPeriod);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
+router.patch('/orders/:id/items', adminController.updateOrderItems);
+router.patch('/orders/:id/address', adminController.updateOrderAddress);
+router.patch('/orders/:id/customer-by-email', adminController.linkOrderCustomerByEmail);
 
 // ===== ANALYTICS =====
 router.get('/analytics/overview', adminController.getAnalyticsOverview);
@@ -40,6 +43,7 @@ router.patch('/inventory/:productId', adminController.updateProductInventory);
 
 // ===== CUSTOMERS =====
 router.get('/customers', adminController.getAllCustomers);
+router.get('/customers/find-by-email', adminController.findCustomerByEmail);
 router.get('/customers/:id', adminController.getCustomerDetails);
 router.get('/customers/analytics/classification', adminController.getCustomerClassification);
 

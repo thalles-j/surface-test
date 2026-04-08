@@ -121,10 +121,28 @@ export async function createOrder(userId, items, codigoCupom = null) {
   const total = subtotalComDesconto + frete;
 
   // 6. Create order + items + reduce stock + increment coupon in a single transaction
+  const usuario = await prisma.usuarios.findUnique({
+    where: { id_usuario: userId },
+    include: { enderecos: true },
+  });
+  const enderecoEntrega = usuario?.enderecos?.[0]
+    ? {
+        logradouro: usuario.enderecos[0].logradouro,
+        numero: usuario.enderecos[0].numero,
+        complemento: usuario.enderecos[0].complemento || null,
+        cidade: usuario.enderecos[0].cidade,
+        estado: usuario.enderecos[0].estado,
+        cep: usuario.enderecos[0].cep,
+      }
+    : null;
+
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.pedidos.create({
       data: {
         id_usuario: userId,
+        cliente_nome: usuario?.nome || null,
+        cliente_email: usuario?.email || null,
+        endereco_entrega: enderecoEntrega,
         status: 'pendente',
         subtotal: Math.round(subtotal * 100) / 100,
         desconto: Math.round(desconto * 100) / 100,

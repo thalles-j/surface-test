@@ -7,15 +7,11 @@ export default function ProductInfo({
   selectedSize,
   setSelectedSize,
   handleAddToCart,
+  handleBuyNow,
   isSelectedSizeSoldOut,
   onRestockRequest,
-  onGuestRestockSubmit,
   restockLoading,
   hasRequestedRestock,
-  signed,
-  showGuestEmailInput,
-  guestEmail,
-  setGuestEmail,
 }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
@@ -33,7 +29,9 @@ export default function ProductInfo({
         <div className={styles.accordion}>
           <button className={styles.accordionHeader} onClick={() => toggleSection("description")}>
             <span>Descricao</span>
-            <span className={expandedSection === "description" ? styles.chevronUp : styles.chevronDown}>
+            <span
+              className={expandedSection === "description" ? styles.chevronUp : styles.chevronDown}
+            >
               v
             </span>
           </button>
@@ -117,6 +115,13 @@ export default function ProductInfo({
         {isSelectedSizeSoldOut ? (
           <>
             <button
+              className={`${styles.buyBtn} ${styles.soldOut}`}
+              disabled
+            >
+              ESGOTADO
+            </button>
+
+            <button
               className={`${styles.buyBtn} ${styles.notifyBtn}`}
               onClick={onRestockRequest}
               disabled={restockLoading || hasRequestedRestock}
@@ -128,36 +133,13 @@ export default function ProductInfo({
                 : "AVISE-ME"}
             </button>
 
-            {!signed && showGuestEmailInput && !hasRequestedRestock && (
-              <div className={styles.restockEmailBox}>
-                <input
-                  type="email"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  placeholder="Digite seu email"
-                  className={styles.restockEmailInput}
-                />
-                <button
-                  className={styles.restockEmailSubmit}
-                  onClick={onGuestRestockSubmit}
-                  disabled={restockLoading}
-                >
-                  Confirmar
-                </button>
-              </div>
-            )}
-
             <p className={styles.restockHint}>
               Avisaremos quando este tamanho voltar ao estoque.
             </p>
           </>
         ) : (
           <>
-            <button
-              className={styles.buyBtn}
-              onClick={handleAddToCart}
-              disabled={!selectedSize}
-            >
+            <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!selectedSize}>
               {!selectedSize ? "SELECIONE UM TAMANHO" : "COMPRAR"}
             </button>
 
@@ -170,5 +152,3 @@ export default function ProductInfo({
     </div>
   );
 }
-
-

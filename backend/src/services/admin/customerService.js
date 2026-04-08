@@ -154,3 +154,26 @@ export const getCustomerClassification = async (req, res) => {
     return erro(res, error.message, 500);
   }
 };
+
+export const findCustomerByEmail = async (req, res) => {
+  try {
+    const email = String(req.query?.email || "").trim().toLowerCase();
+    if (!email) return erro(res, "Email e obrigatorio.");
+
+    const customer = await prisma.usuarios.findUnique({
+      where: { email },
+      include: { enderecos: true },
+    });
+    if (!customer) return erro(res, "Cliente nao encontrado.", 404);
+
+    return res.json({
+      id: customer.id_usuario,
+      nome: customer.nome,
+      email: customer.email,
+      telefone: customer.telefone || "",
+      endereco: customer.enderecos?.[0] || null,
+    });
+  } catch (error) {
+    return erro(res, error.message, 500);
+  }
+};

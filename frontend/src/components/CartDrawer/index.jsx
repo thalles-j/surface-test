@@ -13,6 +13,7 @@ export default function CartDrawer() {
     updateQuantity,
     cartTotal,
   } = useCart();
+  const navigate = useNavigate();
   
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/80?text=No+Image";
@@ -38,9 +39,8 @@ export default function CartDrawer() {
   if (!isCartOpen) return null;
 
   const handleCheckout = () => {
-    // Implement checkout logic here or navigate to checkout page
-    // For now, maybe just alert or navigate to a checkout route if it existed
-    alert("Funcionalidade de checkout a ser implementada!");
+    toggleCart();
+    navigate("/checkout");
   };
 
   return (

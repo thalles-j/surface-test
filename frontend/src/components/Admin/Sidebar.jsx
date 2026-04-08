@@ -36,6 +36,7 @@ export default function Sidebar({
   activeTab,
   setActiveTab,
   mobile = false,
+  isOpen = true,
   onClose = () => {},
   theme = "dark",
 }) {
@@ -75,8 +76,9 @@ export default function Sidebar({
   ];
 
   if (mobile) {
+    if (!isOpen) return null;
     return (
-      <div className="fixed inset-0 z-50 md:hidden">
+      <div className="fixed inset-0 z-50">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
         <aside className="w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col h-screen overflow-y-auto">
           <div className="p-4 flex items-center justify-between border-b border-zinc-800">

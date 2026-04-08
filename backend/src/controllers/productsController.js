@@ -418,6 +418,7 @@ export const createRestockRequestController = async (req, res) => {
     const variacao = req.body?.variacao;
     const emailFromBody = req.body?.email;
     const email = req.user?.email || emailFromBody || null;
+    const userId = req.user?.id || null;
 
     if (!produtoId || Number.isNaN(produtoId)) {
       return res.status(400).json({ error: "produto_id e obrigatorio" });
@@ -425,6 +426,10 @@ export const createRestockRequestController = async (req, res) => {
 
     if (!variacao || !String(variacao).trim()) {
       return res.status(400).json({ error: "variacao e obrigatoria" });
+    }
+
+    if (!userId && !email) {
+      return res.status(400).json({ error: "usuario ou email e obrigatorio" });
     }
 
     if (email && !isValidEmail(String(email).trim())) {
@@ -435,6 +440,7 @@ export const createRestockRequestController = async (req, res) => {
       produtoId,
       variacao,
       email,
+      userId,
     });
 
     if (result.error) {

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { LogOut, Moon, Sun } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { LogOut, Menu, Moon, Sun } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
 import { AdminThemeProvider, useAdminTheme } from "../../context/AdminThemeContext";
 import "./theme.css";
@@ -22,6 +22,17 @@ function AdminPageContent() {
   const { user, logout } = useAuth();
   const { theme, isLight, toggleTheme } = useAdminTheme();
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setIsCompactLayout(window.innerWidth < 1400);
+    };
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   const displayName = user?.nome || "Admin";
   const displayEmail = user?.email || "";
@@ -89,11 +100,33 @@ function AdminPageContent() {
 
   return (
     <div className={`admin-theme admin-theme-${theme} min-h-screen flex font-sans`}>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+      {!isCompactLayout && (
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />
+      )}
+      {isCompactLayout && (
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          theme={theme}
+          mobile
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
+        />
+      )}
 
-      <main className="ml-64 flex-1 p-12 admin-main-content">
-        <div className="flex justify-between items-center mb-10 gap-4">
+      <main className="flex-1 p-12 admin-main-content">
+        <div className="flex justify-between items-center mb-10 gap-4 admin-header-wrap">
           <div>
+            {isCompactLayout && (
+              <button
+                className="admin-menu-btn mb-4"
+                onClick={() => setMobileSidebarOpen((prev) => !prev)}
+                title="Abrir menu"
+              >
+                <Menu size={18} />
+                Menu
+              </button>
+            )}
             <h2 className="text-3xl font-black uppercase tracking-tight">{getPageTitle()}</h2>
             <p className="text-sm text-zinc-500 font-medium mt-1">
               Dados atualizados em tempo real.
