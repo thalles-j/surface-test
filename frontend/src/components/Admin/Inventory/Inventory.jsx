@@ -59,6 +59,8 @@ export default function Inventory() {
   const [movementsModal, setMovementsModal] = useState({ isOpen: false, productId: null, productName: '' });
   const [movements, setMovements] = useState([]);
   const [repoModal, setRepoModal] = useState({ isOpen: false, item: null, qty: 0, obs: '' });
+  const [restockRequests, setRestockRequests] = useState({ total_registros: 0, produtos: [] });
+  const [loadingRestock, setLoadingRestock] = useState(true);
 
   // Debounce para busca
   useEffect(() => {
@@ -121,6 +123,27 @@ export default function Inventory() {
   }, [page, debouncedSearch, flattenProduct, addToast]);
 
   useEffect(() => { loadInventory(); }, [loadInventory]);
+
+  const loadRestockRequests = useCallback(async () => {
+    try {
+      setLoadingRestock(true);
+      const res = await api.get('/admin/restock-requests');
+      const payload = res.data || {};
+      setRestockRequests({
+        total_registros: Number(payload.total_registros || 0),
+        produtos: Array.isArray(payload.produtos) ? payload.produtos : [],
+      });
+    } catch (err) {
+      console.error('Erro ao carregar interesses de reposicao:', err);
+      setRestockRequests({ total_registros: 0, produtos: [] });
+    } finally {
+      setLoadingRestock(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRestockRequests();
+  }, [loadRestockRequests]);
 
   // Filtros de saúde do estoque
   const filteredInventory = useMemo(() => {
@@ -262,6 +285,65 @@ export default function Inventory() {
       )}
 
       <div className="space-y-8">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between gap-3 bg-gray-50/50">
+            <h3 className="text-lg font-bold text-gray-900">Interesses AVISE-ME</h3>
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              {loadingRestock ? 'Carregando...' : `${restockRequests.total_registros} registros`}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50 text-xs font-bold uppercase text-gray-500 border-b border-gray-200">
+                  <th className="px-6 py-4">Produto</th>
+                  <th className="px-6 py-4">Variacao</th>
+                  <th className="px-6 py-4 text-center">Interesses</th>
+                  <th className="px-6 py-4">Ultimo contato</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loadingRestock ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500 font-medium">
+                      Carregando interesses...
+                    </td>
+                  </tr>
+                ) : restockRequests.produtos.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500 font-medium">
+                      Nenhum interesse registrado.
+                    </td>
+                  </tr>
+                ) : (
+                  restockRequests.produtos.flatMap((produto) =>
+                    (produto.variacoes || []).map((variacao) => {
+                      const ultimoInteresse = variacao.interesses?.[0];
+                      return (
+                        <tr key={`${produto.produto_id}-${variacao.variacao}`} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-sm text-gray-900">{produto.nome_produto}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">ID: {produto.produto_id}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="font-bold text-gray-700">{variacao.variacao || 'UNICO'}</span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="font-bold text-gray-900">{variacao.quantidade_interesses || 0}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {ultimoInteresse?.email || ultimoInteresse?.user_nome || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
         
         {/* TABELA: DISPONIBILIDADE DE GRADE */}
         <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
