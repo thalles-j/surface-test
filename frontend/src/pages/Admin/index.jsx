@@ -99,8 +99,10 @@ function AdminPageContent() {
     return titles[activeTab] || 'Painel de Controle';
   };
 
+  const themeClass = isLight ? 'admin-theme-light' : 'admin-theme-dark';
+
   return (
-    <div className={`admin-theme admin-theme-${theme} min-h-screen flex font-sans`}>
+    <div className={`admin-theme ${themeClass} min-h-screen flex font-sans`} data-admin-theme={theme}>
       {!isCompactLayout && <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} />}
       {isCompactLayout && (
         <Sidebar
