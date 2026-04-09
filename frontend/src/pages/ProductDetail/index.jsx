@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import styles from "./style.module.css";
-import PageLoader from "../../components/PageLoader";
-import ImageGallery from "./components/ImageGallery";
-import ProductInfo from "./components/ProductInfo";
-import RelatedProducts from "./components/RelatedProducts";
-import { useCart } from "../../context/CartContext";
-import { api } from "../../services/api";
-import useAuth from "../../hooks/useAuth";
-import { useToast } from "../../context/ToastContext";
-import AlertModal from "../../components/AlertModal";
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import styles from './style.module.css';
+import PageLoader from '../../components/PageLoader';
+import ImageGallery from './components/ImageGallery';
+import ProductInfo from './components/ProductInfo';
+import RelatedProducts from './components/RelatedProducts';
+import { useCart } from '../../context/CartContext';
+import { api } from '../../services/api';
+import useAuth from '../../hooks/useAuth';
+import { useToast } from '../../context/ToastContext';
+import AlertModal from '../../components/AlertModal';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -20,7 +20,7 @@ export default function ProductDetail() {
 
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [selectedSize, setSelectedSize] = useState(null);
@@ -28,47 +28,31 @@ export default function ProductDetail() {
   const [restockRequests, setRestockRequests] = useState({});
   const [showRestockLoginModal, setShowRestockLoginModal] = useState(false);
 
-  const createSlug = (name) =>
-    name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
   useEffect(() => {
     const fetchProduto = async () => {
       setLoading(true);
       try {
-        const res = await api.get("/products");
-        const data = res.data;
+        const res = await api.get(`/products/slug/${slug}`);
+        const { produto: found, related } = res.data;
 
-        const found = data.find((p) => createSlug(p.nome_produto) === slug);
         if (!found) {
-          setError("Produto nao encontrado");
+          setError('Produto nao encontrado');
           return;
         }
 
         setProduto(found);
+        setRelatedProducts(related || []);
 
-        const availableVariations = Array.isArray(found.variacoes_estoque)
-          ? found.variacoes_estoque
-          : [];
+        const availableVariations = Array.isArray(found.variacoes_estoque) ? found.variacoes_estoque : [];
         if (availableVariations.length > 0) {
           setSelectedSize((prev) => prev || availableVariations[0].tamanho);
         }
-
-        const related = data
-          .filter(
-            (p) =>
-              p.id_produto !== found.id_produto &&
-              (p.id_categoria === found.id_categoria || p.destaque)
-          )
-          .slice(0, 4);
-        setRelatedProducts(related);
       } catch (err) {
-        console.error("Erro ao carregar produto:", err);
-        setError(err.message || "Erro ao carregar produto");
+        if (err.response?.status === 404) {
+          setError('Produto nao encontrado');
+        } else {
+          setError(err.message || 'Erro ao carregar produto');
+        }
       } finally {
         setLoading(false);
       }
@@ -82,9 +66,8 @@ export default function ProductDetail() {
     () => variacoes.find((v) => v.tamanho === selectedSize),
     [variacoes, selectedSize]
   );
-  const isSelectedSizeSoldOut = Boolean(
-    selectedSize && Number(selectedVariacao?.estoque || 0) <= 0
-  );
+
+  const isSelectedSizeSoldOut = Boolean(selectedSize && Number(selectedVariacao?.estoque || 0) <= 0);
   const hasRequestedRestock = Boolean(selectedSize && restockRequests[selectedSize]);
 
   if (loading) return <PageLoader />;
@@ -93,9 +76,10 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      toast.warning("Selecione um tamanho.");
+      toast.warning('Selecione um tamanho.');
       return;
     }
+
     if (Number(selectedVariacao?.estoque || 0) <= 0) return;
 
     const ok = addToCart({ ...produto, selectedSize }, { openCart: true });
@@ -104,29 +88,30 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     if (!selectedSize) {
-      toast.warning("Selecione um tamanho.");
+      toast.warning('Selecione um tamanho.');
       return;
     }
+
     if (Number(selectedVariacao?.estoque || 0) <= 0) return;
 
     const ok = addToCart({ ...produto, selectedSize }, { openCart: false });
     if (!ok) return;
-    navigate("/checkout");
+
+    navigate('/checkout');
   };
 
   const handleRestockRequest = async () => {
     if (!isSelectedSizeSoldOut) return;
     if (!selectedSize) {
-      toast.warning("Selecione um tamanho.");
+      toast.warning('Selecione um tamanho.');
       return;
     }
     if (restockLoading || hasRequestedRestock) return;
 
-    let emailToSend = user?.email || "";
+    let emailToSend = user?.email || '';
+
     if (!signed) {
-      const typedEmail = window.prompt(
-        "Digite seu email para avisarmos quando este tamanho voltar ao estoque:"
-      );
+      const typedEmail = window.prompt('Digite seu email para avisarmos quando este tamanho voltar ao estoque:');
 
       if (!typedEmail) {
         setShowRestockLoginModal(true);
@@ -136,25 +121,26 @@ export default function ProductDetail() {
       emailToSend = typedEmail.trim();
       const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToSend);
       if (!isValid) {
-        toast.error("Email invalido.");
+        toast.error('Email invalido.');
         return;
       }
     }
 
     setRestockLoading(true);
     try {
-      await api.post("/products/restock-request", {
+      await api.post('/products/restock-request', {
         produto_id: produto.id_produto,
         variacao: selectedSize,
         email: emailToSend || undefined,
       });
+
       setRestockRequests((prev) => ({ ...prev, [selectedSize]: true }));
-      toast.success("Avisaremos quando este tamanho voltar ao estoque");
+      toast.success('Avisaremos quando este tamanho voltar ao estoque');
     } catch (err) {
       const message =
         err.response?.data?.error ||
         err.response?.data?.mensagem ||
-        "Nao foi possivel registrar seu interesse.";
+        'Nao foi possivel registrar seu interesse.';
       toast.error(message);
     } finally {
       setRestockLoading(false);
@@ -180,7 +166,7 @@ export default function ProductDetail() {
         />
       </div>
 
-      <RelatedProducts products={relatedProducts} createSlug={createSlug} />
+      <RelatedProducts products={relatedProducts} />
 
       <AlertModal
         isOpen={showRestockLoginModal}
@@ -189,7 +175,7 @@ export default function ProductDetail() {
         message="Faca login para receber aviso quando este tamanho voltar ao estoque."
         type="auth"
         actionLabel="Ir para login"
-        actionCallback={() => navigate("/entrar")}
+        actionCallback={() => navigate('/entrar')}
       />
     </div>
   );

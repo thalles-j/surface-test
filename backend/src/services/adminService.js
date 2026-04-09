@@ -8,6 +8,7 @@ export {
   updateOrderItems,
   updateOrderAddress,
   linkOrderCustomerByEmail,
+  createInPersonSale,
 } from './admin/salesService.js';
 export { getAnalyticsOverview, getConversionFunnel, getChannelData, hitVisit, getVisits, getCategorySales, getRecentOrders } from './admin/analyticsService.js';
 export { getInventoryStatus, getLowStockProducts, updateProductInventory, createStockMovement, getStockMovements } from './admin/inventoryService.js';
@@ -17,4 +18,4 @@ export { getCategories, createCategory, updateCategory, deleteCategory, getCoupo
 export { getStoreSettings, updateStoreSettings, toggleStoreStatus, getCustomizationSettings, updateCustomization, uploadBanner } from './admin/settingsService.js';
 export { getAdminUsers, createAdminUser, updateAdminUser, deleteAdminUser, getActivityLogs } from './admin/adminUserService.js';
 export { getRestockRequests } from './admin/restockService.js';
-
+export { subscribeEarlyAccess, checkEarlyAccess, getStoreLaunchInfo, listEarlyAccessEmails, grantEarlyAccess, revokeEarlyAccess } from './admin/earlyAccessService.js';

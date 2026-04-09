@@ -1,5 +1,5 @@
-import { useState } from "react";
-import styles from "./style.module.css";
+import { useState } from 'react';
+import styles from './style.module.css';
 
 export default function ProductInfo({
   produto,
@@ -27,29 +27,23 @@ export default function ProductInfo({
 
       <div className={styles.accordions}>
         <div className={styles.accordion}>
-          <button className={styles.accordionHeader} onClick={() => toggleSection("description")}>
+          <button className={styles.accordionHeader} onClick={() => toggleSection('description')}>
             <span>Descricao</span>
-            <span
-              className={expandedSection === "description" ? styles.chevronUp : styles.chevronDown}
-            >
-              v
-            </span>
+            <span className={expandedSection === 'description' ? styles.chevronUp : styles.chevronDown}>v</span>
           </button>
-          {expandedSection === "description" && (
+          {expandedSection === 'description' && (
             <div className={styles.accordionContent}>
-              <p>{produto.descricao || "Sem descricao disponivel"}</p>
+              <p>{produto.descricao || 'Sem descricao disponivel'}</p>
             </div>
           )}
         </div>
 
         <div className={styles.accordion}>
-          <button className={styles.accordionHeader} onClick={() => toggleSection("care")}>
+          <button className={styles.accordionHeader} onClick={() => toggleSection('care')}>
             <span>Instrucoes de Lavagem</span>
-            <span className={expandedSection === "care" ? styles.chevronUp : styles.chevronDown}>
-              v
-            </span>
+            <span className={expandedSection === 'care' ? styles.chevronUp : styles.chevronDown}>v</span>
           </button>
-          {expandedSection === "care" && (
+          {expandedSection === 'care' && (
             <div className={styles.accordionContent}>
               <ul>
                 <li>Lavar a maquina com agua fria</li>
@@ -77,8 +71,8 @@ export default function ProductInfo({
               return (
                 <button
                   key={v.sku || v.tamanho}
-                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ""} ${
-                    outOfStock ? styles.soldOutOption : ""
+                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''} ${
+                    outOfStock ? styles.soldOutOption : ''
                   }`}
                   onClick={() => setSelectedSize(v.tamanho)}
                 >
@@ -102,10 +96,26 @@ export default function ProductInfo({
               </tr>
             </thead>
             <tbody>
-              <tr><td>P</td><td>48</td><td>68</td></tr>
-              <tr><td>M</td><td>52</td><td>71</td></tr>
-              <tr><td>G</td><td>56</td><td>74</td></tr>
-              <tr><td>GG</td><td>60</td><td>77</td></tr>
+              <tr>
+                <td>P</td>
+                <td>48</td>
+                <td>68</td>
+              </tr>
+              <tr>
+                <td>M</td>
+                <td>52</td>
+                <td>71</td>
+              </tr>
+              <tr>
+                <td>G</td>
+                <td>56</td>
+                <td>74</td>
+              </tr>
+              <tr>
+                <td>GG</td>
+                <td>60</td>
+                <td>77</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -114,10 +124,7 @@ export default function ProductInfo({
       <div className={styles.actions}>
         {isSelectedSizeSoldOut ? (
           <>
-            <button
-              className={`${styles.buyBtn} ${styles.soldOut}`}
-              disabled
-            >
+            <button className={`${styles.buyBtn} ${styles.soldOut}`} disabled>
               ESGOTADO
             </button>
 
@@ -126,21 +133,15 @@ export default function ProductInfo({
               onClick={onRestockRequest}
               disabled={restockLoading || hasRequestedRestock}
             >
-              {restockLoading
-                ? "ENVIANDO..."
-                : hasRequestedRestock
-                ? "AVISO REGISTRADO"
-                : "AVISE-ME"}
+              {restockLoading ? 'ENVIANDO...' : hasRequestedRestock ? 'AVISO REGISTRADO' : 'AVISE-ME'}
             </button>
 
-            <p className={styles.restockHint}>
-              Avisaremos quando este tamanho voltar ao estoque.
-            </p>
+            <p className={styles.restockHint}>Avisaremos quando este tamanho voltar ao estoque.</p>
           </>
         ) : (
           <>
             <button className={styles.buyBtn} onClick={handleBuyNow} disabled={!selectedSize}>
-              {!selectedSize ? "SELECIONE UM TAMANHO" : "COMPRAR"}
+              {!selectedSize ? 'SELECIONE UM TAMANHO' : 'COMPRAR'}
             </button>
 
             <button className={styles.cartBtn} onClick={handleAddToCart} disabled={!selectedSize}>

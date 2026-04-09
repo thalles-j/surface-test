@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../database/prisma.js";
 import ErroBase from "../errors/ErroBase.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
+import { sendWelcomeEmail } from "./emailService.js";
 
 /* ======================================================
   LOGIN SERVICE
@@ -80,6 +79,9 @@ export const registerService = async (dados) => {
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
+
+  // Fire-and-forget — não bloqueia o registro
+  sendWelcomeEmail({ email: usuario.email, name: usuario.nome });
 
   return { usuario, token };
 };

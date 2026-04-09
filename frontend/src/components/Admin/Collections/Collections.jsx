@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Edit, Calendar, Lock, Unlock, Search, CheckSquare, Square } from 'lucide-react';
-import Modal from '../Modal';
-import AlertModal from '../AlertModal';
-import Pagination from './Pagination';
-import { useToast } from '../../context/ToastContext';
-import { api } from '../../services/api';
+import Modal from '../../Modal';
+import AlertModal from '../../AlertModal';
+import Pagination from '../Pagination/Pagination';
+import { useToast } from '../../../context/ToastContext';
+import { api } from '../../../services/api';
 
 const PAGE_SIZE = 12;
 

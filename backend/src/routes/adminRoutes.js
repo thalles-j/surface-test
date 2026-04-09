@@ -5,18 +5,20 @@ import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.j
 const router = express.Router();
 
 // ===== DASHBOARD =====
-// Tornamos as rotas do dashboard públicas durante o desenvolvimento para permitir
-// que o frontend carregue métricas sem autenticação. Proteja-as em produção.
 router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/dashboard/revenue', adminController.getRevenueData);
 router.get('/dashboard/top-products', adminController.getTopProducts);
 
-// Endpoint público para registrar um hit de acesso (útil para contagem de visitas)
+// Endpoint publico para registrar hit de acesso
 router.post('/analytics/visits/hit', adminController.hitVisit);
 
-// Todas as rotas abaixo requerem autenticação
+// ===== EARLY ACCESS (public) =====
+router.post('/early-access/subscribe', adminController.subscribeEarlyAccess);
+router.get('/early-access/check', adminController.checkEarlyAccess);
+router.get('/early-access/launch-info', adminController.getStoreLaunchInfo);
+
+// Todas as rotas abaixo requerem autenticacao
 router.use(authMiddleware);
-router.get('/restock-requests', adminMiddleware, adminController.getRestockRequests);
 
 // ===== SALES / ORDERS =====
 router.get('/sales', adminController.getSalesData);
@@ -24,8 +26,20 @@ router.get('/sales/by-period', adminController.getSalesByPeriod);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
 router.patch('/orders/:id/items', adminController.updateOrderItems);
+router.put('/orders/:id/items', adminController.updateOrderItems);
 router.patch('/orders/:id/address', adminController.updateOrderAddress);
 router.patch('/orders/:id/customer-by-email', adminController.linkOrderCustomerByEmail);
+
+// ===== IN-PERSON SALES =====
+router.post('/sales/in-person', adminController.createInPersonSale);
+
+// ===== EARLY ACCESS (admin) =====
+router.get('/early-access/emails', adminController.listEarlyAccessEmails);
+router.post('/early-access/grant', adminController.grantEarlyAccess);
+router.post('/early-access/revoke', adminController.revokeEarlyAccess);
+
+// ===== RESTOCK =====
+router.get('/restock-requests', adminMiddleware, adminController.getRestockRequests);
 
 // ===== ANALYTICS =====
 router.get('/analytics/overview', adminController.getAnalyticsOverview);
@@ -33,6 +47,7 @@ router.get('/analytics/conversion-funnel', adminController.getConversionFunnel);
 router.get('/analytics/channels', adminController.getChannelData);
 router.get('/analytics/category-sales', adminController.getCategorySales);
 router.get('/analytics/recent-orders', adminController.getRecentOrders);
+router.get('/analytics/visits', adminController.getVisits);
 
 // ===== INVENTORY =====
 router.get('/inventory/status', adminController.getInventoryStatus);
@@ -54,7 +69,6 @@ router.patch('/collections/:id', adminController.updateCollection);
 router.delete('/collections/:id', adminController.deleteCollection);
 router.patch('/collections/:id/lock', adminController.toggleCollectionLock);
 router.patch('/collections/bulk-status', adminController.bulkUpdateCollectionStatus);
-// add/remove products in a collection
 router.post('/collections/:id/products', adminController.addProductsToCollection);
 router.delete('/collections/:id/products/:productId', adminController.removeProductFromCollection);
 
@@ -80,9 +94,6 @@ router.patch('/settings/toggle-store', adminController.toggleStoreStatus);
 router.get('/customization', adminController.getCustomizationSettings);
 router.patch('/customization', adminController.updateCustomization);
 router.post('/customization/upload-banner', adminController.uploadBanner);
-
-// ===== VISITS (protected - list) =====
-router.get('/analytics/visits', adminController.getVisits);
 
 // ===== ADMIN MANAGEMENT =====
 router.get('/admins', adminController.getAdminUsers);

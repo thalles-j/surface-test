@@ -160,6 +160,7 @@ export async function createOrder(userId, items, codigoCupom = null) {
       },
       include: {
         pedidoProdutos: { include: { produto: true } },
+        usuario: { select: { id_usuario: true, nome: true, email: true, telefone: true } },
       },
     });
 

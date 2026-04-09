@@ -1,28 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import styles from "./style.module.css";
-import ShopHeader from "../../components/ShopHeader";
-import PageLoader from "../../components/PageLoader";
-import { useCart } from "../../context/CartContext";
-import { FaCartPlus } from "react-icons/fa";
-import { resolveImageUrl } from "../../utils/resolveImageUrl";
-import { api } from "../../services/api";
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import styles from './style.module.css';
+import ShopHeader from '../../components/ShopHeader';
+import PageLoader from '../../components/PageLoader';
+import { useCart } from '../../context/CartContext';
+import { FaCartPlus } from 'react-icons/fa';
+import { Check } from 'lucide-react';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
+import { api } from '../../services/api';
+import ProductModal from '../../components/ProductModal';
 
 const categoryMap = {
-  1: "Exclusivo",
-  2: "Times",
+  1: 'Exclusivo',
+  2: 'Times',
 };
 
-// ---------------------------------------------------------
-// 1. NOVO COMPONENTE: ProductCard
-// Ele gerencia qual imagem mostrar baseado no mouse
-// ---------------------------------------------------------
-const ProductCard = ({ produto }) => {
+const ProductCard = ({ produto, onQuickAdd }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
 
-  // Função para criar slug a partir do nome
   const createSlug = (name) => {
+    if (!name) return '';
     return name
       .toLowerCase()
       .normalize('NFD')
@@ -31,31 +28,31 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
-  // Ordena as fotos para que a "front" seja a primeira
-  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-  }) : [];
+  const sortedFotos = produto.fotos
+    ? [...produto.fotos].sort((a, b) => {
+        const isFrontA =
+          /front\.[a-zA-Z0-9]+$/i.test(a.descricao || '') ||
+          /front\.[a-zA-Z0-9]+$/i.test(a.url || '') ||
+          (a.descricao || '').toLowerCase().includes('front') ||
+          (a.url || '').toLowerCase().includes('front');
+        const isFrontB =
+          /front\.[a-zA-Z0-9]+$/i.test(b.descricao || '') ||
+          /front\.[a-zA-Z0-9]+$/i.test(b.url || '') ||
+          (b.descricao || '').toLowerCase().includes('front') ||
+          (b.url || '').toLowerCase().includes('front');
 
-  // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = sortedFotos?.[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
-  const fotoSecundaria = sortedFotos?.[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
+        if (isFrontA && !isFrontB) return -1;
+        if (!isFrontA && isFrontB) return 1;
+        return 0;
+      })
+    : [];
 
-  // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
-  // Caso contrário, mostra a principal.
-  const imagemAtual = (isHovered && fotoSecundaria) ? fotoSecundaria : fotoPrincipal;
+  const fotoPrincipal = sortedFotos[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
+  const fotoSecundaria = sortedFotos[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
+  const imagemAtual = isHovered && fotoSecundaria ? fotoSecundaria : fotoPrincipal;
 
   return (
-    <div 
-      className={styles.card}
-      // Eventos para detectar o mouse
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className={styles.card} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <Link to={`/produto/${createSlug(produto.nome_produto)}`} className={styles.cardLink}>
         <div className={styles.imageContainer}>
           {imagemAtual ? (
@@ -63,23 +60,18 @@ const ProductCard = ({ produto }) => {
               src={imagemAtual}
               alt={produto.nome_produto}
               className={styles.produtoImage}
-              style={{ transition: 'opacity 0.2s ease-in-out' }} 
+              style={{ transition: 'opacity 0.2s ease-in-out' }}
             />
           ) : (
-            <div className={styles.produtoPlaceholder}>
-              Sem imagem
-            </div>
+            <div className={styles.produtoPlaceholder}>Sem imagem</div>
           )}
-          
-          <button 
+
+          <button
             className={styles.cartIconButton}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              const variacoes = Array.isArray(produto.variacoes_estoque) ? produto.variacoes_estoque : [];
-              const primeiraDisponivel = variacoes.find(v => Number(v?.estoque || 0) > 0);
-              const tamanhoSelecionado = primeiraDisponivel?.tamanho || variacoes[0]?.tamanho || null;
-              addToCart({ ...produto, selectedSize: tamanhoSelecionado });
+              onQuickAdd(produto);
             }}
             title="Adicionar ao Carrinho"
           >
@@ -88,43 +80,44 @@ const ProductCard = ({ produto }) => {
         </div>
 
         <div className={styles.produtoInfo}>
-          <span className={styles.produtoTag}>
-            {categoryMap[produto.id_categoria] || "Geral"}
-          </span>
+          <span className={styles.produtoTag}>{categoryMap[produto.id_categoria] || 'Geral'}</span>
           <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
-          <p className={styles.produtoPreco}>
-            R$ {parseFloat(produto.preco).toFixed(2)}
-          </p>
+          <p className={styles.produtoPreco}>R$ {parseFloat(produto.preco || 0).toFixed(2)}</p>
         </div>
       </Link>
     </div>
   );
 };
-// ---------------------------------------------------------
 
 export default function Shop() {
+  const { addToCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedType, setSelectedType] = useState("All");
-  const [sortOption, setSortOption] = useState("destaque");
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedType, setSelectedType] = useState('All');
+  const [sortOption, setSortOption] = useState('destaque');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    api.get('/products')
-      .then(res => setRawProdutos(res.data || []))
-      .catch((err) => console.error("Erro ao carregar produtos:", err))
+    api
+      .get('/products')
+      .then((res) => setRawProdutos(res.data || []))
+      .catch((err) => console.error('Erro ao carregar produtos:', err))
       .finally(() => setLoading(false));
   }, []);
 
   const categories = useMemo(() => {
     const set = new Set();
     rawProdutos.forEach((p) => {
-      const cat = categoryMap[p.id_categoria] || "Geral";
+      const cat = categoryMap[p.id_categoria] || 'Geral';
       set.add(cat);
     });
-    return ["All", ...Array.from(set)];
+    return ['All', ...Array.from(set)];
   }, [rawProdutos]);
 
   const types = useMemo(() => {
@@ -132,27 +125,27 @@ export default function Shop() {
     rawProdutos.forEach((p) => {
       if (p.tipo) set.add(p.tipo);
     });
-    return ["All", ...Array.from(set).sort()];
+    return ['All', ...Array.from(set).sort()];
   }, [rawProdutos]);
 
   useEffect(() => {
     let list = rawProdutos.slice();
 
-    if (selectedCategory && selectedCategory !== "All") {
+    if (selectedCategory && selectedCategory !== 'All') {
       list = list.filter((p) => {
-        const cat = categoryMap[p.id_categoria] || "Geral";
+        const cat = categoryMap[p.id_categoria] || 'Geral';
         return cat === selectedCategory;
       });
     }
 
-    if (selectedType && selectedType !== "All") {
+    if (selectedType && selectedType !== 'All') {
       list = list.filter((p) => p.tipo === selectedType);
     }
 
     const sorters = {
       destaque: (a, b) => (b.destaque ? 1 : 0) - (a.destaque ? 1 : 0),
-      az: (a, b) => String(a.nome_produto || "").localeCompare(String(b.nome_produto || "")),
-      za: (a, b) => String(b.nome_produto || "").localeCompare(String(a.nome_produto || "")),
+      az: (a, b) => String(a.nome_produto || '').localeCompare(String(b.nome_produto || '')),
+      za: (a, b) => String(b.nome_produto || '').localeCompare(String(a.nome_produto || '')),
       price_desc: (a, b) => (parseFloat(b.preco) || 0) - (parseFloat(a.preco) || 0),
       price_asc: (a, b) => (parseFloat(a.preco) || 0) - (parseFloat(b.preco) || 0),
       date_new_old: (a, b) => {
@@ -171,11 +164,34 @@ export default function Shop() {
     try {
       list.sort(sorter);
     } catch (e) {
-      console.warn("Sort failed", e);
+      console.warn('Sort failed', e);
     }
 
     setProdutos(list);
   }, [rawProdutos, selectedCategory, selectedType, sortOption]);
+
+  const handleOpenModal = (produto) => {
+    setSelectedProduct(produto);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
+    const ok = addToCart(
+      {
+        ...produto,
+        id_produto: produto.id_produto || produto.id,
+        selectedSize: tamanhoSelecionado || 'Unico',
+      },
+      { openCart: false }
+    );
+
+    if (!ok) return;
+
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+  };
 
   if (loading) {
     return <PageLoader />;
@@ -203,15 +219,25 @@ export default function Shop() {
               <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
-                {/* 2. USANDO O NOVO COMPONENTE AQUI */}
                 {produtos.map((produto) => (
-                  <ProductCard key={produto.id_produto} produto={produto} />
+                  <ProductCard key={produto.id_produto} produto={produto} onQuickAdd={handleOpenModal} />
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <ProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} produto={selectedProduct} />
+
+      {showNotification && (
+        <div className="fixed bottom-8 right-8 bg-black text-white px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]">
+          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
+            <Check className="w-4 h-4" strokeWidth={3} />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-wider">Adicionado ao carrinho</span>
+        </div>
+      )}
     </section>
   );
 }

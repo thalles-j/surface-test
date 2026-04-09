@@ -1,8 +1,9 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ShoppingCart,
+  ShoppingBag,
   Package,
   Layers,
   Tag,
@@ -14,17 +15,17 @@ import {
   Shield,
   X,
   ExternalLink,
-} from "lucide-react";
+} from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick, theme }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg mb-1 ${
       active
-        ? theme === "light"
-          ? "bg-black text-white"
-          : "bg-white text-black"
-        : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+        ? theme === 'light'
+          ? 'bg-black text-white'
+          : 'bg-white text-black'
+        : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
     }`}
   >
     <Icon size={18} />
@@ -38,45 +39,48 @@ export default function Sidebar({
   mobile = false,
   isOpen = true,
   onClose = () => {},
-  theme = "dark",
+  theme = 'dark',
 }) {
   const navigate = useNavigate();
+
   const menuGroups = [
     {
-      title: "PRINCIPAL",
+      title: 'PRINCIPAL',
       items: [
-        { id: "dashboard", icon: LayoutDashboard, label: "Visao Geral" },
-        { id: "sales", icon: ShoppingCart, label: "Vendas" },
+        { id: 'dashboard', icon: LayoutDashboard, label: 'Visao Geral' },
+        { id: 'sales', icon: ShoppingCart, label: 'Vendas' },
+        { id: 'in-person-sales', icon: ShoppingBag, label: 'Venda Presencial' },
       ],
     },
     {
-      title: "CATALOGO",
+      title: 'CATALOGO',
       items: [
-        { id: "products", icon: Package, label: "Produtos" },
-        { id: "collections", icon: Layers, label: "Drops e Colecoes" },
-        { id: "categories", icon: Tag, label: "Categorias" },
-        { id: "inventory", icon: Zap, label: "Estoque" },
+        { id: 'products', icon: Package, label: 'Produtos' },
+        { id: 'collections', icon: Layers, label: 'Drops e Colecoes' },
+        { id: 'categories', icon: Tag, label: 'Categorias' },
+        { id: 'inventory', icon: Zap, label: 'Estoque' },
       ],
     },
     {
-      title: "NEGOCIO",
+      title: 'NEGOCIO',
       items: [
-        { id: "customers", icon: Users, label: "Clientes" },
-        { id: "analytics", icon: BarChart3, label: "Analytics" },
+        { id: 'customers', icon: Users, label: 'Clientes' },
+        { id: 'analytics', icon: BarChart3, label: 'Analytics' },
       ],
     },
     {
-      title: "GERENCIAL",
+      title: 'GERENCIAL',
       items: [
-        { id: "customization", icon: Palette, label: "Customizacao" },
-        { id: "settings", icon: Settings, label: "Configuracoes" },
-        { id: "admin", icon: Shield, label: "Admin" },
+        { id: 'customization', icon: Palette, label: 'Customizacao' },
+        { id: 'settings', icon: Settings, label: 'Configuracoes' },
+        { id: 'admin', icon: Shield, label: 'Admin' },
       ],
     },
   ];
 
   if (mobile) {
     if (!isOpen) return null;
+
     return (
       <div className="fixed inset-0 z-50">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -124,7 +128,7 @@ export default function Sidebar({
             <button
               onClick={() => {
                 onClose();
-                navigate("/");
+                navigate('/');
               }}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-4 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all duration-200"
             >
@@ -179,7 +183,7 @@ export default function Sidebar({
 
       <div className="mt-auto p-8 border-t border-zinc-800">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
           className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg mb-4 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all duration-200"
         >
           <ExternalLink size={18} />
