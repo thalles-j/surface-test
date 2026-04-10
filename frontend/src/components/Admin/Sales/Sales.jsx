@@ -95,9 +95,16 @@ export default function Sales() {
     setIsSearchingProduct(true);
     try {
       const query = typeof term === 'string' ? term : '';
-      const res = await api.get(`/admin/sales/product-suggestions?query=${encodeURIComponent(query)}&limit=12`);
-      const results = res.data || [];
-      setProductResults(Array.isArray(results) ? results : []);
+      try {
+        const res = await api.get(`/admin/sales/product-suggestions?query=${encodeURIComponent(query)}&limit=12`);
+        const results = res.data || [];
+        setProductResults(Array.isArray(results) ? results : []);
+      } catch {
+        // Fallback seguro caso endpoint dedicado esteja indisponivel.
+        const res = await api.get(`/products?search=${encodeURIComponent(query)}`);
+        const results = res.data?.data || res.data || [];
+        setProductResults(Array.isArray(results) ? results : []);
+      }
     } catch (err) {
       setProductResults([]);
     } finally {
@@ -130,7 +137,12 @@ export default function Sales() {
       nome: pp.produto?.nome_produto || 'Produto',
       qtd: pp.quantidade || 1,
       preco: Number(pp.preco_unitario || pp.produto?.preco || 0),
-      size: pp.tamanho || '',
+      size: pp.tamanho || (() => {
+        const sku = String(pp.sku_variacao || '').trim();
+        if (!sku) return '';
+        const tail = sku.split('-').pop();
+        return tail || sku;
+      })(),
     })),
   }), []);
 
