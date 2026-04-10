@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Search, 
   Filter, 
@@ -83,6 +83,7 @@ export default function Sales() {
   const [searchTermProduct, setSearchTermProduct] = useState('');
   const [productResults, setProductResults] = useState([]);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const productSearchContainerRef = useRef(null);
 
   // Lógica de Busca Debounce (Tabela Principal)
   useEffect(() => {
@@ -118,6 +119,22 @@ export default function Sales() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTermProduct, searchProducts]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        productSearchContainerRef.current &&
+        !productSearchContainerRef.current.contains(event.target)
+      ) {
+        setProductResults([]);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const mapOrder = useCallback((o) => ({
     id: `#${o.id_pedido}`,
@@ -516,7 +533,7 @@ export default function Sales() {
                 </div>
 
                 {isEditingItems && (
-                  <div className="relative animate-in slide-in-from-top-2">
+                  <div className="relative animate-in slide-in-from-top-2" ref={productSearchContainerRef}>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                       <input 
