@@ -4,7 +4,8 @@ const STORAGE_KEY = "admin_theme_preference";
 const DEFAULT_THEME = "dark";
 
 function normalizeTheme(value) {
-  return value === "light" || value === "dark" ? value : DEFAULT_THEME;
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "light" || normalized === "dark" ? normalized : DEFAULT_THEME;
 }
 
 const AdminThemeContext = createContext({
@@ -27,18 +28,22 @@ export function AdminThemeProvider({ children }) {
   });
 
   useEffect(() => {
-    const normalized = normalizeTheme(theme);
-    localStorage.setItem(STORAGE_KEY, normalized);
-
-    // Mantem uma unica fonte de verdade do tema ativo no documento.
-    document.body.classList.remove("admin-theme-dark", "admin-theme-light");
-    document.body.classList.add(`admin-theme-${normalized}`);
-    document.body.dataset.adminTheme = normalized;
-
-    if (theme !== normalized) {
-      setTheme(normalized);
+    const normalizedTheme = normalizeTheme(theme);
+    try {
+      localStorage.setItem(STORAGE_KEY, normalizedTheme);
+    } catch {
+      // ignore localStorage write issues (private mode/quota)
+    }
+    if (theme !== normalizedTheme) {
+      setTheme(normalizedTheme);
     }
   }, [theme]);
+
+  useEffect(() => {
+    // Remove legado de classe global no body para evitar conflito com o container raiz do admin.
+    document.body.classList.remove("admin-theme-dark", "admin-theme-light");
+    delete document.body.dataset.adminTheme;
+  }, []);
 
   const value = useMemo(
     () => ({

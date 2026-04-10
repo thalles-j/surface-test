@@ -4,9 +4,9 @@ import { useAdminTheme } from '../context/AdminThemeContext';
 
 const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabel, actionCallback }) => {
   if (!isOpen) return null;
-  const { isAdminThemeActive, isLight } = useAdminTheme();
-  const isAdminLight = isAdminThemeActive && isLight;
-  const isAdminDark = isAdminThemeActive && !isLight;
+  const { isAdminThemeActive, theme } = useAdminTheme();
+  const isAdminLight = isAdminThemeActive && theme === 'light';
+  const isAdminDark = isAdminThemeActive && theme === 'dark';
 
   const icons = {
     success: <CheckCircle2 size={48} className="text-green-500" />,

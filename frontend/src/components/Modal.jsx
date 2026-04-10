@@ -14,8 +14,8 @@ const Modal = ({ isOpen, onClose, title, size = 'md', variant = 'light', footer,
       ? 'max-w-5xl'
       : 'max-w-2xl';
 
-  const { isAdminThemeActive, isLight } = useAdminTheme();
-  const useThemeVariant = isAdminThemeActive ? (isLight ? 'light' : 'dark') : variant;
+  const { isAdminThemeActive, theme } = useAdminTheme();
+  const useThemeVariant = isAdminThemeActive ? theme : variant;
   const isDark = useThemeVariant === 'dark';
 
   return (

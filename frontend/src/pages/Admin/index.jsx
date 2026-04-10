@@ -21,7 +21,7 @@ import InPersonSales from '../../components/Admin/InPersonSales/InPersonSales';
 function AdminPageContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, logout } = useAuth();
-  const { theme, isLight, toggleTheme } = useAdminTheme();
+  const { theme, toggleTheme } = useAdminTheme();
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isCompactLayout, setIsCompactLayout] = useState(false);
@@ -99,7 +99,8 @@ function AdminPageContent() {
     return titles[activeTab] || 'Painel de Controle';
   };
 
-  const themeClass = isLight ? 'admin-theme-light' : 'admin-theme-dark';
+  const isLightTheme = theme === 'light';
+  const themeClass = isLightTheme ? 'admin-theme-light' : 'admin-theme-dark';
 
   return (
     <div className={`admin-theme ${themeClass} min-h-screen flex font-sans`} data-admin-theme={theme}>
@@ -136,10 +137,10 @@ function AdminPageContent() {
             <button
               onClick={toggleTheme}
               className="admin-theme-toggle px-3 py-2 rounded-lg border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 transition-colors flex items-center gap-2"
-              title={`Alternar para modo ${isLight ? 'escuro' : 'claro'}`}
+              title={`Tema atual: ${isLightTheme ? 'claro' : 'escuro'}. Alternar para ${isLightTheme ? 'escuro' : 'claro'}.`}
             >
-              {isLight ? <Moon size={16} /> : <Sun size={16} />}
-              <span className="text-xs font-bold uppercase tracking-wider">{isLight ? 'Dark' : 'Light'}</span>
+              {isLightTheme ? <Sun size={16} /> : <Moon size={16} />}
+              <span className="text-xs font-bold uppercase tracking-wider">{isLightTheme ? 'Light' : 'Dark'}</span>
             </button>
 
             <div className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
