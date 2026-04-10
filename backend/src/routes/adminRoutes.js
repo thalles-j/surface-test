@@ -26,6 +26,7 @@ router.use(authMiddleware);
 // ===== SALES / ORDERS =====
 router.get('/sales', adminController.getSalesData);
 router.get('/sales/by-period', adminController.getSalesByPeriod);
+router.get('/sales/product-suggestions', adminController.searchProductsForOrderEdit);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
 router.put('/orders/:id/items', adminController.updateOrderItems);

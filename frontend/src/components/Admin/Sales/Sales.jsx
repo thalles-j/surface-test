@@ -94,8 +94,9 @@ export default function Sales() {
   const searchProducts = useCallback(async (term) => {
     setIsSearchingProduct(true);
     try {
-      const res = await api.get(`/products?search=${term}`);
-      const results = res.data?.data || res.data || [];
+      const query = typeof term === 'string' ? term : '';
+      const res = await api.get(`/admin/sales/product-suggestions?query=${encodeURIComponent(query)}&limit=12`);
+      const results = res.data || [];
       setProductResults(Array.isArray(results) ? results : []);
     } catch (err) {
       setProductResults([]);
@@ -106,11 +107,7 @@ export default function Sales() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchTermProduct.length >= 2) {
-        searchProducts(searchTermProduct);
-      } else {
-        setProductResults([]);
-      }
+      searchProducts(searchTermProduct);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTermProduct, searchProducts]);
@@ -209,7 +206,7 @@ export default function Sales() {
       nome: prod.nome_produto || prod.nome || 'Produto Adicionado',
       qtd: 1,
       preco: Number(prod.preco) || 0,
-      size: prod.tamanhos?.[0] || 'M'
+      size: prod.tamanhos?.[0] || 'UNICO'
     };
     const newItems = [...(tempOrder.itemsList || []), newItem];
     const newTotal = newItems.reduce((acc, curr) => acc + (curr.qtd * curr.preco), 0);
@@ -515,6 +512,9 @@ export default function Sales() {
                         placeholder="Pesquisar novo produto para adicionar à troca..."
                         value={searchTermProduct}
                         onChange={(e) => setSearchTermProduct(e.target.value)}
+                        onFocus={() => {
+                          if (!productResults.length) searchProducts(searchTermProduct);
+                        }}
                       />
                       {isSearchingProduct && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 animate-spin" size={14} />}
                     </div>

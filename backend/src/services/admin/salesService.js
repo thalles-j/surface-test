@@ -3,6 +3,60 @@ import { sucesso, erro } from '../../helpers/apiResponse.js';
 import { isValidTransition, getAllStatuses } from '../../helpers/orderStatus.js';
 import { sendOrderStatusUpdate } from '../emailService.js';
 
+const SHIRT_KEYWORDS = ['camisa', 'camiseta', 'blusa'];
+
+function extractItemSize(item) {
+  if (!item) return '';
+  if (item.tamanho) return String(item.tamanho);
+
+  const sku = String(item.sku_variacao || '').trim();
+  if (!sku) return '';
+
+  const variations = Array.isArray(item.produto?.variacoes_estoque)
+    ? item.produto.variacoes_estoque
+    : [];
+  const matchedVariation = variations.find((v) => String(v?.sku || '') === sku);
+  if (matchedVariation?.tamanho) return String(matchedVariation.tamanho);
+
+  return sku;
+}
+
+function attachDerivedItemFields(order) {
+  return {
+    ...order,
+    pedidoProdutos: (order.pedidoProdutos || []).map((pp) => ({
+      ...pp,
+      tamanho: extractItemSize(pp),
+      estoque_disponivel: (() => {
+        const variations = Array.isArray(pp.produto?.variacoes_estoque)
+          ? pp.produto.variacoes_estoque
+          : [];
+        const matched = variations.find((v) => String(v?.sku || '') === String(pp.sku_variacao || ''));
+        return Number(matched?.estoque || 0);
+      })(),
+    })),
+  };
+}
+
+function normalizeProductSuggestion(produto) {
+  const variations = Array.isArray(produto.variacoes_estoque) ? produto.variacoes_estoque : [];
+  const inStockVariations = variations.filter((v) => Number(v?.estoque || 0) > 0);
+
+  return {
+    id_produto: produto.id_produto,
+    nome_produto: produto.nome_produto,
+    preco: Number(produto.preco || 0),
+    variacoes_estoque: variations.map((v) => ({
+      tamanho: v?.tamanho || '',
+      sku: v?.sku || '',
+      estoque: Number(v?.estoque || 0),
+    })),
+    tamanhos: inStockVariations.map((v) => v?.tamanho).filter(Boolean),
+    estoque_total: variations.reduce((sum, v) => sum + Number(v?.estoque || 0), 0),
+    tem_estoque: inStockVariations.length > 0,
+  };
+}
+
 export const getSalesData = async (req, res) => {
   try {
     const { page, limit, search, status, sortBy, sortDir, startDate, endDate } = req.query;
@@ -34,9 +88,30 @@ export const getSalesData = async (req, res) => {
         prisma.pedidos.findMany({
           where,
           include: {
-            usuario: { include: { enderecos: true } },
-            pedidoProdutos: { include: { produto: true } },
-            historico: { orderBy: { criado_em: 'desc' } },
+            usuario: {
+              include: {
+                enderecos: {
+                  select: {
+                    logradouro: true,
+                    numero: true,
+                    cidade: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+            pedidoProdutos: {
+              include: {
+                produto: {
+                  select: {
+                    id_produto: true,
+                    nome_produto: true,
+                    preco: true,
+                    variacoes_estoque: true,
+                  },
+                },
+              },
+            },
           },
           orderBy,
           skip: (pageNum - 1) * limitNum,
@@ -48,7 +123,7 @@ export const getSalesData = async (req, res) => {
       ]);
       const totalRevenue = parseFloat(revenueAgg._sum.total || 0);
       return res.json({
-        data: orders,
+        data: orders.map(attachDerivedItemFields),
         total,
         page: pageNum,
         limit: limitNum,
@@ -64,12 +139,77 @@ export const getSalesData = async (req, res) => {
     const orders = await prisma.pedidos.findMany({
       include: {
         usuario: { include: { enderecos: true } },
-        pedidoProdutos: { include: { produto: true } },
-        historico: { orderBy: { criado_em: 'desc' } },
+        pedidoProdutos: {
+          include: {
+            produto: {
+              select: {
+                id_produto: true,
+                nome_produto: true,
+                preco: true,
+                variacoes_estoque: true,
+              },
+            },
+          },
+        },
       },
       orderBy,
     });
-    return res.json(orders);
+    return res.json(orders.map(attachDerivedItemFields));
+  } catch (error) {
+    return erro(res, error.message, 500);
+  }
+};
+
+export const searchProductsForOrderEdit = async (req, res) => {
+  try {
+    const query = String(req.query?.query || '').trim();
+    const limit = Math.min(30, Math.max(5, Number(req.query?.limit || 12)));
+
+    const where = {
+      oculto: false,
+      OR: [
+        { status: 'ativo' },
+        { status: 'inativo' },
+      ],
+    };
+
+    if (query) {
+      where.OR = [
+        { nome_produto: { contains: query, mode: 'insensitive' } },
+        { tags: { contains: query, mode: 'insensitive' } },
+        { tipo: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+
+    const rawProducts = await prisma.produtos.findMany({
+      where,
+      select: {
+        id_produto: true,
+        nome_produto: true,
+        preco: true,
+        variacoes_estoque: true,
+        tipo: true,
+        tags: true,
+        status: true,
+        atualizado_em: true,
+      },
+      orderBy: { atualizado_em: 'desc' },
+      take: query ? limit : 30,
+    });
+
+    const sorted = rawProducts
+      .slice()
+      .sort((a, b) => {
+        const textA = `${a.nome_produto} ${a.tipo || ''} ${a.tags || ''}`.toLowerCase();
+        const textB = `${b.nome_produto} ${b.tipo || ''} ${b.tags || ''}`.toLowerCase();
+        const scoreA = SHIRT_KEYWORDS.some((k) => textA.includes(k)) ? 1 : 0;
+        const scoreB = SHIRT_KEYWORDS.some((k) => textB.includes(k)) ? 1 : 0;
+        return scoreB - scoreA;
+      })
+      .slice(0, limit)
+      .map(normalizeProductSuggestion);
+
+    return res.json(sorted);
   } catch (error) {
     return erro(res, error.message, 500);
   }
