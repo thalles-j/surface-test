@@ -13,6 +13,17 @@ import { api } from '../../../services/api';
 import { resolveImageUrl } from '../../../utils/resolveImageUrl';
 import { useToast } from '../../../context/ToastContext';
 
+const EMPTY_DASHBOARD_DATA = {
+  monthlyRevenue: 0,
+  orders: 0,
+  avgTicket: 0,
+  conversionRate: 0,
+  revenueGrowth: '0%',
+  ordersGrowth: '0%',
+  avgTicketGrowth: '0%',
+  topProducts: [],
+};
+
 const StatCard = ({ title, value, change, isPositive }) => (
   <div className="bg-white p-6 border border-zinc-200 rounded-xl hover:border-zinc-300 shadow-sm transition-all duration-300">
     <p className="text-zinc-500 text-sm font-medium">{title}</p>
@@ -58,9 +69,10 @@ export default function Dashboard({ onCreateCollection }) {
 
         setRecentOrders(ordersRes.data || []);
         setIsDropLocked(settingsRes.data?.loja_ativa === false);
-        setCategorySales(catRes.data || []);
+        setCategorySales(Array.isArray(catRes.data) ? catRes.data : []);
         
-        const visitsTotal = (visitsRes.data || []).reduce((s, it) => s + (it.count || 0), 0);
+        const safeVisits = Array.isArray(visitsRes.data) ? visitsRes.data : [];
+        const visitsTotal = safeVisits.reduce((s, it) => s + (it.count || 0), 0);
         setVisitsCount(visitsTotal);
 
         const stats = statsRes.data || {};
@@ -81,15 +93,18 @@ export default function Dashboard({ onCreateCollection }) {
           orders: stats.ordersCount || stats.orders || 0,
           avgTicket: Number(stats.avgTicket || 0),
           conversionRate: stats.conversionRate || 0,
-          revenueGrowth: stats.revenueGrowth || '0%',
-          ordersGrowth: stats.ordersGrowth || '0%',
-          avgTicketGrowth: stats.avgTicketGrowth || '0%',
+          revenueGrowth: String(stats.revenueGrowth ?? '0%'),
+          ordersGrowth: String(stats.ordersGrowth ?? '0%'),
+          avgTicketGrowth: String(stats.avgTicketGrowth ?? '0%'),
           topProducts,
         });
       } catch (err) {
         if (!cancelled) {
           console.error('Erro ao carregar dashboard:', err);
           toast.error('Erro ao carregar dados do dashboard');
+          setDashboardData(EMPTY_DASHBOARD_DATA);
+          setRecentOrders([]);
+          setCategorySales([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -201,18 +216,19 @@ export default function Dashboard({ onCreateCollection }) {
           <h3 className="text-sm font-bold mb-4 text-zinc-900 uppercase tracking-wider">Vendas por Categoria</h3>
           <div className="space-y-3">
             {categorySales.map((cat) => {
-              const maxValue = Math.max(...categorySales.map(c => c.value), 1);
+              const maxValue = Math.max(...categorySales.map(c => Number(c.value || 0)), 1);
+              const value = Number(cat.value || 0);
               return (
                 <div key={cat.name} className="flex items-center gap-4">
                   <div className="w-24 text-xs font-bold text-zinc-500 truncate">{cat.name}</div>
                   <div className="flex-1 bg-zinc-100 rounded-full h-3 overflow-hidden">
                     <div 
                       className="bg-zinc-900 h-full rounded-full transition-all duration-700" 
-                      style={{ width: `${(cat.value / maxValue) * 100}%` }} 
+                      style={{ width: `${(value / maxValue) * 100}%` }} 
                     />
                   </div>
                   <div className="text-right text-xs font-bold text-zinc-900 w-20">
-                    R$ {cat.value.toLocaleString('pt-BR')}
+                    R$ {value.toLocaleString('pt-BR')}
                   </div>
                 </div>
               );

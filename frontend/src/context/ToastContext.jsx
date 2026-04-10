@@ -2,6 +2,14 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { CheckCircle2, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
 const ToastContext = createContext(null);
+const FALLBACK_TOAST = {
+  addToast: () => {},
+  success: () => {},
+  error: () => {},
+  warning: () => {},
+  info: () => {},
+};
+let warnedMissingProvider = false;
 
 const ICONS = {
   success: <CheckCircle2 size={18} className="text-green-500 shrink-0" />,
@@ -66,6 +74,12 @@ export function ToastProvider({ children }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be inside ToastProvider');
+  if (!ctx) {
+    if (!warnedMissingProvider) {
+      warnedMissingProvider = true;
+      console.error('ToastContext ausente: useToast foi usado fora de ToastProvider.');
+    }
+    return FALLBACK_TOAST;
+  }
   return ctx;
 }
