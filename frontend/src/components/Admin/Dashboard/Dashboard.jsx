@@ -1,23 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Lock, 
-  Unlock, 
-  TrendingUp, 
-  Zap, 
-  Clock, 
-  Eye 
+﻿import React, { useState, useEffect } from 'react';
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Lock,
+  Unlock,
+  TrendingUp,
+  Zap,
+  Clock,
+  Eye
 } from 'lucide-react';
 import { api } from '../../../services/api';
 import { resolveImageUrl } from '../../../utils/resolveImageUrl';
 import { useToast } from '../../../context/ToastContext';
+import { useAdminTheme } from '../../../context/AdminThemeContext';
 
-const StatCard = ({ title, value, change, isPositive }) => (
-  <div className="bg-white p-6 border border-zinc-200 rounded-xl hover:border-zinc-300 shadow-sm transition-all duration-300">
-    <p className="text-zinc-500 text-sm font-medium">{title}</p>
+const StatCard = ({ title, value, change, isPositive, isLightTheme }) => (
+  <div
+    className={`p-6 border rounded-xl shadow-sm transition-all duration-300 ${
+      isLightTheme
+        ? 'bg-white border-zinc-200 hover:border-zinc-300'
+        : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+    }`}
+  >
+    <p className={`text-sm font-medium ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>{title}</p>
     <div className="flex items-end justify-between mt-3">
-      <h3 className="text-3xl font-bold text-zinc-900">{value}</h3>
+      <h3 className={`text-3xl font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>{value}</h3>
       {change && (
         <span className={`flex items-center gap-1 text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
           {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
@@ -30,6 +37,8 @@ const StatCard = ({ title, value, change, isPositive }) => (
 
 export default function Dashboard({ onCreateCollection }) {
   const toast = useToast();
+  const { theme } = useAdminTheme();
+  const isLightTheme = theme === 'light';
   const [isDropLocked, setIsDropLocked] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [visitsCount, setVisitsCount] = useState(0);
@@ -42,7 +51,6 @@ export default function Dashboard({ onCreateCollection }) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Hit de visita (background)
         api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' }).catch(() => {});
 
         const [statsRes, topRes, ordersRes, settingsRes, visitsRes, catRes] = await Promise.all([
@@ -59,7 +67,7 @@ export default function Dashboard({ onCreateCollection }) {
         setRecentOrders(ordersRes.data || []);
         setIsDropLocked(settingsRes.data?.loja_ativa === false);
         setCategorySales(catRes.data || []);
-        
+
         const visitsTotal = (visitsRes.data || []).reduce((s, it) => s + (it.count || 0), 0);
         setVisitsCount(visitsTotal);
 
@@ -97,76 +105,80 @@ export default function Dashboard({ onCreateCollection }) {
     };
 
     fetchData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [toast]);
 
   if (loading || !dashboardData) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="w-10 h-10 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin"></div>
-        <p className="text-zinc-500 font-medium animate-pulse">Sincronizando dados...</p>
+        <div className={`w-10 h-10 border-4 rounded-full animate-spin ${isLightTheme ? 'border-zinc-200 border-t-zinc-900' : 'border-zinc-700 border-t-zinc-200'}`}></div>
+        <p className={`font-medium animate-pulse ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>Sincronizando dados...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Faturamento (Mês)"
           value={`R$ ${dashboardData.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           change={dashboardData.revenueGrowth}
           isPositive={!dashboardData.revenueGrowth.startsWith('-')}
+          isLightTheme={isLightTheme}
         />
-        <StatCard title="Pedidos" value={dashboardData.orders} change={dashboardData.ordersGrowth} isPositive={!dashboardData.ordersGrowth.startsWith('-')} />
+        <StatCard
+          title="Pedidos"
+          value={dashboardData.orders}
+          change={dashboardData.ordersGrowth}
+          isPositive={!dashboardData.ordersGrowth.startsWith('-')}
+          isLightTheme={isLightTheme}
+        />
         <StatCard
           title="Ticket Médio"
           value={`R$ ${dashboardData.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           change={dashboardData.avgTicketGrowth}
           isPositive={!dashboardData.avgTicketGrowth.startsWith('-')}
+          isLightTheme={isLightTheme}
         />
-        <StatCard title="Taxa de Conversão" value={`${dashboardData.conversionRate}%`} change="" isPositive={true} />
+        <StatCard title="Taxa de Conversão" value={`${dashboardData.conversionRate}%`} change="" isPositive={true} isLightTheme={isLightTheme} />
       </div>
 
-      {/* SEÇÃO PRINCIPAL: PRODUTOS E STATUS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* TOP PRODUTOS */}
-        <div className="bg-white p-8 border border-zinc-200 rounded-xl shadow-sm">
+        <div className={`p-8 border rounded-xl shadow-sm ${isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg text-zinc-900">Produtos Mais Vendidos</h3>
-            <button className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Ver tudo →</button>
+            <h3 className={`font-bold text-lg ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>Produtos Mais Vendidos</h3>
+            <button className={`text-xs transition-colors ${isLightTheme ? 'text-zinc-400 hover:text-zinc-900' : 'text-zinc-500 hover:text-zinc-200'}`}>Ver tudo {'->'}</button>
           </div>
           <div className="space-y-4">
             {dashboardData.topProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between pb-4 border-b border-zinc-100 last:border-0">
+              <div key={p.id} className={`flex items-center justify-between pb-4 border-b last:border-0 ${isLightTheme ? 'border-zinc-100' : 'border-zinc-800'}`}>
                 <div className="flex items-center gap-3">
-                  <img src={p.image || "/placeholder-prod.png"} alt={p.name} className="w-12 h-12 object-cover rounded-lg bg-zinc-100" />
+                  <img src={p.image || '/placeholder-prod.png'} alt={p.name} className={`w-12 h-12 object-cover rounded-lg ${isLightTheme ? 'bg-zinc-100' : 'bg-zinc-800'}`} />
                   <div>
-                    <p className="text-sm font-bold text-zinc-900">{p.name}</p>
-                    <span className="text-[10px] bg-zinc-100 px-2 py-1 rounded font-mono text-zinc-500">{p.sku}</span>
+                    <p className={`text-sm font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>{p.name}</p>
+                    <span className={`text-[10px] px-2 py-1 rounded font-mono ${isLightTheme ? 'bg-zinc-100 text-zinc-500' : 'bg-zinc-800 text-zinc-400'}`}>{p.sku}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-zinc-900">R$ {p.price.toFixed(2)}</p>
-                  <p className="text-[10px] text-zinc-500">{p.sold} vendidos</p>
+                  <p className={`text-sm font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>R$ {p.price.toFixed(2)}</p>
+                  <p className={`text-[10px] ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>{p.sold} vendidos</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* STATUS DO DROP */}
-        <div className="bg-white p-8 border border-zinc-200 rounded-xl shadow-sm">
-          <h3 className="font-bold text-lg mb-6 text-zinc-900">Status do Próximo Drop</h3>
+        <div className={`p-8 border rounded-xl shadow-sm ${isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+          <h3 className={`font-bold text-lg mb-6 ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>Status do Próximo Drop</h3>
           <div className="flex flex-col items-center justify-center py-8">
             <div className={`p-4 rounded-full mb-4 ${isDropLocked ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
               {isDropLocked ? <Lock size={32} /> : <Unlock size={32} />}
             </div>
-            <p className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-2">Modo Coming Soon</p>
-            <h4 className="text-2xl font-bold mb-6 text-zinc-900">{isDropLocked ? 'Site Travado' : 'Site Aberto'}</h4>
+            <p className={`text-sm font-semibold uppercase tracking-widest mb-2 ${isLightTheme ? 'text-zinc-400' : 'text-zinc-500'}`}>Modo Coming Soon</p>
+            <h4 className={`text-2xl font-bold mb-6 ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>{isDropLocked ? 'Site Travado' : 'Site Aberto'}</h4>
             <button
               onClick={async () => {
                 try {
@@ -178,40 +190,42 @@ export default function Dashboard({ onCreateCollection }) {
                 }
               }}
               className={`px-8 py-3 rounded-lg text-sm font-bold shadow-sm transition-all ${
-                isDropLocked ? 'bg-zinc-900 text-white hover:bg-black' : 'border-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+                isDropLocked
+                  ? isLightTheme
+                    ? 'bg-zinc-900 text-white hover:bg-black'
+                    : 'bg-zinc-100 text-zinc-900 hover:bg-white'
+                  : isLightTheme
+                    ? 'border-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+                    : 'border-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800'
               }`}
             >
-              {isDropLocked ? '🔓 Liberar Acesso' : '🔒 Travar Site'}
+              {isDropLocked ? 'Liberar Acesso' : 'Travar Site'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ANALYTICS: ACESSOS E CATEGORIAS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-white p-6 border border-zinc-200 rounded-xl flex items-center gap-4 shadow-sm">
-          <div className="p-3 bg-blue-50 rounded-lg"><Eye size={24} className="text-blue-600" /></div>
+        <div className={`lg:col-span-1 p-6 border rounded-xl flex items-center gap-4 shadow-sm ${isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+          <div className={`p-3 rounded-lg ${isLightTheme ? 'bg-blue-50' : 'bg-blue-950/40'}`}><Eye size={24} className="text-blue-600" /></div>
           <div>
-            <p className="text-zinc-500 text-sm font-medium">Total de Acessos</p>
-            <h3 className="text-3xl font-bold text-zinc-900">{visitsCount.toLocaleString('pt-BR')}</h3>
+            <p className={`text-sm font-medium ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>Total de Acessos</p>
+            <h3 className={`text-3xl font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>{visitsCount.toLocaleString('pt-BR')}</h3>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white p-6 border border-zinc-200 rounded-xl shadow-sm">
-          <h3 className="text-sm font-bold mb-4 text-zinc-900 uppercase tracking-wider">Vendas por Categoria</h3>
+        <div className={`lg:col-span-2 p-6 border rounded-xl shadow-sm ${isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+          <h3 className={`text-sm font-bold mb-4 uppercase tracking-wider ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>Vendas por Categoria</h3>
           <div className="space-y-3">
             {categorySales.map((cat) => {
-              const maxValue = Math.max(...categorySales.map(c => c.value), 1);
+              const maxValue = Math.max(...categorySales.map((c) => c.value), 1);
               return (
                 <div key={cat.name} className="flex items-center gap-4">
-                  <div className="w-24 text-xs font-bold text-zinc-500 truncate">{cat.name}</div>
-                  <div className="flex-1 bg-zinc-100 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-zinc-900 h-full rounded-full transition-all duration-700" 
-                      style={{ width: `${(cat.value / maxValue) * 100}%` }} 
-                    />
+                  <div className={`w-24 text-xs font-bold truncate ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>{cat.name}</div>
+                  <div className={`flex-1 rounded-full h-3 overflow-hidden ${isLightTheme ? 'bg-zinc-100' : 'bg-zinc-800'}`}>
+                    <div className={`h-full rounded-full transition-all duration-700 ${isLightTheme ? 'bg-zinc-900' : 'bg-zinc-200'}`} style={{ width: `${(cat.value / maxValue) * 100}%` }} />
                   </div>
-                  <div className="text-right text-xs font-bold text-zinc-900 w-20">
+                  <div className={`text-right text-xs font-bold w-20 ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>
                     R$ {cat.value.toLocaleString('pt-BR')}
                   </div>
                 </div>
@@ -221,15 +235,14 @@ export default function Dashboard({ onCreateCollection }) {
         </div>
       </div>
 
-      {/* PEDIDOS RECENTES */}
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 bg-zinc-50/50">
-          <h3 className="font-bold flex items-center gap-2 text-zinc-900"><Clock size={18} /> Pedidos Recentes</h3>
+      <div className={`border rounded-xl shadow-sm overflow-hidden ${isLightTheme ? 'bg-white border-zinc-200' : 'bg-zinc-900 border-zinc-800'}`}>
+        <div className={`p-6 border-b ${isLightTheme ? 'border-zinc-100 bg-zinc-50/50' : 'border-zinc-800 bg-zinc-950/30'}`}>
+          <h3 className={`font-bold flex items-center gap-2 ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}><Clock size={18} /> Pedidos Recentes</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="text-zinc-400 text-[10px] uppercase tracking-widest border-b border-zinc-100">
+              <tr className={`text-[10px] uppercase tracking-widest border-b ${isLightTheme ? 'text-zinc-400 border-zinc-100' : 'text-zinc-500 border-zinc-800'}`}>
                 <th className="px-6 py-4 font-semibold">ID</th>
                 <th className="px-6 py-4 font-semibold">Cliente</th>
                 <th className="px-6 py-4 font-semibold">Total</th>
@@ -237,18 +250,18 @@ export default function Dashboard({ onCreateCollection }) {
                 <th className="px-6 py-4 font-semibold text-right">Data</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-50">
-              {recentOrders.map(order => (
-                <tr key={order.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-4 font-mono font-bold text-zinc-900">#{order.id}</td>
-                  <td className="px-6 py-4 text-zinc-600 font-medium">{order.client || order.customer}</td>
-                  <td className="px-6 py-4 font-bold text-zinc-900">R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            <tbody className={`divide-y ${isLightTheme ? 'divide-zinc-50' : 'divide-zinc-800/80'}`}>
+              {recentOrders.map((order) => (
+                <tr key={order.id} className={`transition-colors ${isLightTheme ? 'hover:bg-zinc-50' : 'hover:bg-zinc-800/40'}`}>
+                  <td className={`px-6 py-4 font-mono font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>#{order.id}</td>
+                  <td className={`px-6 py-4 font-medium ${isLightTheme ? 'text-zinc-600' : 'text-zinc-300'}`}>{order.client || order.customer}</td>
+                  <td className={`px-6 py-4 font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="px-6 py-4">
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-zinc-100 text-zinc-600 uppercase">
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${isLightTheme ? 'bg-zinc-100 text-zinc-600' : 'bg-zinc-800 text-zinc-300'}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-zinc-400 text-xs text-right">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
+                  <td className={`px-6 py-4 text-xs text-right ${isLightTheme ? 'text-zinc-400' : 'text-zinc-500'}`}>{new Date(order.date).toLocaleDateString('pt-BR')}</td>
                 </tr>
               ))}
             </tbody>
@@ -256,28 +269,37 @@ export default function Dashboard({ onCreateCollection }) {
         </div>
       </div>
 
-      {/* BOTÕES DE AÇÃO RÁPIDA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10">
-        <button 
+        <button
           onClick={onCreateCollection}
-          className="flex items-center justify-between p-6 bg-zinc-900 text-white rounded-xl hover:bg-black transition-all group"
+          className={`flex items-center justify-between p-6 rounded-xl transition-all group ${
+            isLightTheme
+              ? 'bg-zinc-900 text-white hover:bg-black'
+              : 'bg-zinc-100 text-zinc-900 hover:bg-white'
+          }`}
         >
           <div className="text-left">
             <h4 className="font-bold">Criar Coleção</h4>
-            <p className="text-xs text-zinc-400">Preparar novo drop</p>
+            <p className={`text-xs ${isLightTheme ? 'text-zinc-400' : 'text-zinc-600'}`}>Preparar novo drop</p>
           </div>
           <TrendingUp className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
         </button>
 
-        <button className="flex items-center justify-between p-6 bg-white border-2 border-zinc-100 rounded-xl hover:border-zinc-900 transition-all group">
+        <button
+          className={`flex items-center justify-between p-6 border-2 rounded-xl transition-all group ${
+            isLightTheme
+              ? 'bg-white border-zinc-100 hover:border-zinc-900'
+              : 'bg-zinc-900 border-zinc-800 hover:border-zinc-600'
+          }`}
+        >
           <div className="text-left">
-            <h4 className="font-bold text-zinc-900">Disparar Campanha</h4>
-            <p className="text-xs text-zinc-500">Notificar via E-mail/WhatsApp</p>
+            <h4 className={`font-bold ${isLightTheme ? 'text-zinc-900' : 'text-zinc-100'}`}>Disparar Campanha</h4>
+            <p className={`text-xs ${isLightTheme ? 'text-zinc-500' : 'text-zinc-400'}`}>Notificar via E-mail/WhatsApp</p>
           </div>
-          <Zap size={20} className="text-zinc-900" />
+          <Zap size={20} className={isLightTheme ? 'text-zinc-900' : 'text-zinc-100'} />
         </button>
       </div>
-
     </div>
   );
 }
+
