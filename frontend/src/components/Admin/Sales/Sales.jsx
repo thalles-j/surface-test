@@ -74,6 +74,7 @@ export default function Sales() {
   const [tempOrder, setTempOrder] = useState(null);
   const [orderHistory, setOrderHistory] = useState([]);
   const [statusSaving, setStatusSaving] = useState(false);
+  const [addressSaving, setAddressSaving] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editedAddress, setEditedAddress] = useState('');
   const [isEditingItems, setIsEditingItems] = useState(false);
@@ -117,7 +118,7 @@ export default function Sales() {
   const mapOrder = useCallback((o) => ({
     id: `#${o.id_pedido}`,
     rawId: o.id_pedido,
-    cliente: o.usuario?.nome || '—',
+    cliente: o.nome_cliente || o.usuario?.nome || '—',
     email: o.usuario?.email || '',
     phone: o.usuario?.telefone || '',
     endereco: o.endereco_entrega || (o.usuario?.enderecos?.[0] 
@@ -187,6 +188,7 @@ export default function Sales() {
   }, [tempOrder, toast]);
 
   const handleUpdateAddress = async () => {
+    setAddressSaving(true);
     try {
       const cleanId = String(tempOrder.rawId).replace('#', '');
       await api.patch(`/admin/orders/${cleanId}/address`, { endereco: editedAddress });
@@ -196,6 +198,8 @@ export default function Sales() {
       toast.success('Endereço atualizado!');
     } catch (err) {
       toast.error('Erro ao atualizar endereço');
+    } finally {
+      setAddressSaving(false);
     }
   };
 

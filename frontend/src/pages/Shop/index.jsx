@@ -22,15 +22,6 @@ const categoryMap = {
 // ---------------------------------------------------------
 const ProductCard = ({ produto, onQuickAdd }) => {
   const [isHovered, setIsHovered] = useState(false);
-
-  const { shouldOpenCart, toggleCart, setShouldOpenCart } = useCart();
-  useEffect(() => {
-    if (shouldOpenCart) {
-      toggleCart();
-      setShouldOpenCart(false);
-    }
-  }, [shouldOpenCart]);
-
   
   const createSlug = (name) => {
     if (!name) return "";
@@ -105,7 +96,7 @@ export default function Shop() {
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
-  // Estados para Modal e Notificação
+  // Estados para modal e notificacao
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showNotification, setShowNotification] = useState(false);
@@ -185,10 +176,10 @@ export default function Shop() {
   };
 
   const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
-    // Monta o objeto final. A chave 'tamanho' é enviada de forma explícita.
+    // Monta o objeto final para o carrinho.
     const produtoFinalParaCarrinho = {
       ...produto,
-      tamanho: tamanhoSelecionado || "Único" // Fallback seguro
+      selectedSize: tamanhoSelecionado || "Unico" // Fallback seguro
     };
     
     addToCart(produtoFinalParaCarrinho);
@@ -256,3 +247,4 @@ export default function Shop() {
     </section>
   );
 }
+

@@ -10,7 +10,11 @@
     "dev": "nodemon ./src/server.js",
     "start": "node  ./src/server.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prisma:pull": "prisma db pull",
+    "prisma:generate": "node ./scripts/prisma-generate-safe.cjs",
+    "prisma:generate:full": "prisma generate",
+    "prisma:sync": "npm run prisma:pull && npm run prisma:generate"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -21,7 +25,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^8.0.4",
+    "nodemailer": "^8.0.5",
     "nodemon": "^3.1.10",
     "prisma": "^6.16.1",
     "react-loading-indicators": "^1.0.1",

@@ -1,6 +1,7 @@
 import express from 'express';
 import adminController from '../controllers/adminController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
+import { listRestockInterestsController } from '../controllers/restockController.js';
 
 const router = express.Router();
 
@@ -28,10 +29,13 @@ router.get('/sales/by-period', adminController.getSalesByPeriod);
 router.patch('/orders/:id/status', adminController.updateOrderStatus);
 router.patch('/orders/bulk-status', adminController.bulkUpdateOrderStatus);
 router.put('/orders/:id/items', adminController.updateOrderItems);
+router.patch('/orders/:id/items', adminController.updateOrderItems);
 router.patch('/orders/:id/address', adminController.updateOrderAddress);
+router.get('/orders/:id/history', adminController.getOrderHistory);
 
 // ===== IN-PERSON SALES =====
 router.post('/sales/in-person', adminController.createInPersonSale);
+router.get('/restock-interests', listRestockInterestsController);
 
 // ===== EARLY ACCESS (admin) =====
 router.get('/early-access/emails', adminController.listEarlyAccessEmails);
@@ -54,6 +58,7 @@ router.patch('/inventory/:productId', adminController.updateProductInventory);
 
 // ===== CUSTOMERS =====
 router.get('/customers', adminController.getAllCustomers);
+router.get('/customers/by-email', adminController.getCustomerByEmail);
 router.get('/customers/:id', adminController.getCustomerDetails);
 router.get('/customers/analytics/classification', adminController.getCustomerClassification);
 

@@ -5,16 +5,16 @@ import { AuthContext } from '../../../../context/AuthContext';
 import { api } from '../../../../services/api';
 import { useNavigate } from 'react-router-dom';
 
-export default function ProductInfo({ 
-  produto, 
-  variacoes, 
-  selectedSize, 
+export default function ProductInfo({
+  produto,
+  variacoes,
+  selectedSize,
   setSelectedSize
 }) {
   const [expandedSection, setExpandedSection] = useState(null);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const { showAlertModal, addToCart, toggleCart } = useCart();
+  const { showAlertModal, addToCart } = useCart();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -28,62 +28,55 @@ export default function ProductInfo({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // ============================
-  // ADICIONAR AO CARRINHO
-  // ============================
-  const [loading, setLoading] = useState(false);
-
-  const handleAddToCart = () => {
-  if (!selectedSize || loading) return;
-
-  setLoading(true);
-
-  addToCart({
+  const buildCartItem = () => ({
     ...produto,
     id_produto: produto.id_produto || produto.id,
-    selectedSize: selectedSize || "Único"
+    selectedSize: selectedSize || 'Unico',
   });
 
-  setShouldOpenCart(true);
-  navigate('/shop');
-};
+  const handleBuyNow = () => {
+    if (!selectedSize || loading || isSoldOut || isAllSoldOut) return;
+    setLoading(true);
+    addToCart(buildCartItem(), { openDrawer: false });
+    setLoading(false);
+    navigate('/checkout');
+  };
 
-  
+  const handleAddToCart = () => {
+    if (!selectedSize || loading || isSoldOut || isAllSoldOut) return;
+    setLoading(true);
+    addToCart(buildCartItem(), { openDrawer: true });
+    setLoading(false);
+  };
 
-  // ============================
-  // AVISE-ME
-  // ============================
   const handleNotifyMe = async () => {
     if (!user) {
       showAlertModal({
-        title: "Login necessário",
-        message: "Você precisa estar logado para ser avisado.",
-        type: "auth",
-        actionLabel: "Entrar",
+        title: 'Login necessario',
+        message: 'Voce precisa estar logado para ser avisado.',
+        type: 'auth',
+        actionLabel: 'Entrar',
         actionCallback: () => navigate('/entrar')
       });
       return;
     }
 
     try {
-      await api.post("/notify-me", {
+      await api.post('/notify-me', {
         id_produto: produto.id_produto || produto.id,
         tamanho: selectedSize
       });
 
       showAlertModal({
-        title: "Aviso ativado",
-        message: "Te avisaremos quando voltar ao estoque.",
-        type: "success"
+        title: 'Aviso ativado',
+        message: 'Te avisaremos quando voltar ao estoque.',
+        type: 'success'
       });
-
     } catch (err) {
-      console.error("Erro notify-me:", err?.response?.data || err);
-
       showAlertModal({
-        title: "Erro",
-        message: err?.response?.data?.message || "Não foi possível ativar o aviso.",
-        type: "error"
+        title: 'Erro',
+        message: err?.response?.data?.message || 'Nao foi possivel ativar o aviso.',
+        type: 'error'
       });
     }
   };
@@ -97,17 +90,17 @@ export default function ProductInfo({
 
       <div className={styles.accordions}>
         <div className={styles.accordion}>
-          <button 
+          <button
             className={styles.accordionHeader}
             onClick={() => toggleSection('description')}
           >
-            <span>Descrição</span>
+            <span>Descricao</span>
             <span>{expandedSection === 'description' ? '▲' : '▼'}</span>
           </button>
 
           {expandedSection === 'description' && (
             <div className={styles.accordionContent}>
-              <p>{produto.descricao || "Sem descrição disponível"}</p>
+              <p>{produto.descricao || 'Sem descricao disponivel'}</p>
             </div>
           )}
         </div>
@@ -121,8 +114,8 @@ export default function ProductInfo({
 
               return (
                 <button
-                  key={v.sku}
-                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ""} ${outOfStock ? styles.disabled : ""}`}
+                  key={v.sku || v.tamanho}
+                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''} ${outOfStock ? styles.disabled : ''}`}
                   onClick={() => setSelectedSize(v.tamanho)}
                 >
                   {v.tamanho}
@@ -134,26 +127,25 @@ export default function ProductInfo({
       )}
 
       <div className={styles.actions}>
-        
         <button
-          className={`${styles.buyBtn} ${(isSoldOut || isAllSoldOut) ? styles.soldOut : ""}`}
-          onClick={handleAddToCart}
+          className={`${styles.buyBtn} ${(isSoldOut || isAllSoldOut) ? styles.soldOut : ''}`}
+          onClick={handleBuyNow}
           disabled={!selectedSize || isSoldOut || isAllSoldOut}
         >
           {!selectedSize
-            ? "SELECIONE UM TAMANHO"
+            ? 'SELECIONE UM TAMANHO'
             : (isSoldOut || isAllSoldOut)
-            ? "ESGOTADO"
-            : "COMPRAR"}
+              ? 'ESGOTADO'
+              : (loading ? 'PROCESSANDO...' : 'COMPRAR')}
         </button>
 
         {!isSoldOut && !isAllSoldOut && (
           <button
             className={styles.cartBtn}
             onClick={handleAddToCart}
-            disabled={!selectedSize}
+            disabled={!selectedSize || loading}
           >
-            ADICIONAR AO CARRINHO
+            {loading ? 'ADICIONANDO...' : 'ADICIONAR AO CARRINHO'}
           </button>
         )}
 
@@ -165,8 +157,8 @@ export default function ProductInfo({
             AVISE-ME
           </button>
         )}
-
       </div>
     </div>
   );
 }
+

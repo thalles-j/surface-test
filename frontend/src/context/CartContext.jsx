@@ -82,7 +82,8 @@ export function CartProvider({ children }) {
   // ============================
   // ADD TO CART (ANTI BUG)
   // ============================
-  const addToCart = (product) => {
+  const addToCart = (product, options = {}) => {
+    const { openDrawer = true } = options;
     if (!user) {
       showAlertModal({
         title: "Login necessário",
@@ -127,7 +128,7 @@ export function CartProvider({ children }) {
     });
 
     // 🔥 SEMPRE ABRE O CARRINHO
-    openCart();
+    if (openDrawer) openCart();
   };
 
   // ============================

@@ -15,7 +15,12 @@ export const getSalesData = async (req, res) => {
       if (endDate) where.data_pedido.lte = new Date(endDate);
     }
     if (search && search.trim()) {
-      where.usuario = { nome: { contains: search.trim(), mode: 'insensitive' } };
+      const term = search.trim();
+      where.OR = [
+        { nome_cliente: { contains: term, mode: 'insensitive' } },
+        { usuario: { is: { nome: { contains: term, mode: 'insensitive' } } } },
+        { usuario: { is: { email: { contains: term, mode: 'insensitive' } } } },
+      ];
     }
 
     const orderBy = sortBy === 'total'
@@ -193,13 +198,37 @@ export const updateOrderItems = async (req, res) => {
     });
     if (!order) return erro(res, 'Pedido não encontrado', 404);
 
-    // Validate all products exist and have the variation
+    // Validate all products exist and normalize variation identifier
+    const normalizedItems = [];
     for (const item of items) {
-      if (!item.id_produto || !item.sku_variacao || !item.quantidade || !item.preco_unitario) {
-        return erro(res, 'Cada item deve ter id_produto, sku_variacao, quantidade e preco_unitario');
+      if (!item.id_produto || !item.quantidade || item.preco_unitario === undefined || item.preco_unitario === null) {
+        return erro(res, 'Cada item deve ter id_produto, quantidade e preco_unitario');
       }
-      const product = await prisma.produtos.findUnique({ where: { id_produto: item.id_produto } });
+      const product = await prisma.produtos.findUnique({ where: { id_produto: Number(item.id_produto) } });
       if (!product) return erro(res, `Produto ID ${item.id_produto} não encontrado`);
+
+      const variations = Array.isArray(product.variacoes_estoque) ? product.variacoes_estoque : [];
+      let sku = item.sku_variacao || null;
+
+      if (!sku && item.tamanho) {
+        const found = variations.find(v => v.tamanho === item.tamanho);
+        sku = found?.sku || item.tamanho;
+      }
+
+      if (!sku && variations.length === 1) {
+        sku = variations[0].sku || variations[0].tamanho || 'UNICO';
+      }
+
+      if (!sku) {
+        return erro(res, `Não foi possível identificar a variação do produto ID ${item.id_produto}`);
+      }
+
+      normalizedItems.push({
+        id_produto: Number(item.id_produto),
+        sku_variacao: String(sku),
+        quantidade: Number(item.quantidade),
+        preco_unitario: Number(item.preco_unitario),
+      });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -207,7 +236,7 @@ export const updateOrderItems = async (req, res) => {
       await tx.pedido_produtos.deleteMany({ where: { id_pedido: orderId } });
 
       // 2. Insert new items
-      for (const item of items) {
+      for (const item of normalizedItems) {
         await tx.pedido_produtos.create({
           data: {
             id_pedido: orderId,
@@ -220,7 +249,7 @@ export const updateOrderItems = async (req, res) => {
       }
 
       // 3. Recalculate subtotal and total
-      const subtotal = items.reduce((sum, i) => sum + (Number(i.preco_unitario) * i.quantidade), 0);
+      const subtotal = normalizedItems.reduce((sum, i) => sum + (Number(i.preco_unitario) * i.quantidade), 0);
       const desconto = Number(order.desconto || 0);
       const frete = Number(order.frete || 0);
       const total = subtotal - desconto + frete;
@@ -242,7 +271,7 @@ export const updateOrderItems = async (req, res) => {
       await tx.historico_pedidos.create({
         data: {
           id_pedido: orderId,
-          tipo: 'note',
+          tipo: 'items_change',
           descricao: `Itens do pedido atualizados. Novo subtotal: R$ ${(subtotal).toFixed(2)}`,
           autor: 'admin',
         },
@@ -261,16 +290,30 @@ export const updateOrderItems = async (req, res) => {
 export const updateOrderAddress = async (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
-    const { endereco_entrega } = req.body;
+    const { endereco_entrega, endereco } = req.body;
+    const nextAddress = endereco_entrega ?? endereco;
 
-    if (!endereco_entrega) return erro(res, 'endereco_entrega é obrigatório');
+    if (!nextAddress) return erro(res, 'endereco_entrega/endereco é obrigatório');
 
     const order = await prisma.pedidos.findUnique({ where: { id_pedido: orderId } });
     if (!order) return erro(res, 'Pedido não encontrado', 404);
 
-    const updated = await prisma.pedidos.update({
-      where: { id_pedido: orderId },
-      data: { endereco_entrega },
+    const updated = await prisma.$transaction(async (tx) => {
+      const orderUpdated = await tx.pedidos.update({
+        where: { id_pedido: orderId },
+        data: { endereco_entrega: nextAddress },
+      });
+
+      await tx.historico_pedidos.create({
+        data: {
+          id_pedido: orderId,
+          tipo: 'address_change',
+          descricao: 'Endereço de entrega atualizado',
+          autor: 'admin',
+        },
+      });
+
+      return orderUpdated;
     });
 
     return sucesso(res, { mensagem: 'Endereço atualizado', pedido: updated });
@@ -279,10 +322,23 @@ export const updateOrderAddress = async (req, res) => {
   }
 };
 
+export const getOrderHistory = async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    const history = await prisma.historico_pedidos.findMany({
+      where: { id_pedido: orderId },
+      orderBy: { criado_em: 'desc' },
+    });
+    return res.json(history);
+  } catch (error) {
+    return erro(res, error.message, 500);
+  }
+};
+
 // ===== CREATE IN-PERSON SALE =====
 export const createInPersonSale = async (req, res) => {
   try {
-    const { nome_cliente, metodo_pagamento, data_pedido, items, observacoes_internas } = req.body;
+    const { nome_cliente, email_cliente, metodo_pagamento, data_pedido, items, observacoes_internas } = req.body;
 
     if (!nome_cliente || !items || items.length === 0) {
       return erro(res, 'nome_cliente e items são obrigatórios');
@@ -311,16 +367,24 @@ export const createInPersonSale = async (req, res) => {
       (sum, item) => sum + (Number(item.preco_unitario || 0) * item.quantidade), 0
     ) || subtotal;
 
+    const cleanEmail = email_cliente ? String(email_cliente).trim().toLowerCase() : null;
+    const existingCustomer = cleanEmail
+      ? await prisma.usuarios.findUnique({ where: { email: cleanEmail } })
+      : null;
+
+    const customerName = existingCustomer?.nome || nome_cliente;
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create order
       const order = await tx.pedidos.create({
         data: {
+          id_usuario: existingCustomer?.id_usuario || null,
           status: 'finalizado',
           subtotal: Math.round(subtotal * 100) / 100,
           total: Math.round(total * 100) / 100,
           desconto: Math.round((subtotal - total) * 100) / 100 > 0 ? Math.round((subtotal - total) * 100) / 100 : 0,
           metodo_pagamento: metodo_pagamento || null,
-          nome_cliente,
+          nome_cliente: customerName,
           origem: 'presencial',
           observacoes_internas: observacoes_internas || null,
           data_pedido: data_pedido ? new Date(data_pedido) : new Date(),
@@ -358,7 +422,7 @@ export const createInPersonSale = async (req, res) => {
             sku_variacao: variation.sku || `${product.id_produto}-${variation.tamanho}`,
             tipo: 'venda',
             quantidade: quantity,
-            observacao: `Venda presencial - ${nome_cliente}`,
+            observacao: `Venda presencial - ${customerName}`,
           },
         });
       }
@@ -368,7 +432,7 @@ export const createInPersonSale = async (req, res) => {
         data: {
           id_pedido: order.id_pedido,
           tipo: 'note',
-          descricao: `Venda presencial registrada. Cliente: ${nome_cliente}`,
+          descricao: `Venda presencial registrada. Cliente: ${customerName}${cleanEmail ? ` (${cleanEmail})` : ''}`,
           autor: 'admin',
         },
       });

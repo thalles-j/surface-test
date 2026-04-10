@@ -8,6 +8,7 @@ import categoriesRoutes from "./categoriesRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import orderRoutes from "./orderRoutes.js";
 import checkoutRoutes from "./checkoutRoutes.js";
+import restockRoutes from "./restockRoutes.js";
 import { checkStoreActive } from "../middlewares/storeStatusMiddleware.js";
 
 const routes = (app) => {
@@ -21,6 +22,7 @@ const routes = (app) => {
     app.use("/api/upload", uploadRoutes);
     app.use("/api/admin", adminRoutes);
     app.use("/api/users", userRoutes);
+    app.use("/api/notify-me", restockRoutes);
 
     // Rotas públicas — bloqueadas quando loja está em manutenção
     app.use("/api/products", checkStoreActive, productsRoutes);

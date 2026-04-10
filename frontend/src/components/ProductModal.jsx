@@ -10,7 +10,7 @@ export default function ProductModal({ isOpen, onClose, produto }) {
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const { addToCart, showAlertModal, openCart } = useCart();
+  const { addToCart, showAlertModal } = useCart();
   const { user } = useContext(AuthContext);
 
   // RESET
@@ -110,8 +110,6 @@ export default function ProductModal({ isOpen, onClose, produto }) {
     });
 
     // 🔥 ABRE DIRETO (SEM TOGGLE BUGADO)
-    openCart();
-
     setLoading(false);
     onClose();
   };

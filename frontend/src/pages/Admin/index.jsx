@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
-// Import Components
 import Sidebar from '../../components/Admin/Sidebar/Sidebar';
 import Dashboard from '../../components/Admin/Dashboard/Dashboard';
 import Sales from '../../components/Admin/Sales/Sales';
@@ -21,6 +20,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, logout } = useAuth();
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const displayName = user?.nome || 'Admin';
   const displayEmail = user?.email || '';
@@ -36,7 +36,7 @@ export default function AdminPage() {
   };
 
   const renderContent = () => {
-    switch(activeTab) {
+    switch (activeTab) {
       case 'dashboard':
         return <Dashboard onCreateCollection={openCollectionsAndCreate} />;
       case 'sales':
@@ -62,7 +62,7 @@ export default function AdminPage() {
       case 'admin':
         return <AdminPanel />;
       default:
-        return <Dashboard />;
+        return <Dashboard onCreateCollection={openCollectionsAndCreate} />;
     }
   };
 
@@ -71,47 +71,66 @@ export default function AdminPage() {
       dashboard: 'Painel de Controle',
       sales: 'Gerenciar Vendas',
       'in-person-sales': 'Vendas Presenciais',
-      products: 'Catálogo de Produtos',
-      collections: 'Drops & Coleções',
+      products: 'Catalogo de Produtos',
+      collections: 'Drops e Colecoes',
       categories: 'Categorias',
-      inventory: 'Gestão de Estoque',
+      inventory: 'Gestao de Estoque',
       customers: 'Clientes',
-      analytics: 'Relatórios e Dados',
-      customization: 'Customização da Loja',
-      settings: 'Configurações',
+      analytics: 'Relatorios e Dados',
+      customization: 'Customizacao da Loja',
+      settings: 'Configuracoes',
       admin: 'Painel Administrativo',
     };
     return titles[activeTab] || 'Painel de Controle';
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex font-sans text-white">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen bg-[#0a0a0a] flex font-sans text-white overflow-x-hidden">
+      <div className="hidden xl:block">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
 
-      {/* MAIN CONTENT */}
-      <main className="ml-64 flex-1 p-12">
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h2 className="text-3xl font-black uppercase tracking-tight">
-              {getPageTitle()}
-            </h2>
-            <p className="text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
-              <div className="w-8 h-8 rounded-full bg-zinc-700"></div>
-              <div>
-                <p className="text-xs font-bold text-zinc-200">{displayName}</p>
-                <p className="text-[11px] text-zinc-500">{displayEmail}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="ml-2 p-1 text-zinc-500 hover:text-red-400 transition-colors"
-                title="Sair"
-              >
-                <LogOut size={16} />
-              </button>
+      {mobileSidebarOpen && (
+        <Sidebar
+          mobile
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onClose={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      <main className="w-full xl:ml-64 flex-1 p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden">
+        <div className="flex justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="xl:hidden p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200"
+              aria-label="Abrir menu"
+            >
+              <Menu size={18} />
+            </button>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+                {getPageTitle()}
+              </h2>
+              <p className="text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-zinc-900 px-3 py-2 rounded-lg border border-zinc-800 max-w-full">
+            <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0" />
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-xs font-bold text-zinc-200 truncate">{displayName}</p>
+              <p className="text-[11px] text-zinc-500 truncate">{displayEmail}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="ml-1 p-1 text-zinc-500 hover:text-red-400 transition-colors"
+              title="Sair"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
 
