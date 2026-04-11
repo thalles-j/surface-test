@@ -84,13 +84,14 @@ export default function Collections({ openCreate, onCloseCreate }) {
 
   const loadProducts = useCallback(async () => {
     try {
-      const res = await api.get('/products');
-      setProducts((res.data || []).map(p => ({ id: p.id_produto, name: p.nome_produto })));
+      const res = await api.get('/products?page=1&limit=1000&oculto=all&status=all');
+      const list = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+      setProducts(list.map((p) => ({ id: p.id_produto, name: p.nome_produto })));
     } catch (err) {
       console.error('Erro ao carregar produtos:', err);
       addToast('Erro ao carregar produtos', 'error');
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => { loadCollections(); }, [loadCollections]);
   useEffect(() => { loadProducts(); }, [loadProducts]);
@@ -190,11 +191,11 @@ export default function Collections({ openCreate, onCloseCreate }) {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* SEARCH + FILTERS */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-6">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex-1 min-w-[200px] relative">
+          <div className="flex-1 min-w-[0] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
             <input
               type="text"
@@ -207,7 +208,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
+            className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
           >
             <option value="todos">Todos os Status</option>
             <option value="Ativo">Ativo</option>
@@ -218,7 +219,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
           <select
             value={lockedFilter}
             onChange={(e) => setLockedFilter(e.target.value)}
-            className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
+            className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
           >
             <option value="todos">Lock: Todos</option>
             <option value="true">Travadas</option>
@@ -228,12 +229,12 @@ export default function Collections({ openCreate, onCloseCreate }) {
 
         {/* Bulk actions */}
         {selectedIds.length > 0 && (
-          <div className="mt-4 flex items-center gap-3 p-3 bg-zinc-800 rounded-lg border border-zinc-700">
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-zinc-800 rounded-lg border border-zinc-700">
             <span className="text-sm font-bold text-zinc-300">{selectedIds.length} selecionada(s)</span>
             <select
               value={bulkAction}
               onChange={(e) => setBulkAction(e.target.value)}
-              className="px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white"
+              className="w-full sm:w-auto min-h-[40px] px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white"
             >
               <option value="">Ação em massa...</option>
               {BULK_ACTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
@@ -241,13 +242,13 @@ export default function Collections({ openCreate, onCloseCreate }) {
             <button
               onClick={() => bulkAction && setConfirmBulk(true)}
               disabled={!bulkAction}
-              className="px-4 py-1.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-zinc-200 disabled:opacity-50"
+              className="w-full sm:w-auto min-h-[40px] px-4 py-1.5 bg-white text-black text-sm font-bold rounded-lg hover:bg-zinc-200 disabled:opacity-50"
             >
               Aplicar
             </button>
             <button
               onClick={() => { setSelectedIds([]); setBulkAction(''); }}
-              className="px-3 py-1.5 text-sm text-zinc-500 hover:text-white"
+              className="w-full sm:w-auto min-h-[40px] px-3 py-1.5 text-sm text-zinc-500 hover:text-white"
             >
               Limpar
             </button>
@@ -258,7 +259,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
       {loading && <div className="p-4 text-center text-zinc-500 text-sm">Carregando...</div>}
 
       {/* GRID DE COLEÇÕES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
         {collections.map((c) => {
           const colId = c.id_colecao || c.id;
           const isSelected = selectedIds.includes(colId);
@@ -286,18 +287,18 @@ export default function Collections({ openCreate, onCloseCreate }) {
                 </div>
               </div>
 
-              <div className="p-6">
-                <h3 className="font-bold text-lg mb-2 text-white">{c.nome || c.name}</h3>
+              <div className="p-4 sm:p-6">
+                <h3 className="font-bold text-base sm:text-lg mb-2 text-white">{c.nome || c.name}</h3>
 
                 <div className="flex items-center gap-2 text-sm text-zinc-500 mb-4">
                   <Calendar size={14} />
                   {c.launchDate ? new Date(c.launchDate).toLocaleDateString('pt-BR') : c.criado_em ? new Date(c.criado_em).toLocaleDateString('pt-BR') : ''}
                 </div>
 
-                <div className="flex gap-2 pt-4 border-t border-zinc-800">
+                <div className="flex gap-2 pt-4 flex-wrap border-t border-zinc-800">
                   <button
                     onClick={() => handleToggleLock(colId)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold text-sm transition-colors ${c.locked
+                    className={`flex-1 flex items-center justify-center gap-2 min-h-[40px] py-2 rounded-lg font-bold text-sm transition-colors ${c.locked
                       ? 'bg-red-950 text-red-400 hover:bg-red-900'
                       : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                     }`}
@@ -307,13 +308,13 @@ export default function Collections({ openCreate, onCloseCreate }) {
                   </button>
                   <button
                     onClick={() => openEditForm(c)}
-                    className="p-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 rounded-lg transition-colors"
+                    className="min-h-[40px] min-w-[40px] p-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 rounded-lg transition-colors"
                   >
                     <Edit size={16} />
                   </button>
                   <button
                     onClick={() => handleDeleteCollection(colId)}
-                    className="p-2 text-red-400 hover:bg-red-950 rounded-lg transition-colors"
+                    className="min-h-[40px] min-w-[40px] p-2 text-red-400 hover:bg-red-950 rounded-lg transition-colors"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -326,7 +327,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
         {/* ADD NEW BUTTON */}
         <button
           onClick={() => setShowForm(true)}
-          className="border-2 border-dashed border-zinc-700 rounded-xl p-8 flex items-center justify-center hover:border-white transition-colors group min-h-[250px]"
+          className="border-2 border-dashed border-zinc-700 rounded-xl p-8 flex items-center justify-center hover:border-white transition-colors group min-h-[220px] sm:min-h-[250px]"
         >
           <div className="text-center">
             <Plus size={32} className="mx-auto mb-2 text-zinc-500 group-hover:text-white transition-colors" />
@@ -362,7 +363,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block text-zinc-300">Data de Lançamento</label>
               <input
@@ -400,7 +401,7 @@ export default function Collections({ openCreate, onCloseCreate }) {
 
           <div>
             <label className="text-sm font-medium mb-2 block text-zinc-300">Produtos na Coleção</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-zinc-700 rounded-lg p-2 bg-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-zinc-700 rounded-lg p-2 bg-zinc-800">
               {products.map(prod => (
                 <label key={prod.id} className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={selectedProducts.includes(prod.id)} onChange={(e) => {
@@ -413,16 +414,16 @@ export default function Collections({ openCreate, onCloseCreate }) {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4 border-t border-zinc-800">
+          <div className="flex gap-2 pt-4 flex-wrap border-t border-zinc-800">
             <button
               onClick={handleAddCollection}
-              className="flex-1 bg-white text-black py-3 font-bold hover:bg-zinc-200 transition-colors rounded-lg"
+              className="flex-1 min-h-[44px] bg-white text-black py-3 font-bold hover:bg-zinc-200 transition-colors rounded-lg"
             >
               {editingId ? 'Atualizar Coleção' : 'Criar Coleção'}
             </button>
             <button
               onClick={() => { setShowForm(false); setEditingId(null); if (onCloseCreate) onCloseCreate(); }}
-              className="px-6 py-3 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 transition-colors rounded-lg"
+              className="px-6 min-h-[44px] py-3 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 transition-colors rounded-lg"
             >
               Cancelar
             </button>
@@ -454,3 +455,4 @@ export default function Collections({ openCreate, onCloseCreate }) {
     </div>
   );
 }
+

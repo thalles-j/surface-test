@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Menu } from 'lucide-react';
+import { ExternalLink, LogOut, Menu } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
 import Sidebar from '../../components/Admin/Sidebar/Sidebar';
@@ -99,9 +99,20 @@ export default function AdminPage() {
         />
       )}
 
-      <main className="w-full xl:ml-64 flex-1 p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden">
-        <div className="flex justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-start gap-3">
+      <main className="w-full xl:ml-64 flex-1 p-3 sm:p-5 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden">
+        <div className="flex flex-col gap-4 mb-6 sm:mb-8">
+          <a
+            href="/shop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-fit items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm font-semibold"
+          >
+            <ExternalLink size={16} />
+            Voltar para loja
+          </a>
+
+          <div className="flex justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-start gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
@@ -110,27 +121,28 @@ export default function AdminPage() {
             >
               <Menu size={18} />
             </button>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight break-words">
                 {getPageTitle()}
               </h2>
-              <p className="text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
+              <p className="text-xs sm:text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
             </div>
-          </div>
+            </div>
 
-          <div className="flex items-center gap-3 bg-zinc-900 px-3 py-2 rounded-lg border border-zinc-800 max-w-full">
-            <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0" />
-            <div className="min-w-0 hidden sm:block">
-              <p className="text-xs font-bold text-zinc-200 truncate">{displayName}</p>
-              <p className="text-[11px] text-zinc-500 truncate">{displayEmail}</p>
+            <div className="flex items-center gap-2 sm:gap-3 bg-zinc-900 px-2.5 sm:px-3 py-2 rounded-lg border border-zinc-800 max-w-full">
+              <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0" />
+              <div className="min-w-0 hidden sm:block">
+                <p className="text-xs font-bold text-zinc-200 truncate">{displayName}</p>
+                <p className="text-[11px] text-zinc-500 truncate">{displayEmail}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="ml-0.5 sm:ml-1 p-1 text-zinc-500 hover:text-red-400 transition-colors"
+                title="Sair"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="ml-1 p-1 text-zinc-500 hover:text-red-400 transition-colors"
-              title="Sair"
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         </div>
 

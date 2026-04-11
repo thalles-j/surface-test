@@ -9,7 +9,7 @@ export const getCollections = async (req, res) => {
     if (search && search.trim()) {
       where.nome = { contains: search.trim(), mode: 'insensitive' };
     }
-    if (statusFilter && statusFilter !== 'all') where.status = statusFilter;
+    if (statusFilter && statusFilter !== 'all' && statusFilter !== 'todos') where.status = statusFilter;
     if (locked === 'true') where.locked = true;
     else if (locked === 'false') where.locked = false;
 
@@ -78,12 +78,12 @@ export const getCollections = async (req, res) => {
 
 export const createCollection = async (req, res) => {
   try {
-    const { nome, descricao, status, productIds } = req.body;
+    const { nome, descricao, status, locked, productIds } = req.body;
     const data = {
       nome,
       descricao: descricao || null,
       status: status || 'Planejado',
-      locked: false,
+      locked: locked === true,
     };
     if (Array.isArray(productIds) && productIds.length > 0) {
       data.produtos = {

@@ -26,6 +26,8 @@ const STATUS_LABELS = {
   enviado: 'Enviado',
   finalizado: 'Finalizado',
   cancelado: 'Cancelado',
+  processando: 'Processando',
+  concluido: 'Concluído',
 };
 
 const STATUS_COLORS = {
@@ -35,6 +37,8 @@ const STATUS_COLORS = {
   enviado: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   finalizado: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   cancelado: 'bg-rose-100 text-rose-700 border-rose-200',
+  processando: 'bg-sky-100 text-sky-700 border-sky-200',
+  concluido: 'bg-teal-100 text-teal-700 border-teal-200',
 };
 
 const STATUS_DOT = {
@@ -44,6 +48,8 @@ const STATUS_DOT = {
   enviado: 'bg-indigo-400',
   finalizado: 'bg-emerald-400',
   cancelado: 'bg-rose-400',
+  processando: 'bg-sky-400',
+  concluido: 'bg-teal-400',
 };
 
 const PAGE_SIZE = 15;
@@ -200,18 +206,20 @@ export default function Sales() {
     try {
       const cleanId = String(orderId).replace('#', ''); 
       const res = await api.patch(`/admin/orders/${cleanId}/status`, { status: String(newStatus) });
+      const nextStatus = res?.data?.pedido?.status || String(newStatus);
       toast.success('Status atualizado com sucesso');
-      setOrders(prev => prev.map(o => o.rawId === orderId ? { ...o, status: newStatus } : o));
+      setOrders(prev => prev.map(o => o.rawId === orderId ? { ...o, status: nextStatus } : o));
       if (tempOrder && tempOrder.rawId === orderId) {
-        setTempOrder(prev => ({ ...prev, status: newStatus }));
-        if (res.data?.dados?.historico) setOrderHistory(res.data.dados.historico);
+        setTempOrder(prev => ({ ...prev, status: nextStatus }));
+        if (Array.isArray(res?.data?.pedido?.historico)) setOrderHistory(res.data.pedido.historico);
       }
+      loadOrders();
     } catch (err) {
       toast.error(err.response?.data?.mensagem || 'Erro ao alterar status');
     } finally {
       setStatusSaving(false);
     }
-  }, [tempOrder, toast]);
+  }, [tempOrder, toast, loadOrders]);
 
   const handleUpdateAddress = async () => {
     setAddressSaving(true);
@@ -299,7 +307,7 @@ export default function Sales() {
   const formatCurrency = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 p-4 md:p-10 font-sans animate-in fade-in duration-500">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 p-3 sm:p-4 md:p-10 font-sans animate-in fade-in duration-500">
       <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Dashboard Cards */}
@@ -312,7 +320,7 @@ export default function Sales() {
           ].map((card, i) => (
             <div key={i} className="bg-[#111111] p-7 rounded-[24px] border border-slate-800 shadow-xl">
               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">{card.label}</p>
-              <h3 className="text-2xl font-black text-white">{card.val}</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-white break-words">{card.val}</h3>
             </div>
           ))}
         </div>
@@ -330,7 +338,7 @@ export default function Sales() {
               />
             </div>
             <select
-              className="bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold text-sm"
+              className="w-full md:w-auto bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold text-sm"
               value={selectedStatus}
               onChange={e => setSelectedStatus(e.target.value)}
             >
@@ -341,7 +349,7 @@ export default function Sales() {
             </select>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm border transition-all ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-200 text-slate-600'}`}
+              className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm border transition-all ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-200 text-slate-600'}`}
             >
               <Filter size={18} /> Filtros Avançados
             </button>
@@ -367,7 +375,7 @@ export default function Sales() {
           </h2>
           <div className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
+              <table className="w-full text-left border-collapse min-w-[760px]">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr>
                     <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
@@ -394,7 +402,7 @@ export default function Sales() {
                           value={o.status}
                           onChange={(e) => executeStatusChange(o.rawId, e.target.value)}
                           disabled={statusSaving}
-                          className={`px-4 py-1.5 rounded-full text-[10px] font-black border uppercase appearance-none text-center cursor-pointer focus:outline-none transition-colors ${STATUS_COLORS[o.status] || 'bg-slate-100 text-slate-500 border-slate-200'}`}
+                          className={`min-h-[40px] px-3 sm:px-4 py-2 sm:py-1.5 rounded-full text-[11px] sm:text-[10px] font-black border uppercase appearance-none text-center cursor-pointer focus:outline-none transition-colors ${STATUS_COLORS[o.status] || 'bg-slate-100 text-slate-500 border-slate-200'}`}
                         >
                           {Object.entries(STATUS_LABELS).map(([key, label]) => (
                             <option key={key} value={key} className="bg-white text-slate-800">{label}</option>
@@ -411,11 +419,11 @@ export default function Sales() {
               </table>
             </div>
           </div>
-          <div className="flex justify-between items-center px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-2 sm:px-4">
             <p className="text-xs font-bold text-slate-400 uppercase">Página {page} de {totalPages}</p>
-            <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-5 py-2 border border-slate-200 rounded-xl text-xs font-black disabled:opacity-30">Anterior</button>
-              <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-5 py-2 bg-slate-900 text-white rounded-xl text-xs font-black disabled:opacity-30">Próxima</button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button disabled={page === 1} onClick={() => setPage(page - 1)} className="flex-1 sm:flex-none min-h-[40px] px-4 sm:px-5 py-2 border border-slate-200 rounded-xl text-xs font-black disabled:opacity-30">Anterior</button>
+              <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="flex-1 sm:flex-none min-h-[40px] px-4 sm:px-5 py-2 bg-slate-900 text-white rounded-xl text-xs font-black disabled:opacity-30">Próxima</button>
             </div>
           </div>
         </div>
@@ -434,7 +442,7 @@ export default function Sales() {
           </div>
           <div className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+              <table className="w-full text-left border-collapse min-w-[640px]">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr><th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Pedido</th><th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Cliente</th><th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase">Valor</th><th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase">Data</th></tr>
                 </thead>
@@ -463,7 +471,7 @@ export default function Sales() {
           
           <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* HEADER DO MODAL */}
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div>
                 <h2 className="text-xl font-black text-slate-900 uppercase">Pedido {tempOrder.id}</h2>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID do Sistema: {tempOrder.rawId}</p>
@@ -472,7 +480,7 @@ export default function Sales() {
             </div>
 
             {/* CORPO DO MODAL */}
-            <div className="p-6 md:p-8 space-y-8 overflow-y-auto grow">
+            <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 overflow-y-auto grow">
               
               {/* LINHA 1: CLIENTE E ENDEREÇO */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -497,14 +505,14 @@ export default function Sales() {
 
                 {/* Endereço */}
                 <div className="space-y-2 h-full flex flex-col">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
                     <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest"><MapPin size={12}/> Endereço</p>
                     {!isEditingAddress ? (
-                      <button onClick={() => { setIsEditingAddress(true); setEditedAddress(tempOrder.endereco); }} className="text-[10px] font-bold text-blue-600 hover:underline">EDITAR</button>
+                      <button onClick={() => { setIsEditingAddress(true); setEditedAddress(tempOrder.endereco); }} className="min-h-[36px] px-2 text-[10px] font-bold text-blue-600 hover:underline">EDITAR</button>
                     ) : (
-                      <div className="flex gap-2">
-                        <button onClick={handleUpdateAddress} disabled={addressSaving} className="text-[10px] font-bold text-emerald-600">SALVAR</button>
-                        <button onClick={() => setIsEditingAddress(false)} className="text-[10px] font-bold text-rose-600">CANCELAR</button>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button onClick={handleUpdateAddress} disabled={addressSaving} className="min-h-[36px] px-2 text-[10px] font-bold text-emerald-600">SALVAR</button>
+                        <button onClick={() => setIsEditingAddress(false)} className="min-h-[36px] px-2 text-[10px] font-bold text-rose-600">CANCELAR</button>
                       </div>
                     )}
                   </div>
@@ -520,14 +528,14 @@ export default function Sales() {
 
               {/* LINHA 2: ITENS DO PEDIDO */}
               <div className="space-y-6 pt-6 border-t border-slate-100">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap justify-between items-center gap-2">
                   <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest"><Package size={12}/> Produtos do Pedido</p>
                   {!isEditingItems ? (
-                    <button onClick={() => setIsEditingItems(true)} className="text-[10px] font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all uppercase tracking-widest">Alterar / Trocar Itens</button>
+                    <button onClick={() => setIsEditingItems(true)} className="min-h-[40px] text-[10px] font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all uppercase tracking-widest">Alterar / Trocar Itens</button>
                   ) : (
-                    <div className="flex gap-2">
-                      <button onClick={() => { setIsEditingItems(false); loadOrders(); }} className="text-[10px] font-bold text-slate-400 hover:bg-slate-100 px-3 py-1.5 rounded-lg uppercase tracking-widest">Cancelar Edição</button>
-                      <button onClick={handleUpdateItems} className="text-[10px] font-black text-white bg-slate-900 hover:bg-black px-4 py-1.5 rounded-lg shadow-sm uppercase tracking-widest">Salvar Itens</button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button onClick={() => { setIsEditingItems(false); loadOrders(); }} className="min-h-[40px] text-[10px] font-bold text-slate-400 hover:bg-slate-100 px-3 py-1.5 rounded-lg uppercase tracking-widest">Cancelar Edição</button>
+                      <button onClick={handleUpdateItems} className="min-h-[40px] text-[10px] font-black text-white bg-slate-900 hover:bg-black px-4 py-1.5 rounded-lg shadow-sm uppercase tracking-widest">Salvar Itens</button>
                     </div>
                   )}
                 </div>
@@ -604,7 +612,7 @@ export default function Sales() {
                 <div className="flex justify-end pt-4">
                   <div className="text-right bg-slate-900 px-6 py-4 rounded-[24px] shadow-lg">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor Final</p>
-                    <p className="text-2xl font-black text-white">{formatCurrency(tempOrder.total)}</p>
+                    <p className="text-xl sm:text-2xl font-black text-white break-words">{formatCurrency(tempOrder.total)}</p>
                   </div>
                 </div>
               </div>
@@ -639,8 +647,8 @@ export default function Sales() {
             </div>
 
             {/* FOOTER DO MODAL */}
-            <div className="p-6 bg-white border-t border-slate-100 shrink-0">
-              <button onClick={() => setViewingOrder(null)} className="w-full py-4 bg-slate-100 border border-slate-200 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+            <div className="p-4 sm:p-6 bg-white border-t border-slate-100 shrink-0">
+              <button onClick={() => setViewingOrder(null)} className="w-full min-h-[44px] py-3 sm:py-4 bg-slate-100 border border-slate-200 text-slate-600 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
                 <CheckCircle size={18} /> FECHAR DETALHES
               </button>
             </div>
@@ -650,3 +658,4 @@ export default function Sales() {
     </div>
   );
 }
+

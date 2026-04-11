@@ -25,10 +25,10 @@ const EMPTY_DASHBOARD_DATA = {
 };
 
 const StatCard = ({ title, value, change, isPositive }) => (
-  <div className="bg-white p-6 border border-zinc-200 rounded-xl hover:border-zinc-300 shadow-sm transition-all duration-300">
-    <p className="text-zinc-500 text-sm font-medium">{title}</p>
-    <div className="flex items-end justify-between mt-3">
-      <h3 className="text-3xl font-bold text-zinc-900">{value}</h3>
+  <div className="bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl hover:border-zinc-300 shadow-sm transition-all duration-300">
+    <p className="text-zinc-500 text-xs sm:text-sm font-medium">{title}</p>
+    <div className="flex items-end justify-between gap-2 mt-3">
+      <h3 className="text-xl sm:text-2xl sm:text-3xl font-bold text-zinc-900 break-words">{value}</h3>
       {change && (
         <span className={`flex items-center gap-1 text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
           {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
@@ -128,7 +128,7 @@ export default function Dashboard({ onCreateCollection }) {
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* STAT CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Faturamento (Mês)"
           value={`R$ ${dashboardData.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -149,18 +149,18 @@ export default function Dashboard({ onCreateCollection }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* TOP PRODUTOS */}
-        <div className="bg-white p-8 border border-zinc-200 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg text-zinc-900">Produtos Mais Vendidos</h3>
+        <div className="bg-white p-4 sm:p-8 border border-zinc-200 rounded-xl shadow-sm">
+          <div className="flex justify-between items-center gap-3 mb-6">
+            <h3 className="font-bold text-base sm:text-lg text-zinc-900">Produtos Mais Vendidos</h3>
             <button className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Ver tudo →</button>
           </div>
           <div className="space-y-4">
             {dashboardData.topProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between pb-4 border-b border-zinc-100 last:border-0">
-                <div className="flex items-center gap-3">
+              <div key={p.id} className="flex items-center justify-between gap-3 pb-4 border-b border-zinc-100 last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
                   <img src={p.image || "/placeholder-prod.png"} alt={p.name} className="w-12 h-12 object-cover rounded-lg bg-zinc-100" />
-                  <div>
-                    <p className="text-sm font-bold text-zinc-900">{p.name}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-zinc-900 truncate">{p.name}</p>
                     <span className="text-[10px] bg-zinc-100 px-2 py-1 rounded font-mono text-zinc-500">{p.sku}</span>
                   </div>
                 </div>
@@ -174,14 +174,14 @@ export default function Dashboard({ onCreateCollection }) {
         </div>
 
         {/* STATUS DO DROP */}
-        <div className="bg-white p-8 border border-zinc-200 rounded-xl shadow-sm">
-          <h3 className="font-bold text-lg mb-6 text-zinc-900">Status do Próximo Drop</h3>
+        <div className="bg-white p-4 sm:p-8 border border-zinc-200 rounded-xl shadow-sm">
+          <h3 className="font-bold text-base sm:text-lg mb-6 text-zinc-900">Status do Próximo Drop</h3>
           <div className="flex flex-col items-center justify-center py-8">
             <div className={`p-4 rounded-full mb-4 ${isDropLocked ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
               {isDropLocked ? <Lock size={32} /> : <Unlock size={32} />}
             </div>
-            <p className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-2">Modo Coming Soon</p>
-            <h4 className="text-2xl font-bold mb-6 text-zinc-900">{isDropLocked ? 'Site Travado' : 'Site Aberto'}</h4>
+            <p className="text-xs sm:text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-2 text-center">Modo Coming Soon</p>
+            <h4 className="text-xl sm:text-2xl font-bold mb-6 text-zinc-900 text-center">{isDropLocked ? 'Site Travado' : 'Site Aberto'}</h4>
             <button
               onClick={async () => {
                 try {
@@ -192,7 +192,7 @@ export default function Dashboard({ onCreateCollection }) {
                   toast.error('Erro ao alternar status');
                 }
               }}
-              className={`px-8 py-3 rounded-lg text-sm font-bold shadow-sm transition-all ${
+              className={`w-full sm:w-auto px-5 sm:px-8 py-3 rounded-lg text-sm font-bold shadow-sm transition-all ${
                 isDropLocked ? 'bg-zinc-900 text-white hover:bg-black' : 'border-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50'
               }`}
             >
@@ -204,30 +204,30 @@ export default function Dashboard({ onCreateCollection }) {
 
       {/* ANALYTICS: ACESSOS E CATEGORIAS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-white p-6 border border-zinc-200 rounded-xl flex items-center gap-4 shadow-sm">
+        <div className="lg:col-span-1 bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl flex items-center gap-3 sm:gap-4 shadow-sm">
           <div className="p-3 bg-blue-50 rounded-lg"><Eye size={24} className="text-blue-600" /></div>
           <div>
             <p className="text-zinc-500 text-sm font-medium">Total de Acessos</p>
-            <h3 className="text-3xl font-bold text-zinc-900">{visitsCount.toLocaleString('pt-BR')}</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold text-zinc-900">{visitsCount.toLocaleString('pt-BR')}</h3>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white p-6 border border-zinc-200 rounded-xl shadow-sm">
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl shadow-sm">
           <h3 className="text-sm font-bold mb-4 text-zinc-900 uppercase tracking-wider">Vendas por Categoria</h3>
           <div className="space-y-3">
             {categorySales.map((cat) => {
               const maxValue = Math.max(...categorySales.map(c => Number(c.value || 0)), 1);
               const value = Number(cat.value || 0);
               return (
-                <div key={cat.name} className="flex items-center gap-4">
-                  <div className="w-24 text-xs font-bold text-zinc-500 truncate">{cat.name}</div>
+                <div key={cat.name} className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-20 sm:w-24 text-[11px] sm:text-xs font-bold text-zinc-500 truncate">{cat.name}</div>
                   <div className="flex-1 bg-zinc-100 rounded-full h-3 overflow-hidden">
                     <div 
                       className="bg-zinc-900 h-full rounded-full transition-all duration-700" 
                       style={{ width: `${(value / maxValue) * 100}%` }} 
                     />
                   </div>
-                  <div className="text-right text-xs font-bold text-zinc-900 w-20">
+                  <div className="text-right text-[11px] sm:text-xs font-bold text-zinc-900 w-16 sm:w-20">
                     R$ {value.toLocaleString('pt-BR')}
                   </div>
                 </div>
@@ -239,11 +239,11 @@ export default function Dashboard({ onCreateCollection }) {
 
       {/* PEDIDOS RECENTES */}
       <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 bg-zinc-50/50">
+        <div className="p-4 sm:p-6 border-b border-zinc-100 bg-zinc-50/50">
           <h3 className="font-bold flex items-center gap-2 text-zinc-900"><Clock size={18} /> Pedidos Recentes</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full min-w-[680px] text-sm text-left">
             <thead>
               <tr className="text-zinc-400 text-[10px] uppercase tracking-widest border-b border-zinc-100">
                 <th className="px-6 py-4 font-semibold">ID</th>
@@ -276,7 +276,7 @@ export default function Dashboard({ onCreateCollection }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10">
         <button 
           onClick={onCreateCollection}
-          className="flex items-center justify-between p-6 bg-zinc-900 text-white rounded-xl hover:bg-black transition-all group"
+          className="flex items-center justify-between p-4 sm:p-6 bg-zinc-900 text-white rounded-xl hover:bg-black transition-all group"
         >
           <div className="text-left">
             <h4 className="font-bold">Criar Coleção</h4>
@@ -285,7 +285,7 @@ export default function Dashboard({ onCreateCollection }) {
           <TrendingUp className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
         </button>
 
-        <button className="flex items-center justify-between p-6 bg-white border-2 border-zinc-100 rounded-xl hover:border-zinc-900 transition-all group">
+        <button className="flex items-center justify-between p-4 sm:p-6 bg-white border-2 border-zinc-100 rounded-xl hover:border-zinc-900 transition-all group">
           <div className="text-left">
             <h4 className="font-bold text-zinc-900">Disparar Campanha</h4>
             <p className="text-xs text-zinc-500">Notificar via E-mail/WhatsApp</p>
@@ -297,3 +297,4 @@ export default function Dashboard({ onCreateCollection }) {
     </div>
   );
 }
+
