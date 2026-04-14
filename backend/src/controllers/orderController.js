@@ -4,9 +4,9 @@ import { buildWhatsAppMessage, generateWhatsAppLink } from '../helpers/whatsapp.
 
 export async function createOrderController(req, res, next) {
   try {
-    const userId = req.user.id;
-    const { items, codigo_cupom } = req.body;
-    const order = await createOrder(userId, items, codigo_cupom || null);
+    const userId = req.user?.id || null;
+    const { items, codigo_cupom, cliente } = req.body;
+    const order = await createOrder(userId, items, codigo_cupom || null, cliente || {});
 
     // WhatsApp — gera link (nunca falha o pedido)
     let whatsappUrl = null;

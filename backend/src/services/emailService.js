@@ -103,7 +103,7 @@ function safeSend(fn) {
 // ─── Envios de alto nível ────────────────────────────
 
 export const sendOrderConfirmation = safeSend(async (order) => {
-  const email = order.email || order.usuario?.email;
+  const email = order.email || order.usuario?.email || order.endereco_entrega?.email || order.endereco_entrega?.contato?.email;
   const name = order.nome_cliente || order.usuario?.nome;
 
   const items = (order.pedidoProdutos || []).map(pp => ({
@@ -127,7 +127,7 @@ export const sendOrderConfirmation = safeSend(async (order) => {
 });
 
 export const sendOrderStatusUpdate = safeSend(async ({ order, statusDe, statusPara }) => {
-  const email = order.email || order.usuario?.email;
+  const email = order.email || order.usuario?.email || order.endereco_entrega?.email || order.endereco_entrega?.contato?.email;
   const name = order.nome_cliente || order.usuario?.nome;
 
   const { subject, html } = templates.orderStatusUpdate({

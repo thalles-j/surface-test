@@ -1,24 +1,50 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import styles from "./style.module.css";
 import useAuth from "../../hooks/useAuth";
-import { apiRegister } from "../../services/auth"; 
+import {
+  apiRegister,
+  apiForgotPassword,
+  apiResetPassword,
+  apiFirstAccessStatus,
+} from "../../services/auth";
+
+const MODES = {
+  LOGIN: "login",
+  FORGOT: "forgot",
+  FIRST_ACCESS: "first-access",
+  RESET: "reset",
+};
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [searchParams] = useSearchParams();
 
-  // Estados login
+  const initialMode = useMemo(() => {
+    const modeParam = searchParams.get("modo");
+    const token = searchParams.get("token");
+    if (modeParam === "reset" && token) return MODES.RESET;
+    if (modeParam === "first-access") return MODES.FIRST_ACCESS;
+    if (modeParam === "forgot") return MODES.FORGOT;
+    return MODES.LOGIN;
+  }, [searchParams]);
+
+  const resetToken = searchParams.get("token") || "";
+  const emailFromQuery = searchParams.get("email") || "";
+
+  const [mode, setMode] = useState(initialMode);
+
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginMsg, setLoginMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estados registro
   const [registerData, setRegisterData] = useState({
     nome: "",
     sobrenome: "",
     email: "",
+    telefone: "",
     senha: "",
     confirmarSenha: "",
   });
@@ -26,100 +52,175 @@ export default function Login() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [senhaConfere, setSenhaConfere] = useState(true);
 
-  // Funções de validação
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMsg, setForgotMsg] = useState("");
+
+  const [resetData, setResetData] = useState({ novaSenha: "", confirmarSenha: "" });
+  const [resetMsg, setResetMsg] = useState("");
+
+  const [firstAccessStatus, setFirstAccessStatus] = useState(null);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
+
+  useEffect(() => {
+    if (!emailFromQuery) return;
+    setRegisterData((prev) => ({ ...prev, email: emailFromQuery }));
+    setLoginData((prev) => ({ ...prev, email: emailFromQuery }));
+  }, [emailFromQuery]);
+
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (senha) => senha.trim().length >= 7;
 
-  // --- FUNÇÃO DE LOGIN ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMsg("");
 
     if (!validateEmail(loginData.email)) {
-      setLoginMsg("Email inválido.");
+      setLoginMsg("Email invalido.");
       return;
     }
 
     if (!validatePassword(loginData.senha)) {
-      setLoginMsg("Senha deve ter no mínimo 7 caracteres.");
+      setLoginMsg("Senha deve ter no minimo 7 caracteres.");
       return;
     }
 
     try {
-      const user = await login(loginData);
+      const user = await login({
+        email: loginData.email.trim().toLowerCase(),
+        senha: loginData.senha,
+      });
 
-      // Força conversão para número para garantir
       const roleId = Number(user.role);
-
-      setLoginMsg("Login realizado com sucesso!");
 
       if (roleId === 1) {
         navigate("/admin");
       } else {
-        navigate("/account"); // ou "/" se preferir
+        navigate("/account");
       }
-
     } catch (error) {
-      // Axios geralmente retorna a mensagem em error.response.data.mensagem
-      const msg = error.response?.data?.mensagem || error.message || "Email ou senha inválidos.";
+      const msg = error.response?.data?.mensagem || error.message || "Email ou senha invalidos.";
       setLoginMsg(msg);
     }
   };
 
-  // --- FUNÇÃO DE REGISTRO (COM AXIOS) ---
   const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterMsg("");
 
-    // Validações locais
     if (!registerData.nome.trim()) {
-      setRegisterMsg("Nome obrigatório.");
+      setRegisterMsg("Nome obrigatorio.");
       return;
     }
     if (!registerData.sobrenome.trim()) {
-      setRegisterMsg("Sobrenome obrigatório.");
+      setRegisterMsg("Sobrenome obrigatorio.");
       return;
     }
     if (!validateEmail(registerData.email)) {
-      setRegisterMsg("Email inválido.");
+      setRegisterMsg("Email invalido.");
+      return;
+    }
+    if (!registerData.telefone || registerData.telefone.replace(/\D/g, "").length < 10) {
+      setRegisterMsg("Telefone invalido.");
       return;
     }
     if (!validatePassword(registerData.senha)) {
-      setRegisterMsg("Senha deve ter no mínimo 7 caracteres.");
+      setRegisterMsg("Senha deve ter no minimo 7 caracteres.");
       return;
     }
     if (!senhaConfere) {
-      setRegisterMsg("As senhas não conferem.");
+      setRegisterMsg("As senhas nao conferem.");
       return;
     }
 
     const nomeCompleto = `${registerData.nome.trim()} ${registerData.sobrenome.trim()}`.trim();
 
     try {
-      // Substituímos o fetch pelo apiRegister (que usa o Axios configurado)
       await apiRegister({
         nome: nomeCompleto,
-        email: registerData.email.trim(),
+        email: registerData.email.trim().toLowerCase(),
         senha: registerData.senha,
-        telefone: "11999999999", // Placeholder (ajuste se tiver campo de telefone no form)
+        telefone: registerData.telefone,
       });
 
-      setRegisterMsg("Cadastro realizado com sucesso! Faça login.");
-      
-      // Limpa o formulário
-      setRegisterData({
-        nome: "",
-        sobrenome: "",
-        email: "",
-        senha: "",
-        confirmarSenha: "",
-      });
-      setSenhaConfere(true);
-
+      setRegisterMsg("Conta criada com sucesso. Agora faca login.");
+      setMode(MODES.LOGIN);
+      setLoginData((prev) => ({ ...prev, email: registerData.email.trim().toLowerCase() }));
     } catch (error) {
-      // Tratamento de erro do Axios
       const errorMsg = error.response?.data?.mensagem || "Erro ao realizar cadastro.";
       setRegisterMsg(errorMsg);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotMsg("");
+
+    if (!validateEmail(forgotEmail)) {
+      setForgotMsg("Email invalido.");
+      return;
+    }
+
+    try {
+      await apiForgotPassword({ email: forgotEmail.trim().toLowerCase() });
+      setForgotMsg("Se o email existir, voce recebera as instrucoes de redefinicao.");
+    } catch (error) {
+      setForgotMsg(error.response?.data?.mensagem || "Nao foi possivel solicitar recuperacao.");
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setResetMsg("");
+
+    if (!resetToken) {
+      setResetMsg("Token de recuperacao ausente.");
+      return;
+    }
+
+    if (!validatePassword(resetData.novaSenha)) {
+      setResetMsg("A nova senha deve ter no minimo 7 caracteres.");
+      return;
+    }
+
+    if (resetData.novaSenha !== resetData.confirmarSenha) {
+      setResetMsg("As senhas nao conferem.");
+      return;
+    }
+
+    try {
+      await apiResetPassword({ token: resetToken, novaSenha: resetData.novaSenha });
+      setResetMsg("Senha redefinida com sucesso. Voce ja pode entrar.");
+      setMode(MODES.LOGIN);
+    } catch (error) {
+      setResetMsg(error.response?.data?.mensagem || "Nao foi possivel redefinir a senha.");
+    }
+  };
+
+  const handleCheckFirstAccess = async () => {
+    setRegisterMsg("");
+    setFirstAccessStatus(null);
+
+    if (!validateEmail(registerData.email)) {
+      setRegisterMsg("Informe um email valido para primeiro acesso.");
+      return;
+    }
+
+    try {
+      const status = await apiFirstAccessStatus({ email: registerData.email.trim().toLowerCase() });
+      setFirstAccessStatus(status);
+
+      if (status.hasConta) {
+        setRegisterMsg("Ja existe conta para este email. Use o login normal.");
+      } else if (!status.temPedidosPorEmail) {
+        setRegisterMsg("Nenhum pedido encontrado para este email. Voce ainda pode criar uma conta normalmente.");
+      } else {
+        setRegisterMsg("Pedido encontrado. Finalize seu primeiro acesso criando a conta.");
+      }
+    } catch (error) {
+      setRegisterMsg(error.response?.data?.mensagem || "Nao foi possivel verificar primeiro acesso.");
     }
   };
 
@@ -131,65 +232,109 @@ export default function Login() {
         </div>
 
         <div className={styles.loginBody}>
-          {/* Login Form */}
           <div className={styles.box_login}>
-            <h4 className={styles.title_form}>Faça Login</h4>
-            <form onSubmit={handleLogin} className={styles.form}>
-              <div className={styles.field}>
-                <label htmlFor="login-email">Email</label>
-                <input
-                  type="email"
-                  id="login-email"
-                  placeholder="Digite aqui"
-                  value={loginData.email}
-                  onChange={(e) =>
-                    setLoginData({ ...loginData, email: e.target.value })
-                  }
-                />
-              </div>
+            <h4 className={styles.title_form}>Acesso</h4>
 
-              <div className={styles.field}>
-                <label htmlFor="login-senha">Senha</label>
-                <div className={styles.passwordField}>
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.LOGIN)}>Login</button>
+              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.FORGOT)}>Recuperar senha</button>
+              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.FIRST_ACCESS)}>Primeiro acesso</button>
+            </div>
+
+            {mode === MODES.LOGIN && (
+              <form onSubmit={handleLogin} className={styles.form}>
+                <div className={styles.field}>
+                  <label htmlFor="login-email">Email</label>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    id="login-senha"
+                    type="email"
+                    id="login-email"
                     placeholder="Digite aqui"
-                    value={loginData.senha}
-                    onChange={(e) =>
-                      setLoginData({ ...loginData, senha: e.target.value })
-                    }
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className={styles.eyeButton}
-                  >
-                    {showPassword ? <FaEye /> : <FaEyeSlash />}
-                  </button>
                 </div>
-              </div>
 
-              {loginMsg && (
-                <div
-                  className={styles.msg_retorno}
-                  data-msg={loginMsg.includes("sucesso") ? "success" : "error"}
-                >
-                  {loginMsg}
+                <div className={styles.field}>
+                  <label htmlFor="login-senha">Senha</label>
+                  <div className={styles.passwordField}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="login-senha"
+                      placeholder="Digite aqui"
+                      value={loginData.senha}
+                      onChange={(e) => setLoginData({ ...loginData, senha: e.target.value })}
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className={styles.eyeButton}>
+                      {showPassword ? <FaEye /> : <FaEyeSlash />}
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                <button className={styles.btn_submit} type="submit">
-                  Entrar
-                </button>
-              </div>
-            </form>
+                {loginMsg && <div className={styles.msg_retorno}>{loginMsg}</div>}
+
+                <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                  <button className={styles.btn_submit} type="submit">Entrar</button>
+                </div>
+              </form>
+            )}
+
+            {mode === MODES.FORGOT && (
+              <form onSubmit={handleForgotPassword} className={styles.form}>
+                <div className={styles.field}>
+                  <label htmlFor="forgot-email">Email da conta</label>
+                  <input
+                    type="email"
+                    id="forgot-email"
+                    placeholder="Digite aqui"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+                </div>
+
+                {forgotMsg && <div className={styles.msg_retorno}>{forgotMsg}</div>}
+
+                <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                  <button className={styles.btn_submit} type="submit">Enviar link</button>
+                </div>
+              </form>
+            )}
+
+            {mode === MODES.RESET && (
+              <form onSubmit={handleResetPassword} className={styles.form}>
+                <div className={styles.field}>
+                  <label htmlFor="reset-password">Nova senha</label>
+                  <input
+                    type="password"
+                    id="reset-password"
+                    placeholder="Digite aqui"
+                    value={resetData.novaSenha}
+                    onChange={(e) => setResetData((prev) => ({ ...prev, novaSenha: e.target.value }))}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label htmlFor="reset-password-confirm">Confirmar nova senha</label>
+                  <input
+                    type="password"
+                    id="reset-password-confirm"
+                    placeholder="Digite aqui"
+                    value={resetData.confirmarSenha}
+                    onChange={(e) => setResetData((prev) => ({ ...prev, confirmarSenha: e.target.value }))}
+                  />
+                </div>
+
+                {resetMsg && <div className={styles.msg_retorno}>{resetMsg}</div>}
+
+                <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                  <button className={styles.btn_submit} type="submit">Redefinir senha</button>
+                </div>
+              </form>
+            )}
           </div>
 
-          {/* Register Form */}
           <div className={styles.box_register}>
-            <h4 className={styles.title_form}>Criar Conta</h4>
+            <h4 className={styles.title_form}>{mode === MODES.FIRST_ACCESS ? "Primeiro acesso apos compra" : "Criar Conta"}</h4>
+
             <form onSubmit={handleRegister} className={styles.form}>
               <div className={`${styles.field} ${styles.field_half}`}>
                 <label htmlFor="register-first-name">Nome</label>
@@ -198,9 +343,7 @@ export default function Login() {
                   id="register-first-name"
                   placeholder="Digite aqui"
                   value={registerData.nome}
-                  onChange={(e) =>
-                    setRegisterData({ ...registerData, nome: e.target.value })
-                  }
+                  onChange={(e) => setRegisterData({ ...registerData, nome: e.target.value })}
                 />
               </div>
 
@@ -211,12 +354,7 @@ export default function Login() {
                   id="register-last-name"
                   placeholder="Digite aqui"
                   value={registerData.sobrenome}
-                  onChange={(e) =>
-                    setRegisterData({
-                      ...registerData,
-                      sobrenome: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setRegisterData({ ...registerData, sobrenome: e.target.value })}
                 />
               </div>
 
@@ -227,11 +365,28 @@ export default function Login() {
                   id="register-email"
                   placeholder="Digite aqui"
                   value={registerData.email}
-                  onChange={(e) =>
-                    setRegisterData({ ...registerData, email: e.target.value })
-                  }
+                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                 />
               </div>
+
+              <div className={styles.field}>
+                <label htmlFor="register-phone">Telefone</label>
+                <input
+                  type="tel"
+                  id="register-phone"
+                  placeholder="Digite aqui"
+                  value={registerData.telefone}
+                  onChange={(e) => setRegisterData({ ...registerData, telefone: e.target.value })}
+                />
+              </div>
+
+              {mode === MODES.FIRST_ACCESS && (
+                <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                  <button className={styles.btn_submit} type="button" onClick={handleCheckFirstAccess}>
+                    Verificar email de pedido
+                  </button>
+                </div>
+              )}
 
               <div className={`${styles.field} ${styles.field_half}`}>
                 <label htmlFor="register-password">Senha</label>
@@ -266,38 +421,27 @@ export default function Login() {
                   value={registerData.confirmarSenha}
                   onChange={(e) => {
                     const confirmar = e.target.value;
-                    setRegisterData({
-                      ...registerData,
-                      confirmarSenha: confirmar,
-                    });
+                    setRegisterData({ ...registerData, confirmarSenha: confirmar });
                     setSenhaConfere(registerData.senha === confirmar);
                   }}
                 />
               </div>
 
-              {!senhaConfere && (
-                <p className={styles.msg_retorno} data-msg="error">
-                  As senhas não conferem.
-                </p>
-              )}
+              {!senhaConfere && <p className={styles.msg_retorno}>As senhas nao conferem.</p>}
 
-              {registerMsg && (
-                <div
-                  className={styles.msg_retorno}
-                  data-msg={
-                    registerMsg.includes("sucesso") ? "success" : "error"
-                  }
-                >
-                  {registerMsg}
+              {registerMsg && <div className={styles.msg_retorno}>{registerMsg}</div>}
+
+              {mode === MODES.FIRST_ACCESS && firstAccessStatus && (
+                <div className={styles.msg_retorno}>
+                  {firstAccessStatus.temPedidosPorEmail
+                    ? "Pedidos desse email serao vinculados automaticamente apos criar conta/login."
+                    : "Nenhum pedido pendente para vincular nesse email."}
                 </div>
               )}
 
               <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                <button
-                  className={styles.btn_submit}
-                  type="submit"
-                >
-                  Cadastrar
+                <button className={styles.btn_submit} type="submit">
+                  {mode === MODES.FIRST_ACCESS ? "Concluir primeiro acesso" : "Cadastrar"}
                 </button>
               </div>
             </form>

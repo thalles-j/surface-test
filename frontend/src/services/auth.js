@@ -25,3 +25,18 @@ export async function apiLogout() {
     localStorage.removeItem("token");
     return true;
 }
+
+export async function apiForgotPassword(payload) {
+    const response = await api.post("/auth/forgot-password", payload);
+    return response.data;
+}
+
+export async function apiResetPassword(payload) {
+    const response = await api.post("/auth/reset-password", payload);
+    return response.data;
+}
+
+export async function apiFirstAccessStatus(payload) {
+    const response = await api.post("/auth/first-access-status", payload);
+    return response.data;
+}

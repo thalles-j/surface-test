@@ -6,15 +6,28 @@ import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
 
+const CHECKOUT_COUPON_STORAGE_KEY = "checkoutCouponApplied";
+
 export default function Checkout() {
-  const { cartItems, createOrder, checkoutLoading } = useCart();
+  const {
+    cartItems,
+    createOrder,
+    checkoutLoading,
+    preCheckoutData,
+    setPreCheckoutData,
+  } = useCart();
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const orderCompletedRef = useRef(false);
 
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
+  const [couponApplied, setCouponApplied] = useState(() => {
+    const stored = localStorage.getItem(CHECKOUT_COUPON_STORAGE_KEY);
+    return stored ? String(stored).trim().toUpperCase() : null;
+  });
+
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
 
@@ -22,8 +35,13 @@ export default function Checkout() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
 
+  const [preCheckoutErrors, setPreCheckoutErrors] = useState({});
+
   const formatCurrency = (value) =>
     `R$ ${(Number(value) || 0).toFixed(2).replace(".", ",")}`;
+
+  const validateEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
 
   const buildItems = useCallback(
     () =>
@@ -36,84 +54,179 @@ export default function Checkout() {
     [cartItems]
   );
 
-  const fetchPreview = useCallback(
-    async (cupom = null) => {
-      if (cartItems.length === 0) return;
-      setPreviewLoading(true);
-      setPreviewError("");
-      try {
-        const { data } = await api.post("/checkout/preview", {
-          items: buildItems(),
-          codigo_cupom: cupom,
-        });
-        setPreview(data);
-      } catch (err) {
-        const msg =
-          err.response?.data?.mensagem ||
-          err.response?.data?.message ||
-          "Erro ao calcular resumo.";
-        setPreviewError(msg);
-      } finally {
-        setPreviewLoading(false);
-      }
-    },
-    [cartItems, buildItems]
-  );
+  const isPreCheckoutValid =
+    String(preCheckoutData?.nome || "").trim().length > 1 &&
+    validateEmail(preCheckoutData?.email || "") &&
+    String(preCheckoutData?.telefone || "").replace(/\D/g, "").length >= 10;
+
+  const fetchPreview = useCallback(async () => {
+    if (cartItems.length === 0) return;
+
+    setPreviewLoading(true);
+    setPreviewError("");
+
+    try {
+      const { data } = await api.post("/checkout/preview", {
+        items: buildItems(),
+        codigo: couponApplied,
+      });
+
+      setPreview(data);
+    } catch (err) {
+      const msg =
+        err.response?.data?.mensagem ||
+        err.response?.data?.message ||
+        "Erro ao calcular resumo.";
+
+      setPreviewError(msg);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [cartItems, buildItems, couponApplied]);
+
+  useEffect(() => {
+    if (couponApplied) {
+      const normalized = String(couponApplied).trim().toUpperCase();
+      setCouponCode(normalized);
+      localStorage.setItem(CHECKOUT_COUPON_STORAGE_KEY, normalized);
+    } else {
+      setCouponCode("");
+      localStorage.removeItem(CHECKOUT_COUPON_STORAGE_KEY);
+    }
+  }, [couponApplied]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setPreCheckoutData((prev) => ({
+      nome: prev.nome || user.nome || "",
+      email: prev.email || user.email || "",
+      telefone: prev.telefone || user.telefone || "",
+    }));
+  }, [user, setPreCheckoutData]);
 
   useEffect(() => {
     if (cartItems.length === 0 && !orderCompletedRef.current) {
+      try {
+        const storedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+        const hasPersistedCart = Array.isArray(storedCart) && storedCart.length > 0;
+
+        if (hasPersistedCart) {
+          return;
+        }
+      } catch {
+        // segue fluxo normal
+      }
+
       navigate("/shop");
       return;
     }
+
     if (cartItems.length > 0) {
-      fetchPreview(couponApplied);
+      fetchPreview();
     }
-  }, [cartItems.length]);
+  }, [cartItems.length, fetchPreview, navigate]);
 
   const handleApplyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
-    if (!code) return;
-    setCouponError("");
+
+    if (!code || code.length < 3) return;
+
     setCouponLoading(true);
+    setCouponError("");
+
     try {
-      await api.post("/checkout/validate-coupon", { codigo: code });
+      await api.post("/checkout/validate-coupon", {
+        codigo: code,
+      });
+
+      // Persist immediately after successful validation to avoid refresh timing loss.
+      localStorage.setItem(CHECKOUT_COUPON_STORAGE_KEY, code);
       setCouponApplied(code);
-      await fetchPreview(code);
     } catch (err) {
       const msg =
-        err.response?.data?.mensagem || "Cupom inválido.";
+        err.response?.data?.mensagem ||
+        err.response?.data?.message ||
+        "Cupom invalido.";
+
       setCouponError(msg);
-      setCouponApplied(null);
     } finally {
       setCouponLoading(false);
     }
   };
 
-  const handleRemoveCoupon = async () => {
-    setCouponCode("");
+  const handleRemoveCoupon = () => {
     setCouponApplied(null);
+    setCouponCode("");
     setCouponError("");
-    await fetchPreview(null);
+    setPreviewError("");
+  };
+
+  const handleCustomerFieldChange = (field, value) => {
+    setPreCheckoutData((prev) => ({ ...prev, [field]: value }));
+    setPreCheckoutErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validatePreCheckout = () => {
+    const errors = {};
+
+    if (!String(preCheckoutData?.nome || "").trim()) {
+      errors.nome = "Nome obrigatorio.";
+    }
+
+    if (!validateEmail(preCheckoutData?.email || "")) {
+      errors.email = "Email invalido.";
+    }
+
+    const cleanPhone = String(preCheckoutData?.telefone || "").replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      errors.telefone = "Telefone invalido.";
+    }
+
+    setPreCheckoutErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleFinalize = async () => {
     if (checkoutLoading) return;
+
+    if (!validatePreCheckout()) {
+      toast.error("Preencha nome, email e telefone para continuar.");
+      return;
+    }
+
     try {
       orderCompletedRef.current = true;
-      const result = await createOrder(couponApplied);
+      const result = await createOrder(couponApplied, preCheckoutData);
+
       if (result) {
+        setCouponApplied(null);
+        localStorage.removeItem(CHECKOUT_COUPON_STORAGE_KEY);
+
         toast.success("Pedido criado com sucesso!");
 
-        // Redireciona para WhatsApp (URL gerada pelo backend)
         if (result.whatsappUrl) {
           window.location.href = result.whatsappUrl;
-        } else {
+        } else if (user) {
           navigate("/account");
+        } else {
+          navigate(
+            `/entrar?modo=first-access&email=${encodeURIComponent(
+              preCheckoutData.email || ""
+            )}`
+          );
         }
+      } else {
+        orderCompletedRef.current = false;
+        toast.error("Nao foi possivel criar o pedido.");
       }
     } catch (err) {
       orderCompletedRef.current = false;
-      toast.error(err.response?.data?.mensagem || err.message || "Erro ao criar pedido.");
+      toast.error(
+        err.response?.data?.mensagem ||
+          err.message ||
+          "Erro ao criar pedido."
+      );
     }
   };
 
@@ -129,11 +242,6 @@ export default function Checkout() {
     return fotos[0]?.url;
   };
 
-  if (!user) {
-    navigate("/entrar");
-    return null;
-  }
-
   if (cartItems.length === 0 && !orderCompletedRef.current) {
     return null;
   }
@@ -144,11 +252,86 @@ export default function Checkout() {
         Checkout
       </h2>
 
-      {/* Order Items */}
+      <div
+        style={{
+          marginBottom: "1.5rem",
+          padding: "1rem",
+          background: "#f9f9f9",
+          borderRadius: 8,
+        }}
+      >
+        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
+          Antes de finalizar
+        </h3>
+
+        <div style={{ display: "grid", gap: "0.6rem" }}>
+          <div>
+            <input
+              type="text"
+              placeholder="Nome completo"
+              value={preCheckoutData.nome}
+              onChange={(e) => handleCustomerFieldChange("nome", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+            {preCheckoutErrors.nome && (
+              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
+                {preCheckoutErrors.nome}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={preCheckoutData.email}
+              onChange={(e) => handleCustomerFieldChange("email", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+            {preCheckoutErrors.email && (
+              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
+                {preCheckoutErrors.email}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="tel"
+              placeholder="Telefone"
+              value={preCheckoutData.telefone}
+              onChange={(e) => handleCustomerFieldChange("telefone", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+            {preCheckoutErrors.telefone && (
+              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
+                {preCheckoutErrors.telefone}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div style={{ marginBottom: "1.5rem" }}>
         <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
           Itens do Pedido
         </h3>
+
         {cartItems.map((item, index) => (
           <div
             key={`${item.id_produto}-${item.selectedSize || index}`}
@@ -170,15 +353,18 @@ export default function Checkout() {
             />
             <div style={{ flex: 1 }}>
               <p style={{ fontWeight: 600 }}>{item.nome_produto}</p>
+
               {item.selectedSize && (
                 <p style={{ fontSize: "0.85rem", color: "#666" }}>
                   Tamanho: {item.selectedSize}
                 </p>
               )}
+
               <p style={{ fontSize: "0.85rem", color: "#666" }}>
                 {item.quantity}x {formatCurrency(item.preco)}
               </p>
             </div>
+
             <div style={{ fontWeight: 600 }}>
               {formatCurrency(Number(item.preco) * item.quantity)}
             </div>
@@ -186,11 +372,18 @@ export default function Checkout() {
         ))}
       </div>
 
-      {/* Coupon Section */}
-      <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "#f9f9f9", borderRadius: 8 }}>
+      <div
+        style={{
+          marginBottom: "1.5rem",
+          padding: "1rem",
+          background: "#f9f9f9",
+          borderRadius: 8,
+        }}
+      >
         <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
           Cupom de Desconto
         </h3>
+
         {couponApplied ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
@@ -202,8 +395,9 @@ export default function Checkout() {
                 fontSize: "0.9rem",
               }}
             >
-              {couponApplied} ✓
+              {couponApplied} (aplicado)
             </span>
+
             <button
               onClick={handleRemoveCoupon}
               style={{
@@ -224,7 +418,7 @@ export default function Checkout() {
               type="text"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="Digite o código"
+              placeholder="Digite o codigo"
               style={{
                 flex: 1,
                 padding: "0.5rem",
@@ -234,6 +428,7 @@ export default function Checkout() {
               }}
               onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
             />
+
             <button
               onClick={handleApplyCoupon}
               disabled={couponLoading || !couponCode.trim()}
@@ -251,6 +446,7 @@ export default function Checkout() {
             </button>
           </div>
         )}
+
         {couponError && (
           <p style={{ color: "#d32f2f", fontSize: "0.85rem", marginTop: "0.4rem" }}>
             {couponError}
@@ -258,8 +454,14 @@ export default function Checkout() {
         )}
       </div>
 
-      {/* Order Summary */}
-      <div style={{ padding: "1rem", background: "#f9f9f9", borderRadius: 8, marginBottom: "1.5rem" }}>
+      <div
+        style={{
+          padding: "1rem",
+          background: "#f9f9f9",
+          borderRadius: 8,
+          marginBottom: "1.5rem",
+        }}
+      >
         <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
           Resumo do Pedido
         </h3>
@@ -269,7 +471,13 @@ export default function Checkout() {
 
         {preview && !previewLoading && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "0.4rem",
+              }}
+            >
               <span>Subtotal</span>
               <span>{formatCurrency(preview.subtotal)}</span>
             </div>
@@ -283,19 +491,33 @@ export default function Checkout() {
                   color: "#2e7d32",
                 }}
               >
-                <span>Desconto {preview.cupom ? `(${preview.cupom.codigo})` : ""}</span>
+                <span>
+                  Desconto {preview.cupom ? `(${preview.cupom.codigo})` : ""}
+                </span>
                 <span>-{formatCurrency(preview.desconto)}</span>
               </div>
             )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "0.4rem",
+              }}
+            >
               <span>Frete</span>
               <span style={{ color: preview.frete === 0 ? "#2e7d32" : "inherit" }}>
-                {preview.frete === 0 ? "Grátis ✨" : formatCurrency(preview.frete)}
+                {preview.frete === 0 ? "Gratis" : formatCurrency(preview.frete)}
               </span>
             </div>
 
-            <hr style={{ margin: "0.75rem 0", border: "none", borderTop: "1px solid #ddd" }} />
+            <hr
+              style={{
+                margin: "0.75rem 0",
+                border: "none",
+                borderTop: "1px solid #ddd",
+              }}
+            />
 
             <div
               style={{
@@ -312,7 +534,6 @@ export default function Checkout() {
         )}
       </div>
 
-      {/* Actions */}
       <div style={{ display: "flex", gap: "1rem" }}>
         <button
           onClick={() => navigate("/shop")}
@@ -328,9 +549,10 @@ export default function Checkout() {
         >
           Continuar Comprando
         </button>
+
         <button
           onClick={handleFinalize}
-          disabled={checkoutLoading || previewLoading}
+          disabled={checkoutLoading || previewLoading || !isPreCheckoutValid}
           style={{
             flex: 1,
             padding: "0.75rem",
@@ -338,10 +560,14 @@ export default function Checkout() {
             color: "#fff",
             border: "none",
             borderRadius: 4,
-            cursor: checkoutLoading || previewLoading ? "not-allowed" : "pointer",
+            cursor:
+              checkoutLoading || previewLoading || !isPreCheckoutValid
+                ? "not-allowed"
+                : "pointer",
             fontSize: "1rem",
             fontWeight: 600,
-            opacity: checkoutLoading || previewLoading ? 0.6 : 1,
+            opacity:
+              checkoutLoading || previewLoading || !isPreCheckoutValid ? 0.6 : 1,
           }}
         >
           {checkoutLoading ? "Processando..." : "Finalizar via WhatsApp"}

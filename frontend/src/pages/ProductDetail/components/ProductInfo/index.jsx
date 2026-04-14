@@ -9,7 +9,7 @@ export default function ProductInfo({
   produto,
   variacoes,
   selectedSize,
-  setSelectedSize
+  setSelectedSize,
 }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -18,11 +18,13 @@ export default function ProductInfo({
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
-  const isSoldOut = selectedSize && selectedVariacao?.estoque === 0;
+  const isProductInactive = String(produto.status || '').toLowerCase() !== 'ativo';
+  const selectedVariacao = variacoes.find((v) => v.tamanho === selectedSize);
+  const isSoldOut = !!selectedSize && Number(selectedVariacao?.estoque || 0) <= 0;
   const isAllSoldOut =
-    produto.status === 'inativo' ||
-    (variacoes.length > 0 && variacoes.every(v => v.estoque === 0));
+    !isProductInactive &&
+    variacoes.length > 0 &&
+    variacoes.every((v) => Number(v?.estoque || 0) <= 0);
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -35,7 +37,7 @@ export default function ProductInfo({
   });
 
   const handleBuyNow = () => {
-    if (!selectedSize || loading || isSoldOut || isAllSoldOut) return;
+    if (!selectedSize || loading || isSoldOut || isAllSoldOut || isProductInactive) return;
     setLoading(true);
     addToCart(buildCartItem(), { openDrawer: false });
     setLoading(false);
@@ -43,7 +45,7 @@ export default function ProductInfo({
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize || loading || isSoldOut || isAllSoldOut) return;
+    if (!selectedSize || loading || isSoldOut || isAllSoldOut || isProductInactive) return;
     setLoading(true);
     addToCart(buildCartItem(), { openDrawer: true });
     setLoading(false);
@@ -56,7 +58,7 @@ export default function ProductInfo({
         message: 'Voce precisa estar logado para ser avisado.',
         type: 'auth',
         actionLabel: 'Entrar',
-        actionCallback: () => navigate('/entrar')
+        actionCallback: () => navigate('/entrar'),
       });
       return;
     }
@@ -64,19 +66,19 @@ export default function ProductInfo({
     try {
       await api.post('/notify-me', {
         id_produto: produto.id_produto || produto.id,
-        tamanho: selectedSize
+        tamanho: selectedSize,
       });
 
       showAlertModal({
         title: 'Aviso ativado',
         message: 'Te avisaremos quando voltar ao estoque.',
-        type: 'success'
+        type: 'success',
       });
     } catch (err) {
       showAlertModal({
         title: 'Erro',
         message: err?.response?.data?.message || 'Nao foi possivel ativar o aviso.',
-        type: 'error'
+        type: 'error',
       });
     }
   };
@@ -84,9 +86,7 @@ export default function ProductInfo({
   return (
     <div className={styles.infoSection}>
       <h1 className={styles.productName}>{produto.nome_produto}</h1>
-      <p className={styles.productPrice}>
-        R$ {parseFloat(produto.preco).toFixed(2)}
-      </p>
+      <p className={styles.productPrice}>R$ {parseFloat(produto.preco).toFixed(2)}</p>
 
       <div className={styles.accordions}>
         <div className={styles.accordion}>
@@ -95,7 +95,7 @@ export default function ProductInfo({
             onClick={() => toggleSection('description')}
           >
             <span>Descricao</span>
-            <span>{expandedSection === 'description' ? '▲' : '▼'}</span>
+            <span>{expandedSection === 'description' ? '?' : '?'}</span>
           </button>
 
           {expandedSection === 'description' && (
@@ -110,13 +110,18 @@ export default function ProductInfo({
         <div className={styles.sizeSection}>
           <div className={styles.sizeButtons}>
             {variacoes.map((v) => {
-              const outOfStock = v.estoque === 0;
+              const outOfStock = Number(v?.estoque || 0) <= 0;
+              const disabled = isProductInactive || outOfStock;
 
               return (
                 <button
                   key={v.sku || v.tamanho}
-                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''} ${outOfStock ? styles.disabled : ''}`}
-                  onClick={() => setSelectedSize(v.tamanho)}
+                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''} ${disabled ? styles.disabled : ''}`}
+                  onClick={() => {
+                    if (disabled) return;
+                    setSelectedSize(v.tamanho);
+                  }}
+                  disabled={disabled}
                 >
                   {v.tamanho}
                 </button>
@@ -128,18 +133,20 @@ export default function ProductInfo({
 
       <div className={styles.actions}>
         <button
-          className={`${styles.buyBtn} ${(isSoldOut || isAllSoldOut) ? styles.soldOut : ''}`}
+          className={`${styles.buyBtn} ${(isSoldOut || isAllSoldOut || isProductInactive) ? styles.soldOut : ''}`}
           onClick={handleBuyNow}
-          disabled={!selectedSize || isSoldOut || isAllSoldOut}
+          disabled={!selectedSize || isSoldOut || isAllSoldOut || isProductInactive}
         >
-          {!selectedSize
-            ? 'SELECIONE UM TAMANHO'
-            : (isSoldOut || isAllSoldOut)
-              ? 'ESGOTADO'
-              : (loading ? 'PROCESSANDO...' : 'COMPRAR')}
+          {isProductInactive
+            ? 'INDISPONIVEL'
+            : !selectedSize
+              ? 'SELECIONE UM TAMANHO'
+              : (isSoldOut || isAllSoldOut)
+                ? 'ESGOTADO'
+                : (loading ? 'PROCESSANDO...' : 'COMPRAR')}
         </button>
 
-        {!isSoldOut && !isAllSoldOut && (
+        {!isProductInactive && !isSoldOut && !isAllSoldOut && (
           <button
             className={styles.cartBtn}
             onClick={handleAddToCart}
@@ -149,7 +156,7 @@ export default function ProductInfo({
           </button>
         )}
 
-        {(isSoldOut || isAllSoldOut) && selectedSize && (
+        {!isProductInactive && (isSoldOut || isAllSoldOut) && selectedSize && (
           <button
             className={styles.cartBtn}
             onClick={handleNotifyMe}
@@ -161,4 +168,3 @@ export default function ProductInfo({
     </div>
   );
 }
-

@@ -4,6 +4,26 @@ import { validateCoupon, applyCoupon, incrementCouponUsage } from './couponServi
 import { calculateShipping } from './shippingService.js';
 import { logSaleMovements } from './admin/inventoryService.js';
 
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+function normalizeCustomerInfo(customerInfo = {}) {
+  const nome = String(customerInfo.nome || '').trim();
+  const email = normalizeEmail(customerInfo.email);
+  const telefone = normalizePhone(customerInfo.telefone);
+
+  return {
+    nome: nome || null,
+    email: email || null,
+    telefone: telefone || null,
+  };
+}
+
 /**
  * Validates stock availability for all items in the cart.
  * Returns the product records with their current variations for use in order creation.
@@ -20,6 +40,11 @@ export async function validateStock(items) {
 
     if (!product) {
       errors.push(`Produto ID ${item.id_produto} não encontrado.`);
+      continue;
+    }
+
+    if (String(product.status || '').toLowerCase() !== 'ativo') {
+      errors.push(`Produto "${product.nome_produto}" está inativo e não pode ser comprado.`);
       continue;
     }
 
@@ -91,9 +116,51 @@ async function reduceStock(tx, productData) {
  * - Reduces stock atomically
  * - Increments coupon usage
  */
-export async function createOrder(userId, items, codigoCupom = null) {
+export async function createOrder(userId, items, codigoCupom = null, customerInfo = {}) {
   if (!items || items.length === 0) {
     throw new ErroValidation('Carrinho vazio.');
+  }
+
+  let customer = normalizeCustomerInfo(customerInfo);
+
+  if (
+    userId &&
+    (!customer.nome || !customer.email || !customer.telefone || customer.telefone.length < 10)
+  ) {
+    const account = await prisma.usuarios.findUnique({
+      where: { id_usuario: Number(userId) },
+      select: { nome: true, email: true, telefone: true },
+    });
+
+    if (account) {
+      customer = normalizeCustomerInfo({
+        nome: customer.nome || account.nome,
+        email: customer.email || account.email,
+        telefone: customer.telefone || account.telefone,
+      });
+    }
+  }
+
+  if (!customer.nome) {
+    throw new ErroValidation('Nome é obrigatório para continuar.');
+  }
+  if (!customer.email) {
+    throw new ErroValidation('Email é obrigatório para continuar.');
+  }
+  if (!customer.telefone || customer.telefone.length < 10) {
+    throw new ErroValidation('Telefone inválido.');
+  }
+
+  let linkedUserId = userId || null;
+
+  if (!linkedUserId && customer.email) {
+    const existingUser = await prisma.usuarios.findUnique({
+      where: { email: customer.email },
+      select: { id_usuario: true },
+    });
+    if (existingUser) {
+      linkedUserId = existingUser.id_usuario;
+    }
   }
 
   // 1. Validate stock availability
@@ -124,13 +191,23 @@ export async function createOrder(userId, items, codigoCupom = null) {
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.pedidos.create({
       data: {
-        id_usuario: userId,
+        id_usuario: linkedUserId,
         status: 'pendente',
         subtotal: Math.round(subtotal * 100) / 100,
         desconto: Math.round(desconto * 100) / 100,
         frete: Math.round(frete * 100) / 100,
         total: Math.round(total * 100) / 100,
         codigo_cupom: codigoCupom || null,
+        nome_cliente: customer.nome,
+        endereco_entrega: {
+          contato: {
+            nome: customer.nome,
+            email: customer.email,
+            telefone: customer.telefone,
+          },
+          email: customer.email,
+          telefone: customer.telefone,
+        },
         pedidoProdutos: {
           create: productData.map(({ product, variation, quantity }) => ({
             id_produto: product.id_produto,

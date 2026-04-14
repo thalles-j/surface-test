@@ -1,6 +1,4 @@
 import { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
-import { AuthContext } from "./AuthContext";
-import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import AlertModal from "../components/AlertModal";
 
@@ -9,18 +7,18 @@ export const CartContext = createContext({});
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [preCheckoutData, setPreCheckoutData] = useState({
+    nome: "",
+    email: "",
+    telefone: "",
+  });
 
   const [shouldOpenCart, setShouldOpenCart] = useState(false);
 
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  // 🔥 ANTI DUPLICAÇÃO (ESSENCIAL)
+  // ANTI DUPLICACAO
   const lastAddedRef = useRef(null);
 
-  // ============================
   // LOAD LOCAL STORAGE
-  // ============================
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
 
@@ -31,18 +29,27 @@ export function CartProvider({ children }) {
         localStorage.removeItem("cartItems");
       }
     }
+
+    const savedPreCheckout = localStorage.getItem("preCheckoutData");
+    if (savedPreCheckout) {
+      try {
+        setPreCheckoutData(JSON.parse(savedPreCheckout));
+      } catch {
+        localStorage.removeItem("preCheckoutData");
+      }
+    }
   }, []);
 
-  // ============================
   // SAVE LOCAL STORAGE
-  // ============================
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // ============================
+  useEffect(() => {
+    localStorage.setItem("preCheckoutData", JSON.stringify(preCheckoutData));
+  }, [preCheckoutData]);
+
   // ALERT MODAL
-  // ============================
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
     title: "",
@@ -72,32 +79,18 @@ export function CartProvider({ children }) {
   const hideAlertModal = () =>
     setAlertModal((prev) => ({ ...prev, isOpen: false }));
 
-  // ============================
   // CART CONTROL
-  // ============================
   const toggleCart = () => setIsCartOpen((prev) => !prev);
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
 
-  // ============================
-  // ADD TO CART (ANTI BUG)
-  // ============================
+  // ADD TO CART
   const addToCart = (product, options = {}) => {
     const { openDrawer = true } = options;
-    if (!user) {
-      showAlertModal({
-        title: "Login necessário",
-        message: "Você precisa estar logado para adicionar itens ao carrinho.",
-        type: "auth",
-        actionLabel: "Entrar",
-        actionCallback: () => navigate("/entrar"),
-      });
-      return;
-    }
 
     const key = `${product.id_produto}-${product.selectedSize}`;
 
-    // 🔥 BLOQUEIA DUPLICAÇÃO EM MILISSEGUNDOS (StrictMode / double click)
+    // Bloqueia duplicacao em milissegundos (StrictMode / double click)
     if (lastAddedRef.current === key) return;
     lastAddedRef.current = key;
 
@@ -127,13 +120,10 @@ export function CartProvider({ children }) {
       ];
     });
 
-    // 🔥 SEMPRE ABRE O CARRINHO
     if (openDrawer) openCart();
   };
 
-  // ============================
   // REMOVE
-  // ============================
   const removeFromCart = (productId, selectedSize) => {
     setCartItems((prevItems) =>
       prevItems.filter(
@@ -146,9 +136,7 @@ export function CartProvider({ children }) {
     );
   };
 
-  // ============================
   // UPDATE QTD
-  // ============================
   const updateQuantity = (productId, selectedSize, amount) => {
     setCartItems((prevItems) =>
       prevItems
@@ -169,27 +157,22 @@ export function CartProvider({ children }) {
     );
   };
 
-  // ============================
   // CLEAR
-  // ============================
   const clearCart = () => {
     setCartItems([]);
+    setPreCheckoutData({ nome: "", email: "", telefone: "" });
   };
 
-  // ============================
   // TOTAL
-  // ============================
   const cartTotal = cartItems.reduce(
     (total, item) => total + Number(item.preco) * item.quantity,
     0
   );
 
-  // ============================
   // CREATE ORDER
-  // ============================
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const createOrder = useCallback(async (codigoCupom = null) => {
+  const createOrder = useCallback(async (codigoCupom = null, cliente = null) => {
     if (cartItems.length === 0) return null;
 
     setCheckoutLoading(true);
@@ -205,22 +188,28 @@ export function CartProvider({ children }) {
       const { data } = await api.post("/orders", {
         items,
         codigo_cupom: codigoCupom,
+        cliente: cliente || preCheckoutData,
       });
 
       clearCart();
       return data;
     } catch (error) {
+      const message =
+        error?.response?.data?.mensagem ||
+        error?.response?.data?.message ||
+        "Nao foi possivel finalizar o pedido.";
+
       showAlertModal({
         title: "Erro no pedido",
-        message: "Não foi possível finalizar o pedido.",
+        message,
         type: "error",
       });
 
-      return null;
+      throw error;
     } finally {
       setCheckoutLoading(false);
     }
-  }, [cartItems]);
+  }, [cartItems, preCheckoutData]);
 
   return (
     <CartContext.Provider
@@ -239,6 +228,8 @@ export function CartProvider({ children }) {
         hideAlertModal,
         createOrder,
         checkoutLoading,
+        preCheckoutData,
+        setPreCheckoutData,
         shouldOpenCart,
         setShouldOpenCart,
       }}

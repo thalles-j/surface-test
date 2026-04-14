@@ -18,6 +18,7 @@ vi.mock('../../src/database/prisma.js', () => {
 
 vi.mock('../../src/services/emailService.js', () => ({
   sendWelcomeEmail: vi.fn().mockResolvedValue({ status: 'preview' }),
+  sendPasswordResetEmail: vi.fn().mockResolvedValue({ status: 'preview' }),
 }));
 
 // Precisa setar JWT_SECRET antes de importar o authMiddleware

@@ -13,14 +13,12 @@ export default function ProductModal({ isOpen, onClose, produto }) {
   const { addToCart, showAlertModal } = useCart();
   const { user } = useContext(AuthContext);
 
-  // RESET
   useEffect(() => {
     setSelectedSize("");
     setActivePhoto(0);
     setLoading(false);
   }, [produto, isOpen]);
 
-  // VARIAÇÕES
   const variacoes = useMemo(() => {
     if (!produto) return [];
 
@@ -41,36 +39,34 @@ export default function ProductModal({ isOpen, onClose, produto }) {
 
   if (!isOpen || !produto) return null;
 
+  const isProductInactive = String(produto.status || '').toLowerCase() !== 'ativo';
+
   const formatPrice = (val) =>
     parseFloat(val || 0).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
     });
 
   const hasVariations = variacoes.length > 0;
-
-  const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
+  const selectedVariacao = variacoes.find((v) => v.tamanho === selectedSize);
 
   const isOutOfStock =
     hasVariations &&
     selectedSize &&
-    selectedVariacao?.estoque === 0;
+    Number(selectedVariacao?.estoque || 0) <= 0;
 
-  // ============================
-  // AÇÃO PRINCIPAL
-  // ============================
   const handleAction = async () => {
     if (loading) return;
     if (hasVariations && !selectedSize) return;
+    if (isProductInactive) return;
 
     setLoading(true);
 
-    // 🔥 AVISE-ME
     if (isOutOfStock) {
       if (!user) {
         showAlertModal({
-          title: "Login necessário",
-          message: "Você precisa estar logado para ser avisado.",
-          type: "auth"
+          title: "Login necessario",
+          message: "Voce precisa estar logado para ser avisado.",
+          type: "auth",
         });
         setLoading(false);
         return;
@@ -79,22 +75,19 @@ export default function ProductModal({ isOpen, onClose, produto }) {
       try {
         await api.post("/notify-me", {
           id_produto: produto.id_produto || produto.id,
-          tamanho: selectedSize
+          tamanho: selectedSize,
         });
 
         showAlertModal({
           title: "Aviso ativado",
           message: "Te avisaremos quando voltar ao estoque.",
-          type: "success"
+          type: "success",
         });
-
       } catch (err) {
         showAlertModal({
           title: "Erro",
-          message:
-            err?.response?.data?.message ||
-            "Não foi possível ativar o aviso.",
-          type: "error"
+          message: err?.response?.data?.message || "Nao foi possivel ativar o aviso.",
+          type: "error",
         });
       }
 
@@ -102,14 +95,12 @@ export default function ProductModal({ isOpen, onClose, produto }) {
       return;
     }
 
-    // 🛒 ADD CARRINHO (SEM DUPLICAR)
     addToCart({
       ...produto,
       id_produto: produto.id_produto || produto.id,
-      selectedSize: selectedSize || "Único"
+      selectedSize: selectedSize || "Unico",
     });
 
-    // 🔥 ABRE DIRETO (SEM TOGGLE BUGADO)
     setLoading(false);
     onClose();
   };
@@ -117,8 +108,6 @@ export default function ProductModal({ isOpen, onClose, produto }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white w-full max-w-[1000px] flex flex-col md:flex-row relative shadow-2xl">
-
-        {/* FECHAR */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-50"
@@ -126,7 +115,6 @@ export default function ProductModal({ isOpen, onClose, produto }) {
           <X />
         </button>
 
-        {/* IMAGEM */}
         <div className="w-full md:w-1/2 p-8">
           <img
             src={resolveImageUrl(produto.fotos?.[activePhoto]?.url)}
@@ -135,30 +123,28 @@ export default function ProductModal({ isOpen, onClose, produto }) {
           />
         </div>
 
-        {/* INFO */}
         <div className="w-full md:w-1/2 p-8">
+          <h2 className="text-2xl font-bold mb-2 uppercase">{produto.nome_produto}</h2>
 
-          <h2 className="text-2xl font-bold mb-2 uppercase">
-            {produto.nome_produto}
-          </h2>
+          <p className="mb-6">R$ {formatPrice(produto.preco)}</p>
 
-          <p className="mb-6">
-            R$ {formatPrice(produto.preco)}
-          </p>
-
-          {/* TAMANHOS */}
           {hasVariations && (
             <div className="mb-6 flex gap-2 flex-wrap">
               {variacoes.map((v) => {
-                const outOfStock = v.estoque === 0;
+                const outOfStock = Number(v?.estoque || 0) <= 0;
+                const disabled = isProductInactive || outOfStock;
 
                 return (
                   <button
                     key={v.sku || v.tamanho}
-                    onClick={() => setSelectedSize(v.tamanho)}
+                    onClick={() => {
+                      if (disabled) return;
+                      setSelectedSize(v.tamanho);
+                    }}
+                    disabled={disabled}
                     className={`px-4 py-2 border text-sm transition
                       ${selectedSize === v.tamanho ? 'bg-black text-white' : ''}
-                      ${outOfStock ? 'opacity-40' : 'hover:border-black'}
+                      ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-black'}
                     `}
                   >
                     {v.tamanho}
@@ -168,23 +154,23 @@ export default function ProductModal({ isOpen, onClose, produto }) {
             </div>
           )}
 
-          {/* BOTÃO */}
           <button
             onClick={handleAction}
-            disabled={(hasVariations && !selectedSize) || loading}
+            disabled={(hasVariations && !selectedSize) || loading || isProductInactive}
             className="w-full h-[60px] bg-black text-white flex items-center justify-center gap-2 disabled:bg-gray-300"
           >
             <ShoppingBag />
 
             {loading
               ? "CARREGANDO..."
-              : hasVariations && !selectedSize
-              ? "SELECIONE UM TAMANHO"
-              : isOutOfStock
-              ? "AVISE-ME"
-              : "ADICIONAR AO CARRINHO"}
+              : isProductInactive
+                ? "INDISPONIVEL"
+                : hasVariations && !selectedSize
+                  ? "SELECIONE UM TAMANHO"
+                  : isOutOfStock
+                    ? "AVISE-ME"
+                    : "ADICIONAR AO CARRINHO"}
           </button>
-
         </div>
       </div>
     </div>

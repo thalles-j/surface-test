@@ -5,12 +5,10 @@ import PageLoader from "../../components/PageLoader";
 import ImageGallery from "./components/ImageGallery";
 import ProductInfo from "./components/ProductInfo";
 import RelatedProducts from "./components/RelatedProducts";
-import { useCart } from "../../context/CartContext";
 import { api } from "../../services/api";
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const { addToCart } = useCart();
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [error, setError] = useState("");
@@ -54,18 +52,6 @@ export default function ProductDetail() {
 
   const variacoes = produto.variacoes_estoque || [];
 
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      alert("Por favor, selecione um tamanho");
-      return;
-    }
-    
-    const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
-    if (selectedVariacao?.estoque === 0) return;
-    
-    addToCart({ ...produto, selectedSize });
-  };
-
   return (
     <div className={styles.productDetail}>
       <div className={styles.container}>
@@ -79,7 +65,6 @@ export default function ProductDetail() {
           variacoes={variacoes}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
-          handleAddToCart={handleAddToCart}
         />
       </div>
 

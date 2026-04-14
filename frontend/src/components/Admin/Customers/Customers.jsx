@@ -7,10 +7,23 @@ import {
 import { api } from '../../../services/api';
 import { arrayToCsv, downloadCsv } from '../../../utils/exportCsv';
 
-const INITIAL_COUPONS = [
-  { id: '1', code: 'BEMVINDO10', discount: 10, type: 'Porcentagem', expiry: '2025-12-31', uses: 45, active: true },
-  { id: '2', code: 'PRIMEIRA20', discount: 20, type: 'Valor Fixo', expiry: '2024-06-01', uses: 12, active: true },
-];
+const mapCouponTypeToUi = (tipo) => {
+  const normalized = String(tipo || '').toLowerCase();
+  if (normalized === 'fixo' || normalized === 'valor fixo' || normalized === 'fixed' || normalized === 'valor_fixo') return 'Valor Fixo';
+  return 'Porcentagem';
+};
+
+const mapCouponTypeToApi = (tipo) => (tipo === 'Valor Fixo' ? 'fixo' : 'porcentagem');
+
+const mapApiCouponToUi = (coupon) => ({
+  id: String(coupon?.id_cupom ?? coupon?.id ?? ''),
+  code: String(coupon?.codigo ?? coupon?.code ?? ''),
+  discount: Number(coupon?.desconto ?? coupon?.discount ?? 0),
+  type: mapCouponTypeToUi(coupon?.tipo ?? coupon?.type),
+  expiry: coupon?.validade ? new Date(coupon.validade).toISOString().slice(0, 10) : '',
+  uses: Number(coupon?.usos ?? coupon?.uses ?? 0),
+  active: typeof coupon?.ativo === 'boolean' ? coupon.ativo : true,
+});
 
 // --- COMPONENTES AUXILIARES ---
 
@@ -52,7 +65,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 export default function App() {
   const [customers, setCustomers] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [coupons, setCoupons] = useState(INITIAL_COUPONS);
+  const [coupons, setCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modais
@@ -81,6 +95,24 @@ export default function App() {
   useEffect(() => {
     loadCustomers();
   }, [loadCustomers]);
+
+  const loadCoupons = useCallback(async () => {
+    try {
+      setLoadingCoupons(true);
+      const res = await api.get('/admin/marketing/coupons');
+      const rows = Array.isArray(res.data) ? res.data : [];
+      setCoupons(rows.map(mapApiCouponToUi));
+    } catch (error) {
+      console.error('Erro ao carregar cupons:', error);
+      setCoupons([]);
+    } finally {
+      setLoadingCoupons(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCoupons();
+  }, [loadCoupons]);
 
   const openDetails = async (customer) => {
     try {
@@ -129,21 +161,30 @@ export default function App() {
 
   // --- LÓGICA DE CUPONS ---
 
-  const handleAddCoupon = (e) => {
+  const handleAddCoupon = async (e) => {
     e.preventDefault();
-    const coupon = {
-      ...newCoupon,
-      id: Math.random().toString(36).substr(2, 9),
-      uses: 0,
-      active: true
-    };
-    setCoupons([coupon, ...coupons]);
-    setNewCoupon({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
-    setIsCouponModalOpen(false);
+    try {
+      await api.post('/admin/marketing/coupons', {
+        codigo: newCoupon.code.trim().toUpperCase(),
+        desconto: Number(newCoupon.discount),
+        tipo: mapCouponTypeToApi(newCoupon.type),
+        validade: newCoupon.expiry || null,
+      });
+      await loadCoupons();
+      setNewCoupon({ code: '', discount: '', type: 'Porcentagem', expiry: '' });
+      setIsCouponModalOpen(false);
+    } catch (error) {
+      console.error('Erro ao criar cupom:', error);
+    }
   };
 
-  const deleteCoupon = (id) => {
-    setCoupons(coupons.filter(c => c.id !== id));
+  const deleteCoupon = async (id) => {
+    try {
+      await api.delete(`/admin/marketing/coupons/${id}`);
+      setCoupons((prev) => prev.filter((c) => c.id !== String(id)));
+    } catch (error) {
+      console.error('Erro ao deletar cupom:', error);
+    }
   };
 
   // --- RENDERIZAÇÃO ---
@@ -300,7 +341,11 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {coupons.map(coupon => (
+                  {loadingCoupons ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Carregando cupons...</td>
+                    </tr>
+                  ) : coupons.map(coupon => (
                     <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <code className="bg-amber-50 text-amber-700 px-3 py-1 rounded-md font-mono font-bold border border-amber-100 uppercase tracking-tight">{coupon.code}</code>
@@ -330,6 +375,11 @@ export default function App() {
                       </td>
                     </tr>
                   ))}
+                  {!loadingCoupons && coupons.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Nenhum cupom cadastrado.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
