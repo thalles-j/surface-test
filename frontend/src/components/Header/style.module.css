@@ -1,20 +1,53 @@
 :root {
-  --header-bg: black;
-  --header-color: white;
-  --underline-color: white;
+  --header-bg: var(--app-surface);
+  --header-color: var(--app-text);
+  --underline-color: var(--app-text);
   --logo-url: url('/src/assets/logo192white.png');
 }
 
 .header, header {
   z-index: 997;
-  background-color: var(--header-bg);
   color: var(--header-color);
   visibility: visible;
   opacity: 1;
   font-family: "Oswald", sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
-  transition: opacity 0.3s ease-in;
+  transition: opacity 0.3s ease-in, color 0.25s ease, background-color 0.25s ease;
+}
+
+.heroHeader {
+  color: #ffffff;
+}
+
+.heroHeader .navbarWrapper {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.38);
+}
+
+.heroHeader .centeredMenu li,
+.heroHeader .rightMenu li button,
+.heroHeader .btn_login,
+.heroHeader .searchConfirmButton,
+.heroHeader .searchCloseButton,
+.heroHeader .searchInput,
+.heroHeader .searchInput::placeholder {
+  color: #ffffff;
+}
+
+.heroHeader .centeredMenu li.active,
+.heroHeader .activeButton {
+  color: #ffffff;
+}
+
+.heroHeader .centeredMenu li.active::after,
+.heroHeader .centeredMenu li:hover::after {
+  background-color: #ffffff;
+}
+
+.heroHeader .logoWrapper img,
+.heroHeader .rightMenu li button,
+.heroHeader .btn_login {
+  filter: drop-shadow(0 1px 10px rgba(0, 0, 0, 0.32));
 }
 
 .noBreak {
@@ -24,13 +57,17 @@
 }
 
 .navbarWrapper {
-  position: absolute;
+  position: fixed;
+  top: 0;
+  left: 0;
   display: inline;
   width: 100%;
   gap: 1rem;
   justify-content: space-between;
   height: 0 !important;
   z-index: 999;
+  background-color: var(--header-bg);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .nav {
@@ -96,12 +133,12 @@
 .active {}
 
 .centeredMenu li.active {
-  color: #ff3b30; /* active red */
+  color: var(--app-danger);
 }
 
 .centeredMenu li.active::after {
   width: 100%;
-  background-color: #ff3b30;
+  background-color: var(--app-danger);
 }
 
 /* --- LOGO --- */
@@ -125,7 +162,7 @@
 
 /* Botão de pesquisa ativo (usado condicionalmente via styles.activeButton) */
 .activeButton {
-  color: #ff3b30;
+  color: var(--app-danger);
   transform: scale(1.05);
 }
 
@@ -170,9 +207,29 @@
   color: var(--header-color);
 }
 
+.rightMenu li button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.themeToggleItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.themeToggleItem button {
+  color: inherit;
+  font-size: inherit;
+}
+
+.rightMenu .themeToggleItem button:hover {
+  transform: none;
+}
+
 /* Classe para quando usuário está logado */
 .btn_login_active {
-  filter: drop-shadow(0 1px 1px #00ff40);  /* Glow effect */
+  filter: drop-shadow(0 1px 1px var(--app-success));  /* Glow effect */
 }
 
 .searchWrapper {
@@ -290,7 +347,7 @@
     left: 0;
     width: 100%;
     height: 100vh;
-    background-color: white;
+    background-color: var(--app-surface);
     -webkit-font-smoothing: antialiased;
     padding: 1rem 0;
     z-index: 997;
@@ -309,7 +366,7 @@
 }
 
   .mobileMenu li a {
-    color: black;
+    color: var(--app-text);
     text-decoration: none;
     font-size: 20px;
     font-weight: 600;
@@ -325,23 +382,30 @@
 
   .mobileMenuBottom li{
     display: flex;
+  }
+
+  .mobileMenuBottom li:first-child{
     margin-top: 100px;
-    
   }
   .mobileMenuBottom li a{
-    border: 4px solid rgb(0, 0, 0);
+    border: 4px solid var(--app-text);
     padding: 10px;
     font-weight: 700;
     transition: ease-in-out 0.2s;
   }
   .mobileMenuBottom li a:hover{
-    background-color: black;
-    color: white;
+    background-color: var(--app-text);
+    color: var(--app-bg);
+  }
+
+  .mobileThemeItem {
+    margin-top: 1rem;
+    padding-left: 10px;
   }
 
   /* mobile active link */
   .mobileMenu li.active a {
-    color: #ff3b30;
+    color: var(--app-danger);
     font-weight: 800;
   }
 }
@@ -363,6 +427,10 @@
   .rightMenuWrapper li button{
     font-size: calc(0.9rem + 0.2vw);
     
+  }
+
+  .mobileThemeItem button {
+    min-height: 38px;
   }
 }
 

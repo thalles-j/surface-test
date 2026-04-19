@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Lock, 
-  Unlock, 
-  TrendingUp, 
-  Zap, 
-  Clock, 
-  Eye 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Lock,
+  Unlock,
+  TrendingUp,
+  Zap,
+  Clock,
+  Eye,
 } from 'lucide-react';
 import { api } from '../../../services/api';
 import { resolveImageUrl } from '../../../utils/resolveImageUrl';
@@ -25,19 +25,42 @@ const EMPTY_DASHBOARD_DATA = {
 };
 
 const StatCard = ({ title, value, change, isPositive }) => (
-  <div className="bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl hover:border-zinc-300 shadow-sm transition-all duration-300">
-    <p className="text-zinc-500 text-xs sm:text-sm font-medium">{title}</p>
-    <div className="flex items-end justify-between gap-2 mt-3">
-      <h3 className="text-xl sm:text-2xl sm:text-3xl font-bold text-zinc-900 break-words">{value}</h3>
-      {change && (
-        <span className={`flex items-center gap-1 text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+  <div className="admin-kpi-card h-full transition-all duration-300">
+    <div className="flex items-start justify-between gap-3">
+      <p className="admin-kpi-label pr-2">{title}</p>
+      {change ? (
+        <span className={`admin-badge ${isPositive ? 'admin-badge-success' : 'admin-badge-danger'}`}>
           {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
           {change}
         </span>
+      ) : (
+        <span className="admin-badge admin-badge-neutral">Atual</span>
       )}
+    </div>
+    <div className="mt-5 space-y-2">
+      <h3 className="admin-kpi-value break-words">{value}</h3>
+      <p className="admin-kpi-meta">
+        {change ? 'Comparado ao periodo anterior' : 'Acompanhamento em tempo real'}
+      </p>
     </div>
   </div>
 );
+
+const getOrderStatusClass = (status) => {
+  const normalizedStatus = String(status || '').toLowerCase();
+
+  if (normalizedStatus.includes('cancel')) return 'admin-badge-danger';
+  if (normalizedStatus.includes('pend')) return 'admin-badge-warning';
+  if (
+    normalizedStatus.includes('paid') ||
+    normalizedStatus.includes('pago') ||
+    normalizedStatus.includes('aprov')
+  ) {
+    return 'admin-badge-success';
+  }
+
+  return 'admin-badge-neutral';
+};
 
 export default function Dashboard({ onCreateCollection }) {
   const toast = useToast();
@@ -53,7 +76,6 @@ export default function Dashboard({ onCreateCollection }) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Hit de visita (background)
         api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' }).catch(() => {});
 
         const [statsRes, topRes, ordersRes, settingsRes, visitsRes, catRes] = await Promise.all([
@@ -70,7 +92,7 @@ export default function Dashboard({ onCreateCollection }) {
         setRecentOrders(ordersRes.data || []);
         setIsDropLocked(settingsRes.data?.loja_ativa === false);
         setCategorySales(Array.isArray(catRes.data) ? catRes.data : []);
-        
+
         const safeVisits = Array.isArray(visitsRes.data) ? visitsRes.data : [];
         const visitsTotal = safeVisits.reduce((s, it) => s + (it.count || 0), 0);
         setVisitsCount(visitsTotal);
@@ -84,7 +106,7 @@ export default function Dashboard({ onCreateCollection }) {
             price: Number(prod.preco || prod.price || 0),
             sold: it.sold || 0,
             sku: Array.isArray(prod.variacoes_estoque) && prod.variacoes_estoque[0] ? prod.variacoes_estoque[0].sku : prod.sku || '',
-            image: prod.fotos && prod.fotos[0] ? resolveImageUrl(prod.fotos[0].url) : ''
+            image: prod.fotos && prod.fotos[0] ? resolveImageUrl(prod.fotos[0].url) : '',
           };
         });
 
@@ -112,7 +134,9 @@ export default function Dashboard({ onCreateCollection }) {
     };
 
     fetchData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [toast]);
 
   if (loading || !dashboardData) {
@@ -124,64 +148,97 @@ export default function Dashboard({ onCreateCollection }) {
     );
   }
 
+  const maxCategoryValue = Math.max(...categorySales.map((item) => Number(item.value || 0)), 1);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* STAT CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Faturamento (Mês)"
+          title="Faturamento (Mes)"
           value={`R$ ${dashboardData.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           change={dashboardData.revenueGrowth}
           isPositive={!dashboardData.revenueGrowth.startsWith('-')}
         />
-        <StatCard title="Pedidos" value={dashboardData.orders} change={dashboardData.ordersGrowth} isPositive={!dashboardData.ordersGrowth.startsWith('-')} />
         <StatCard
-          title="Ticket Médio"
+          title="Pedidos"
+          value={dashboardData.orders}
+          change={dashboardData.ordersGrowth}
+          isPositive={!dashboardData.ordersGrowth.startsWith('-')}
+        />
+        <StatCard
+          title="Ticket Medio"
           value={`R$ ${dashboardData.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           change={dashboardData.avgTicketGrowth}
           isPositive={!dashboardData.avgTicketGrowth.startsWith('-')}
         />
-        <StatCard title="Taxa de Conversão" value={`${dashboardData.conversionRate}%`} change="" isPositive={true} />
+        <StatCard
+          title="Taxa de Conversao"
+          value={`${dashboardData.conversionRate}%`}
+          change=""
+          isPositive
+        />
       </div>
 
-      {/* SEÇÃO PRINCIPAL: PRODUTOS E STATUS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* TOP PRODUTOS */}
-        <div className="bg-white p-4 sm:p-8 border border-zinc-200 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center gap-3 mb-6">
-            <h3 className="font-bold text-base sm:text-lg text-zinc-900">Produtos Mais Vendidos</h3>
-            <button className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">Ver tudo →</button>
+        <div className="admin-panel p-5 sm:p-8">
+          <div className="flex justify-between items-start gap-3 mb-6">
+            <div className="space-y-2">
+              <p className="admin-section-kicker">Performance</p>
+              <h3 className="admin-section-title">Produtos Mais Vendidos</h3>
+            </div>
+            <button className="admin-btn-ghost shrink-0">Ver tudo</button>
           </div>
-          <div className="space-y-4">
-            {dashboardData.topProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-3 pb-4 border-b border-zinc-100 last:border-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src={p.image || "/placeholder-prod.png"} alt={p.name} className="w-12 h-12 object-cover rounded-lg bg-zinc-100" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-zinc-900 truncate">{p.name}</p>
-                    <span className="text-[10px] bg-zinc-100 px-2 py-1 rounded font-mono text-zinc-500">{p.sku}</span>
+
+          {dashboardData.topProducts.length ? (
+            <div className="space-y-3">
+              {dashboardData.topProducts.map((product, index) => (
+                <div key={product.id} className="admin-panel-muted flex items-center justify-between gap-4 px-4 py-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <img
+                      src={product.image || '/placeholder-prod.png'}
+                      alt={product.name}
+                      className="w-14 h-14 object-cover rounded-xl"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="admin-badge admin-badge-neutral">#{index + 1}</span>
+                        {product.sku ? <span className="admin-badge admin-badge-neutral font-mono">{product.sku}</span> : null}
+                      </div>
+                      <p className="mt-3 text-sm sm:text-base font-semibold truncate" style={{ color: 'var(--app-text)' }}>
+                        {product.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-text)' }}>
+                      R$ {product.price.toFixed(2)}
+                    </p>
+                    <p className="admin-kpi-meta mt-1">{product.sold} vendidos</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-zinc-900">R$ {p.price.toFixed(2)}</p>
-                  <p className="text-[10px] text-zinc-500">{p.sold} vendidos</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-empty-state admin-panel-muted">Nenhum produto disponivel para ranking.</div>
+          )}
         </div>
 
-        {/* STATUS DO DROP */}
-        <div className="bg-white p-4 sm:p-8 border border-zinc-200 rounded-xl shadow-sm">
-          <h3 className="font-bold text-base sm:text-lg mb-6 text-zinc-900">Status do Próximo Drop</h3>
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className={`p-4 rounded-full mb-4 ${isDropLocked ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+        <div className="admin-panel p-5 sm:p-8">
+          <div className="space-y-2 mb-6">
+            <p className="admin-section-kicker">Operacao</p>
+            <h3 className="admin-section-title">Status do Proximo Drop</h3>
+          </div>
+          <div className="admin-panel-muted flex flex-col items-center justify-center py-8 px-5 sm:px-8 text-center">
+            <div className={`admin-badge mb-4 ${isDropLocked ? 'admin-badge-danger' : 'admin-badge-success'}`}>
               {isDropLocked ? <Lock size={32} /> : <Unlock size={32} />}
             </div>
-            <p className="text-xs sm:text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-2 text-center">Modo Coming Soon</p>
-            <h4 className="text-xl sm:text-2xl font-bold mb-6 text-zinc-900 text-center">{isDropLocked ? 'Site Travado' : 'Site Aberto'}</h4>
+            <p className="admin-section-kicker mb-2">Modo Coming Soon</p>
+            <h4 className="text-xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--app-text)' }}>
+              {isDropLocked ? 'Site Travado' : 'Site Aberto'}
+            </h4>
+            <p className="admin-kpi-meta max-w-sm mb-6">
+              {isDropLocked ? 'O acesso esta restrito enquanto o proximo drop esta em preparacao.' : 'A loja esta disponivel para compras e navegacao.'}
+            </p>
             <button
               onClick={async () => {
                 try {
@@ -192,42 +249,58 @@ export default function Dashboard({ onCreateCollection }) {
                   toast.error('Erro ao alternar status');
                 }
               }}
-              className={`w-full sm:w-auto px-5 sm:px-8 py-3 rounded-lg text-sm font-bold shadow-sm transition-all ${
-                isDropLocked ? 'bg-zinc-900 text-white hover:bg-black' : 'border-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-              }`}
+              className={`w-full sm:w-auto ${isDropLocked ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
             >
-              {isDropLocked ? '🔓 Liberar Acesso' : '🔒 Travar Site'}
+              {isDropLocked ? 'Liberar acesso' : 'Travar site'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ANALYTICS: ACESSOS E CATEGORIAS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl flex items-center gap-3 sm:gap-4 shadow-sm">
-          <div className="p-3 bg-blue-50 rounded-lg"><Eye size={24} className="text-blue-600" /></div>
-          <div>
-            <p className="text-zinc-500 text-sm font-medium">Total de Acessos</p>
-            <h3 className="text-2xl sm:text-3xl font-bold text-zinc-900">{visitsCount.toLocaleString('pt-BR')}</h3>
+        <div className="lg:col-span-1 admin-kpi-card flex items-center gap-4 sm:gap-5">
+          <div
+            className="flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'var(--app-info-soft)', color: 'var(--app-info)' }}
+          >
+            <Eye size={24} />
+          </div>
+          <div className="min-w-0">
+            <p className="admin-kpi-label">Total de Acessos</p>
+            <h3 className="admin-kpi-value">{visitsCount.toLocaleString('pt-BR')}</h3>
+            <p className="admin-kpi-meta mt-2">Visitas acumuladas no painel administrativo</p>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white p-4 sm:p-6 border border-zinc-200 rounded-xl shadow-sm">
-          <h3 className="text-sm font-bold mb-4 text-zinc-900 uppercase tracking-wider">Vendas por Categoria</h3>
-          <div className="space-y-3">
+        <div className="lg:col-span-2 admin-panel p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="space-y-2">
+              <p className="admin-section-kicker">Categorias</p>
+              <h3 className="admin-section-title">Vendas por Categoria</h3>
+            </div>
+            <span className="admin-badge admin-badge-info">Distribuicao</span>
+          </div>
+          <div className="space-y-4">
             {categorySales.map((cat) => {
-              const maxValue = Math.max(...categorySales.map(c => Number(c.value || 0)), 1);
               const value = Number(cat.value || 0);
               return (
-                <div key={cat.name} className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-20 sm:w-24 text-[11px] sm:text-xs font-bold text-zinc-500 truncate">{cat.name}</div>
-                  <div className="flex-1 bg-zinc-100 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-zinc-900 h-full rounded-full transition-all duration-700" 
-                      style={{ width: `${(value / maxValue) * 100}%` }} 
+                <div key={cat.name} className="grid grid-cols-[minmax(0,96px)_1fr_auto] items-center gap-3 sm:gap-4">
+                  <div className="text-[11px] sm:text-xs font-semibold truncate" style={{ color: 'var(--app-text-secondary)' }}>
+                    {cat.name}
+                  </div>
+                  <div
+                    className="rounded-full h-3 overflow-hidden"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface-alt) 90%, transparent)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${(value / maxCategoryValue) * 100}%`,
+                        background: 'var(--app-primary-bg)',
+                      }}
                     />
                   </div>
-                  <div className="text-right text-[11px] sm:text-xs font-bold text-zinc-900 w-16 sm:w-20">
+                  <div className="text-right text-[11px] sm:text-xs font-bold w-16 sm:w-20" style={{ color: 'var(--app-text)' }}>
                     R$ {value.toLocaleString('pt-BR')}
                   </div>
                 </div>
@@ -237,34 +310,54 @@ export default function Dashboard({ onCreateCollection }) {
         </div>
       </div>
 
-      {/* PEDIDOS RECENTES */}
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-zinc-100 bg-zinc-50/50">
-          <h3 className="font-bold flex items-center gap-2 text-zinc-900"><Clock size={18} /> Pedidos Recentes</h3>
+      <div className="admin-panel admin-table-shell overflow-hidden">
+        <div
+          className="p-4 sm:p-6 border-b"
+          style={{
+            borderColor: 'var(--app-border)',
+            background: 'color-mix(in srgb, var(--app-surface-alt) 74%, transparent)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2">
+              <p className="admin-section-kicker">Atividade recente</p>
+              <h3 className="admin-section-title flex items-center gap-2">
+                <Clock size={18} />
+                Pedidos Recentes
+              </h3>
+            </div>
+            <span className="admin-badge admin-badge-neutral">{recentOrders.length} itens</span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-sm text-left">
             <thead>
-              <tr className="text-zinc-400 text-[10px] uppercase tracking-widest border-b border-zinc-100">
-                <th className="px-6 py-4 font-semibold">ID</th>
-                <th className="px-6 py-4 font-semibold">Cliente</th>
-                <th className="px-6 py-4 font-semibold">Total</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Data</th>
+              <tr className="admin-table-header" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <th className="admin-table-head-cell px-6 py-4">ID</th>
+                <th className="admin-table-head-cell px-6 py-4">Cliente</th>
+                <th className="admin-table-head-cell px-6 py-4">Total</th>
+                <th className="admin-table-head-cell px-6 py-4">Status</th>
+                <th className="admin-table-head-cell px-6 py-4 text-right">Data</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-50">
-              {recentOrders.map(order => (
-                <tr key={order.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-4 font-mono font-bold text-zinc-900">#{order.id}</td>
-                  <td className="px-6 py-4 text-zinc-600 font-medium">{order.client || order.customer}</td>
-                  <td className="px-6 py-4 font-bold text-zinc-900">R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="px-6 py-4">
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-zinc-100 text-zinc-600 uppercase">
-                      {order.status}
-                    </span>
+            <tbody className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
+              {recentOrders.map((order) => (
+                <tr key={order.id} className="admin-table-row">
+                  <td className="px-6 py-4 font-mono font-bold" style={{ color: 'var(--app-text)' }}>
+                    #{order.id}
                   </td>
-                  <td className="px-6 py-4 text-zinc-400 text-xs text-right">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
+                  <td className="px-6 py-4 font-medium" style={{ color: 'var(--app-text-secondary)' }}>
+                    {order.client || order.customer}
+                  </td>
+                  <td className="px-6 py-4 font-bold" style={{ color: 'var(--app-text)' }}>
+                    R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`admin-badge ${getOrderStatusClass(order.status)}`}>{order.status}</span>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-right" style={{ color: 'var(--app-muted-text)' }}>
+                    {new Date(order.date).toLocaleDateString('pt-BR')}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -272,29 +365,32 @@ export default function Dashboard({ onCreateCollection }) {
         </div>
       </div>
 
-      {/* BOTÕES DE AÇÃO RÁPIDA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10">
-        <button 
+        <button
           onClick={onCreateCollection}
-          className="flex items-center justify-between p-4 sm:p-6 bg-zinc-900 text-white rounded-xl hover:bg-black transition-all group"
+          className="admin-kpi-card flex items-center justify-between gap-4 text-left group transition-all duration-200"
         >
-          <div className="text-left">
-            <h4 className="font-bold">Criar Coleção</h4>
-            <p className="text-xs text-zinc-400">Preparar novo drop</p>
+          <div className="space-y-2">
+            <p className="admin-section-kicker">Acao rapida</p>
+            <h4 className="text-lg font-bold tracking-tight" style={{ color: 'var(--app-text)' }}>
+              Criar Colecao
+            </h4>
+            <p className="admin-kpi-meta">Prepare o proximo drop com a mesma linguagem visual do painel.</p>
           </div>
-          <TrendingUp className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          <TrendingUp className="shrink-0 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
         </button>
 
-        <button className="flex items-center justify-between p-4 sm:p-6 bg-white border-2 border-zinc-100 rounded-xl hover:border-zinc-900 transition-all group">
-          <div className="text-left">
-            <h4 className="font-bold text-zinc-900">Disparar Campanha</h4>
-            <p className="text-xs text-zinc-500">Notificar via E-mail/WhatsApp</p>
+        <button className="admin-panel-muted flex items-center justify-between gap-4 p-5 sm:p-6 text-left group transition-all duration-200">
+          <div className="space-y-2">
+            <p className="admin-section-kicker">Marketing</p>
+            <h4 className="text-lg font-bold tracking-tight" style={{ color: 'var(--app-text)' }}>
+              Disparar Campanha
+            </h4>
+            <p className="admin-kpi-meta">Notifique sua base por email ou WhatsApp sem sair do fluxo administrativo.</p>
           </div>
-          <Zap size={20} className="text-zinc-900" />
+          <Zap size={20} className="shrink-0" style={{ color: 'var(--app-text)' }} />
         </button>
       </div>
-
     </div>
   );
 }
-

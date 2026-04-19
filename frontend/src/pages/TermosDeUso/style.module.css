@@ -1,12 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap");
 
-:root {
-    --brand-black: #000000;
-}
-
 .page {
     min-height: 100vh;
-    color: var(--brand-black);
+    color: var(--app-text);
+    background: var(--app-bg);
     margin-top: 6rem;
 }
 
@@ -22,7 +19,7 @@
 .policy-text {
     font-size: 14px;
     font-weight: 700;
-    color: rgba(0,0,0,0.85);
+    color: var(--app-muted-text);
     line-height: 1.7;
 }
 
@@ -31,4 +28,13 @@
     font-weight: 900;
     text-transform: uppercase;
     margin-bottom: 0.5rem;
+    color: var(--app-text);
+}
+
+.page :global(.text-black) {
+    color: var(--app-text) !important;
+}
+
+.page :global(.text-gray-400) {
+    color: var(--app-muted-text) !important;
 }

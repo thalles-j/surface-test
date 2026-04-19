@@ -32,7 +32,7 @@ export default function CartDrawer() {
 
   const handleCheckout = () => {
     toggleCart();
-    navigate('/checkout');
+    navigate('/pre-checkout');
   };
 
   return (

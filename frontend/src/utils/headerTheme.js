@@ -1,21 +1,24 @@
-export function updateHeaderCSS(pathname) {
+export function updateHeaderCSS(pathname, options = {}) {
   const root = document.documentElement;
+  const isDark = root.getAttribute("data-theme") === "dark";
+  const rootStyles = getComputedStyle(root);
+  const heroMode = options.heroMode ?? pathname === "/";
 
-  if (pathname === "/") {
-    // Landing page: letras brancas, logo clara
+  if (heroMode) {
     root.style.setProperty("--header-bg", "transparent");
-    root.style.setProperty("--header-color", "white");
-    root.style.setProperty("--underline-color", "white");
+    root.style.setProperty("--header-color", "#ffffff");
+    root.style.setProperty("--underline-color", "#ffffff");
     root.style.setProperty("--logo-url", "url('/src/assets/logo192white.png')");
   } else {
-    // Shop ou outras páginas: letras pretas, logo escura
-    root.style.setProperty("--header-bg", "white");
-    root.style.setProperty("--header-color", "black");
-    root.style.setProperty("--underline-color", "black");
-    root.style.setProperty("--logo-url", "url('/src/assets/logo192.png')");
+    root.style.setProperty("--header-bg", rootStyles.getPropertyValue("--app-surface").trim());
+    root.style.setProperty("--header-color", rootStyles.getPropertyValue("--app-text").trim());
+    root.style.setProperty("--underline-color", rootStyles.getPropertyValue("--app-text").trim());
+    root.style.setProperty(
+      "--logo-url",
+      isDark ? "url('/src/assets/logo192white.png')" : "url('/src/assets/logo192.png')"
+    );
   }
 
-  // Atualiza cores do input de pesquisa se ele existir
   const searchInput = document.querySelector(".searchInput");
   if (searchInput) {
     const bg = getComputedStyle(root).getPropertyValue("--header-bg");

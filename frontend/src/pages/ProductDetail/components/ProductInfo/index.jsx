@@ -19,12 +19,12 @@ export default function ProductInfo({
   const navigate = useNavigate();
 
   const isProductInactive = String(produto.status || '').toLowerCase() !== 'ativo';
+  const availableVariacoes = isProductInactive
+    ? variacoes
+    : variacoes.filter((v) => Number(v?.estoque || 0) > 0);
   const selectedVariacao = variacoes.find((v) => v.tamanho === selectedSize);
   const isSoldOut = !!selectedSize && Number(selectedVariacao?.estoque || 0) <= 0;
-  const isAllSoldOut =
-    !isProductInactive &&
-    variacoes.length > 0 &&
-    variacoes.every((v) => Number(v?.estoque || 0) <= 0);
+  const isAllSoldOut = !isProductInactive && variacoes.length > 0 && availableVariacoes.length === 0;
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -41,7 +41,7 @@ export default function ProductInfo({
     setLoading(true);
     addToCart(buildCartItem(), { openDrawer: false });
     setLoading(false);
-    navigate('/checkout');
+    navigate('/pre-checkout');
   };
 
   const handleAddToCart = () => {
@@ -109,25 +109,38 @@ export default function ProductInfo({
       {variacoes.length > 0 && (
         <div className={styles.sizeSection}>
           <div className={styles.sizeButtons}>
-            {variacoes.map((v) => {
-              const outOfStock = Number(v?.estoque || 0) <= 0;
-              const disabled = isProductInactive || outOfStock;
-
-              return (
-                <button
-                  key={v.sku || v.tamanho}
-                  className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''} ${disabled ? styles.disabled : ''}`}
-                  onClick={() => {
-                    if (disabled) return;
-                    setSelectedSize(v.tamanho);
-                  }}
-                  disabled={disabled}
-                >
-                  {v.tamanho}
-                </button>
-              );
-            })}
+            {isProductInactive
+              ? variacoes.map((v) => (
+                  <button
+                    key={v.sku || v.tamanho}
+                    className={`${styles.sizeBtn} ${styles.disabled}`}
+                    disabled
+                  >
+                    {v.tamanho} - ESGOTADO
+                  </button>
+                ))
+              : availableVariacoes.map((v) => (
+                  <button
+                    key={v.sku || v.tamanho}
+                    className={`${styles.sizeBtn} ${selectedSize === v.tamanho ? styles.selected : ''}`}
+                    onClick={() => setSelectedSize(v.tamanho)}
+                  >
+                    {v.tamanho}
+                  </button>
+                ))}
           </div>
+
+          {isAllSoldOut && (
+            <p className={styles.stockMessage}>
+              Todos os tamanhos estao esgotados no momento.
+            </p>
+          )}
+
+          {isProductInactive && (
+            <p className={styles.stockMessage}>
+              Produto indisponivel. Nenhum tamanho pode ser comprado enquanto estiver inativo.
+            </p>
+          )}
         </div>
       )}
 

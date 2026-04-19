@@ -20,7 +20,7 @@ const MODES = {
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const initialMode = useMemo(() => {
     const modeParam = searchParams.get("modo");
@@ -68,7 +68,32 @@ export default function Login() {
     if (!emailFromQuery) return;
     setRegisterData((prev) => ({ ...prev, email: emailFromQuery }));
     setLoginData((prev) => ({ ...prev, email: emailFromQuery }));
+    setForgotEmail(emailFromQuery);
   }, [emailFromQuery]);
+
+  const setPageMode = (nextMode) => {
+    setMode(nextMode);
+    setLoginMsg("");
+    setRegisterMsg("");
+    setForgotMsg("");
+    setResetMsg("");
+    setFirstAccessStatus(null);
+
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (nextMode === MODES.LOGIN) {
+      nextParams.delete("modo");
+      nextParams.delete("token");
+    } else if (nextMode === MODES.RESET) {
+      nextParams.set("modo", "reset");
+      if (resetToken) nextParams.set("token", resetToken);
+    } else {
+      nextParams.set("modo", nextMode);
+      if (nextMode !== MODES.RESET) nextParams.delete("token");
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (senha) => senha.trim().length >= 7;
@@ -145,9 +170,15 @@ export default function Login() {
         telefone: registerData.telefone,
       });
 
-      setRegisterMsg("Conta criada com sucesso. Agora faca login.");
-      setMode(MODES.LOGIN);
-      setLoginData((prev) => ({ ...prev, email: registerData.email.trim().toLowerCase() }));
+      const normalizedEmail = registerData.email.trim().toLowerCase();
+      setLoginData((prev) => ({ ...prev, email: normalizedEmail }));
+      setForgotEmail(normalizedEmail);
+      setPageMode(MODES.LOGIN);
+      setLoginMsg(
+        mode === MODES.FIRST_ACCESS
+          ? "Conta criada com sucesso. Entre para vincular seus pedidos automaticamente."
+          : "Conta criada com sucesso. Agora faca login."
+      );
     } catch (error) {
       const errorMsg = error.response?.data?.mensagem || "Erro ao realizar cadastro.";
       setRegisterMsg(errorMsg);
@@ -209,13 +240,20 @@ export default function Login() {
     }
 
     try {
-      const status = await apiFirstAccessStatus({ email: registerData.email.trim().toLowerCase() });
+      const normalizedEmail = registerData.email.trim().toLowerCase();
+      const status = await apiFirstAccessStatus({ email: normalizedEmail });
       setFirstAccessStatus(status);
+      setLoginData((prev) => ({ ...prev, email: normalizedEmail }));
+      setForgotEmail(normalizedEmail);
 
       if (status.hasConta) {
-        setRegisterMsg("Ja existe conta para este email. Use o login normal.");
+        setRegisterMsg(
+          status.temPedidosPorEmail
+            ? "Ja existe conta para este email. Faca login para vincular os pedidos pendentes ou recupere sua senha."
+            : "Ja existe conta para este email. Use o login normal ou recupere sua senha."
+        );
       } else if (!status.temPedidosPorEmail) {
-        setRegisterMsg("Nenhum pedido encontrado para este email. Voce ainda pode criar uma conta normalmente.");
+        setRegisterMsg("Nenhum pedido encontrado para este email. Este fluxo e apenas para primeiro acesso apos compra.");
       } else {
         setRegisterMsg("Pedido encontrado. Finalize seu primeiro acesso criando a conta.");
       }
@@ -223,6 +261,36 @@ export default function Login() {
       setRegisterMsg(error.response?.data?.mensagem || "Nao foi possivel verificar primeiro acesso.");
     }
   };
+
+  const canSubmitFirstAccessRegister =
+    mode !== MODES.FIRST_ACCESS ||
+    (firstAccessStatus && !firstAccessStatus.hasConta && firstAccessStatus.temPedidosPorEmail);
+
+  const renderModeTabs = () => (
+    <div className={styles.modeTabs}>
+      <button
+        type="button"
+        className={`${styles.modeTab} ${mode === MODES.LOGIN ? styles.modeTabActive : ""}`}
+        onClick={() => setPageMode(MODES.LOGIN)}
+      >
+        Login
+      </button>
+      <button
+        type="button"
+        className={`${styles.modeTab} ${mode === MODES.FORGOT ? styles.modeTabActive : ""}`}
+        onClick={() => setPageMode(MODES.FORGOT)}
+      >
+        Recuperar senha
+      </button>
+      <button
+        type="button"
+        className={`${styles.modeTab} ${mode === MODES.FIRST_ACCESS ? styles.modeTabActive : ""}`}
+        onClick={() => setPageMode(MODES.FIRST_ACCESS)}
+      >
+        Primeiro acesso
+      </button>
+    </div>
+  );
 
   return (
     <section>
@@ -235,11 +303,7 @@ export default function Login() {
           <div className={styles.box_login}>
             <h4 className={styles.title_form}>Acesso</h4>
 
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
-              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.LOGIN)}>Login</button>
-              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.FORGOT)}>Recuperar senha</button>
-              <button type="button" className={styles.btn_submit} style={{ height: 38, width: "auto", padding: "0 0.9rem" }} onClick={() => setMode(MODES.FIRST_ACCESS)}>Primeiro acesso</button>
-            </div>
+            {renderModeTabs()}
 
             {mode === MODES.LOGIN && (
               <form onSubmit={handleLogin} className={styles.form}>
@@ -272,6 +336,15 @@ export default function Login() {
 
                 {loginMsg && <div className={styles.msg_retorno}>{loginMsg}</div>}
 
+                <div className={styles.inlineActions}>
+                  <button type="button" className={styles.textAction} onClick={() => setPageMode(MODES.FORGOT)}>
+                    Esqueci minha senha
+                  </button>
+                  <button type="button" className={styles.textAction} onClick={() => setPageMode(MODES.FIRST_ACCESS)}>
+                    Primeiro acesso apos compra
+                  </button>
+                </div>
+
                 <div className={`${styles.field} ${styles.fieldsubmit}`}>
                   <button className={styles.btn_submit} type="submit">Entrar</button>
                 </div>
@@ -292,6 +365,10 @@ export default function Login() {
                 </div>
 
                 {forgotMsg && <div className={styles.msg_retorno}>{forgotMsg}</div>}
+
+                <div className={styles.infoBox}>
+                  Use este fluxo apenas para redefinir a senha de uma conta que ja existe.
+                </div>
 
                 <div className={`${styles.field} ${styles.fieldsubmit}`}>
                   <button className={styles.btn_submit} type="submit">Enviar link</button>
@@ -333,31 +410,11 @@ export default function Login() {
           </div>
 
           <div className={styles.box_register}>
-            <h4 className={styles.title_form}>{mode === MODES.FIRST_ACCESS ? "Primeiro acesso apos compra" : "Criar Conta"}</h4>
+            <h4 className={styles.title_form}>
+              {mode === MODES.FIRST_ACCESS ? "Primeiro acesso apos compra" : "Criar Conta"}
+            </h4>
 
             <form onSubmit={handleRegister} className={styles.form}>
-              <div className={`${styles.field} ${styles.field_half}`}>
-                <label htmlFor="register-first-name">Nome</label>
-                <input
-                  type="text"
-                  id="register-first-name"
-                  placeholder="Digite aqui"
-                  value={registerData.nome}
-                  onChange={(e) => setRegisterData({ ...registerData, nome: e.target.value })}
-                />
-              </div>
-
-              <div className={`${styles.field} ${styles.field_half}`}>
-                <label htmlFor="register-last-name">Sobrenome</label>
-                <input
-                  type="text"
-                  id="register-last-name"
-                  placeholder="Digite aqui"
-                  value={registerData.sobrenome}
-                  onChange={(e) => setRegisterData({ ...registerData, sobrenome: e.target.value })}
-                />
-              </div>
-
               <div className={styles.field}>
                 <label htmlFor="register-email">Email</label>
                 <input
@@ -365,85 +422,131 @@ export default function Login() {
                   id="register-email"
                   placeholder="Digite aqui"
                   value={registerData.email}
-                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label htmlFor="register-phone">Telefone</label>
-                <input
-                  type="tel"
-                  id="register-phone"
-                  placeholder="Digite aqui"
-                  value={registerData.telefone}
-                  onChange={(e) => setRegisterData({ ...registerData, telefone: e.target.value })}
-                />
-              </div>
-
-              {mode === MODES.FIRST_ACCESS && (
-                <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                  <button className={styles.btn_submit} type="button" onClick={handleCheckFirstAccess}>
-                    Verificar email de pedido
-                  </button>
-                </div>
-              )}
-
-              <div className={`${styles.field} ${styles.field_half}`}>
-                <label htmlFor="register-password">Senha</label>
-                <div className={styles.passwordField}>
-                  <input
-                    type={showRegisterPassword ? "text" : "password"}
-                    id="register-password"
-                    placeholder="Digite aqui"
-                    value={registerData.senha}
-                    onChange={(e) => {
-                      const novaSenha = e.target.value;
-                      setRegisterData({ ...registerData, senha: novaSenha });
-                      setSenhaConfere(novaSenha === registerData.confirmarSenha);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                    className={styles.eyeButton}
-                  >
-                    {showRegisterPassword ? <FaEye /> : <FaEyeSlash />}
-                  </button>
-                </div>
-              </div>
-
-              <div className={`${styles.field} ${styles.field_half}`}>
-                <label htmlFor="register-password-confirm">Confirmar Senha</label>
-                <input
-                  type={showRegisterPassword ? "text" : "password"}
-                  id="register-password-confirm"
-                  placeholder="Digite aqui"
-                  value={registerData.confirmarSenha}
                   onChange={(e) => {
-                    const confirmar = e.target.value;
-                    setRegisterData({ ...registerData, confirmarSenha: confirmar });
-                    setSenhaConfere(registerData.senha === confirmar);
+                    setRegisterData({ ...registerData, email: e.target.value });
+                    if (mode === MODES.FIRST_ACCESS) {
+                      setFirstAccessStatus(null);
+                    }
                   }}
                 />
               </div>
 
-              {!senhaConfere && <p className={styles.msg_retorno}>As senhas nao conferem.</p>}
+              {mode === MODES.FIRST_ACCESS && (
+                <>
+                  <div className={styles.infoBox}>
+                    Primeiro acesso e exclusivo para quem comprou antes de criar conta. Verifique o email usado no pedido.
+                  </div>
+
+                  <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                    <button className={styles.btn_submit} type="button" onClick={handleCheckFirstAccess}>
+                      Verificar email do pedido
+                    </button>
+                  </div>
+                </>
+              )}
 
               {registerMsg && <div className={styles.msg_retorno}>{registerMsg}</div>}
 
-              {mode === MODES.FIRST_ACCESS && firstAccessStatus && (
-                <div className={styles.msg_retorno}>
-                  {firstAccessStatus.temPedidosPorEmail
-                    ? "Pedidos desse email serao vinculados automaticamente apos criar conta/login."
-                    : "Nenhum pedido pendente para vincular nesse email."}
+              {mode === MODES.FIRST_ACCESS && firstAccessStatus?.hasConta && (
+                <div className={styles.modeActionGroup}>
+                  <button className={styles.btn_submit} type="button" onClick={() => setPageMode(MODES.LOGIN)}>
+                    Ir para login
+                  </button>
+                  <button className={styles.btn_submit} type="button" onClick={() => setPageMode(MODES.FORGOT)}>
+                    Recuperar senha
+                  </button>
                 </div>
               )}
 
-              <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                <button className={styles.btn_submit} type="submit">
-                  {mode === MODES.FIRST_ACCESS ? "Concluir primeiro acesso" : "Cadastrar"}
-                </button>
-              </div>
+              {(mode !== MODES.FIRST_ACCESS || canSubmitFirstAccessRegister) && (
+                <>
+                  <div className={`${styles.field} ${styles.field_half}`}>
+                    <label htmlFor="register-first-name">Nome</label>
+                    <input
+                      type="text"
+                      id="register-first-name"
+                      placeholder="Digite aqui"
+                      value={registerData.nome}
+                      onChange={(e) => setRegisterData({ ...registerData, nome: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={`${styles.field} ${styles.field_half}`}>
+                    <label htmlFor="register-last-name">Sobrenome</label>
+                    <input
+                      type="text"
+                      id="register-last-name"
+                      placeholder="Digite aqui"
+                      value={registerData.sobrenome}
+                      onChange={(e) => setRegisterData({ ...registerData, sobrenome: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label htmlFor="register-phone">Telefone</label>
+                    <input
+                      type="tel"
+                      id="register-phone"
+                      placeholder="Digite aqui"
+                      value={registerData.telefone}
+                      onChange={(e) => setRegisterData({ ...registerData, telefone: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={`${styles.field} ${styles.field_half}`}>
+                    <label htmlFor="register-password">Senha</label>
+                    <div className={styles.passwordField}>
+                      <input
+                        type={showRegisterPassword ? "text" : "password"}
+                        id="register-password"
+                        placeholder="Digite aqui"
+                        value={registerData.senha}
+                        onChange={(e) => {
+                          const novaSenha = e.target.value;
+                          setRegisterData({ ...registerData, senha: novaSenha });
+                          setSenhaConfere(novaSenha === registerData.confirmarSenha);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                        className={styles.eyeButton}
+                      >
+                        {showRegisterPassword ? <FaEye /> : <FaEyeSlash />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`${styles.field} ${styles.field_half}`}>
+                    <label htmlFor="register-password-confirm">Confirmar Senha</label>
+                    <input
+                      type={showRegisterPassword ? "text" : "password"}
+                      id="register-password-confirm"
+                      placeholder="Digite aqui"
+                      value={registerData.confirmarSenha}
+                      onChange={(e) => {
+                        const confirmar = e.target.value;
+                        setRegisterData({ ...registerData, confirmarSenha: confirmar });
+                        setSenhaConfere(registerData.senha === confirmar);
+                      }}
+                    />
+                  </div>
+
+                  {!senhaConfere && <p className={styles.msg_retorno}>As senhas nao conferem.</p>}
+
+                  {mode === MODES.FIRST_ACCESS && firstAccessStatus && (
+                    <div className={styles.infoBox}>
+                      Pedidos desse email serao vinculados automaticamente quando a conta for criada e nos proximos logins.
+                    </div>
+                  )}
+
+                  <div className={`${styles.field} ${styles.fieldsubmit}`}>
+                    <button className={styles.btn_submit} type="submit">
+                      {mode === MODES.FIRST_ACCESS ? "Concluir primeiro acesso" : "Cadastrar"}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           </div>
         </div>

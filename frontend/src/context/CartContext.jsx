@@ -4,14 +4,18 @@ import AlertModal from "../components/AlertModal";
 
 export const CartContext = createContext({});
 
+const PRE_CHECKOUT_DEFAULTS = {
+  nome: "",
+  email: "",
+  telefone: "",
+  endereco: "",
+  tipo_pagamento: "PIX",
+};
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [preCheckoutData, setPreCheckoutData] = useState({
-    nome: "",
-    email: "",
-    telefone: "",
-  });
+  const [preCheckoutData, setPreCheckoutData] = useState(PRE_CHECKOUT_DEFAULTS);
 
   const [shouldOpenCart, setShouldOpenCart] = useState(false);
 
@@ -33,7 +37,11 @@ export function CartProvider({ children }) {
     const savedPreCheckout = localStorage.getItem("preCheckoutData");
     if (savedPreCheckout) {
       try {
-        setPreCheckoutData(JSON.parse(savedPreCheckout));
+        const parsed = JSON.parse(savedPreCheckout);
+        setPreCheckoutData({
+          ...PRE_CHECKOUT_DEFAULTS,
+          ...(parsed && typeof parsed === "object" ? parsed : {}),
+        });
       } catch {
         localStorage.removeItem("preCheckoutData");
       }
@@ -87,6 +95,43 @@ export function CartProvider({ children }) {
   // ADD TO CART
   const addToCart = (product, options = {}) => {
     const { openDrawer = true } = options;
+    const productStatus = String(product?.status || "").toLowerCase();
+    const variations = Array.isArray(product?.variacoes_estoque)
+      ? product.variacoes_estoque
+      : [];
+    const hasVariations = variations.length > 0;
+    const selectedVariation = variations.find(
+      (item) =>
+        item?.tamanho === product?.selectedSize ||
+        item?.sku === product?.sku_variacao
+    );
+
+    if (productStatus && productStatus !== "ativo") {
+      showAlertModal({
+        title: "Produto indisponivel",
+        message: "Este produto esta inativo e nao pode ser adicionado ao carrinho.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (hasVariations && !selectedVariation) {
+      showAlertModal({
+        title: "Tamanho indisponivel",
+        message: "Selecione um tamanho disponivel para continuar.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (selectedVariation && Number(selectedVariation.estoque || 0) <= 0) {
+      showAlertModal({
+        title: "Sem estoque",
+        message: "O tamanho selecionado esta indisponivel no momento.",
+        type: "error",
+      });
+      return;
+    }
 
     const key = `${product.id_produto}-${product.selectedSize}`;
 
@@ -160,7 +205,7 @@ export function CartProvider({ children }) {
   // CLEAR
   const clearCart = () => {
     setCartItems([]);
-    setPreCheckoutData({ nome: "", email: "", telefone: "" });
+    setPreCheckoutData(PRE_CHECKOUT_DEFAULTS);
   };
 
   // TOTAL

@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, Crown, Plus, Trash2, Eye, UserPlus, 
   ShoppingBag, Mail, Phone, Calendar, DollarSign,
-  Tag, X, TrendingUp, Users
+  Tag, TrendingUp, Users
 } from 'lucide-react';
 import { api } from '../../../services/api';
 import { arrayToCsv, downloadCsv } from '../../../utils/exportCsv';
+import Modal from '../../Modal';
 
 const mapCouponTypeToUi = (tipo) => {
   const normalized = String(tipo || '').toLowerCase();
@@ -29,34 +30,15 @@ const mapApiCouponToUi = (coupon) => ({
 
 const Badge = ({ children, variant = 'default' }) => {
   const styles = {
-    VIP: 'bg-purple-100 text-purple-700 border-purple-200',
-    Novo: 'bg-blue-100 text-blue-700 border-blue-200',
-    Recorrente: 'bg-green-100 text-green-700 border-green-200',
-    default: 'bg-gray-100 text-gray-700 border-gray-200'
+    VIP: 'admin-badge admin-badge-info',
+    Novo: 'admin-badge admin-badge-info',
+    Recorrente: 'admin-badge admin-badge-success',
+    default: 'admin-badge admin-badge-neutral'
   };
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[variant] || styles.default}`}>
+    <span className={styles[variant] || styles.default}>
       {children}
     </span>
-  );
-};
-
-const Modal = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-            <X size={20} className="text-gray-500" />
-          </button>
-        </div>
-        <div className="p-4 sm:p-6 max-h-[80vh] overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>
   );
 };
 
@@ -190,7 +172,7 @@ export default function App() {
   // --- RENDERIZAÇÃO ---
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
+    <div className="admin-page-shell min-h-screen font-sans pb-20">
       <div className="max-w-7xl mx-auto px-3 py-6 sm:px-4 sm:py-8">
 
         {/* --- SEÇÃO DE CLIENTES --- */}
@@ -388,7 +370,7 @@ export default function App() {
       </div>
 
       {/* MODAL: DETALHES DO CLIENTE */}
-      <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Perfil do Cliente">
+      <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Perfil do Cliente" size="lg">
         {selectedCustomer && (
           <div className="space-y-8">
             <div className="flex flex-col md:flex-row gap-6 items-start pb-6 border-b border-gray-100">
@@ -458,7 +440,7 @@ export default function App() {
       </Modal>
 
       {/* MODAL: CRIAR CUPOM */}
-      <Modal isOpen={isCouponModalOpen} onClose={() => setIsCouponModalOpen(false)} title="Configurar Novo Cupom">
+      <Modal isOpen={isCouponModalOpen} onClose={() => setIsCouponModalOpen(false)} title="Configurar Novo Cupom" size="sm">
         <form onSubmit={handleAddCoupon} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Código do Cupom</label>

@@ -23,7 +23,7 @@ vi.mock('../../src/services/admin/inventoryService.js', () => ({
 
 // ─── Import services (após mock) ─────────────────────
 
-import { validateStock, createOrder, getOrderById } from '../../src/services/orderService.js';
+import { validateStock, createOrder, getOrderById, calculateOrderPricing } from '../../src/services/orderService.js';
 import { validateCoupon, applyCoupon, incrementCouponUsage } from '../../src/services/couponService.js';
 import { calculateShipping } from '../../src/services/shippingService.js';
 
@@ -118,6 +118,12 @@ describe('orderService — validateStock', () => {
     ).rejects.toThrow('Estoque insuficiente');
   });
 
+  it('rejeita quantidade invalida', async () => {
+    await expect(
+      validateStock([{ id_produto: 1, selectedSize: 'M', quantity: 0 }])
+    ).rejects.toThrow('quantidade invalida');
+  });
+
   it('rejeita produto sem variações de estoque', async () => {
     prismaMock.produtos.findUnique.mockResolvedValue({
       ...produtoCamiseta,
@@ -141,6 +147,17 @@ describe('orderService — validateStock', () => {
       ])
     ).rejects.toThrow(/não encontrado.*não encontrada/s);
   });
+
+  it('soma itens duplicados da mesma variacao antes de validar estoque', async () => {
+    prismaMock.produtos.findUnique.mockResolvedValue(produtoCamiseta);
+
+    await expect(
+      validateStock([
+        { id_produto: 1, selectedSize: 'G', quantity: 2 },
+        { id_produto: 1, selectedSize: 'G', quantity: 2 },
+      ])
+    ).rejects.toThrow('Estoque insuficiente');
+  });
 });
 
 // ─── couponService – validateCoupon ───────────────────
@@ -158,16 +175,16 @@ describe('couponService — validateCoupon', () => {
   });
 
   it('rejeita código vazio', async () => {
-    await expect(validateCoupon('')).rejects.toThrow('obrigatório');
+    await expect(validateCoupon('')).rejects.toThrow('obrigatorio');
   });
 
   it('rejeita código null', async () => {
-    await expect(validateCoupon(null)).rejects.toThrow('obrigatório');
+    await expect(validateCoupon(null)).rejects.toThrow('obrigatorio');
   });
 
   it('rejeita cupom não encontrado', async () => {
     prismaMock.cupons.findUnique.mockResolvedValue(null);
-    await expect(validateCoupon('NAO_EXISTE')).rejects.toThrow('não encontrado');
+    await expect(validateCoupon('NAO_EXISTE')).rejects.toThrow('nao encontrado');
   });
 
   it('rejeita cupom inativo', async () => {
@@ -317,5 +334,31 @@ describe('orderService — getOrderById', () => {
     prismaMock.pedidos.findUnique.mockResolvedValue(null);
 
     await expect(getOrderById(999, 10, false)).rejects.toThrow('não encontrado');
+  });
+});
+
+describe('orderService — calculateOrderPricing', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('recalcula subtotal, desconto, frete e total somente no backend', async () => {
+    prismaMock.produtos.findUnique.mockResolvedValue(produtoCamiseta);
+    prismaMock.cupons.findUnique.mockResolvedValue(cupomPorcentagem);
+    prismaMock.configuracoes_loja.findFirst.mockResolvedValue({
+      frete: 20,
+      frete_gratis_acima: 200,
+    });
+
+    const result = await calculateOrderPricing(
+      [{ id_produto: 1, selectedSize: 'M', quantity: 2 }],
+      'desconto10'
+    );
+
+    expect(result.subtotal).toBe(179.8);
+    expect(result.desconto).toBe(17.98);
+    expect(result.frete).toBe(20);
+    expect(result.total).toBe(181.82);
+    expect(result.cupomValidado.codigo).toBe('DESCONTO10');
   });
 });

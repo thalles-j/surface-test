@@ -1,6 +1,6 @@
 
 body{
-  background-color: #000000;
+  background-color: var(--app-bg);
 }
 
 .landingSection {
@@ -14,16 +14,39 @@ body{
   content: "";
   position: absolute;
   inset: 0;
-  background-color: #000000;
+  background-color: var(--app-bg);
   background-image: 
     url("/img/background2000.png"); 
   background-size: cover;
   background-position: center;
-  filter: brightness(0.4); 
   z-index: 0;
   height: 100vh;
 }
 
+.landingSection::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-overlay-strong) 90%, transparent) 0%,
+      color-mix(in srgb, var(--app-overlay) 72%, transparent) 42%,
+      color-mix(in srgb, var(--app-overlay-strong) 82%, transparent) 100%
+    );
+  z-index: 1;
+  pointer-events: none;
+}
+
+:global(:root[data-theme='light']) .landingSection::after {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.74) 0%,
+      rgba(15, 23, 42, 0.48) 42%,
+      rgba(15, 23, 42, 0.6) 100%
+    );
+}
 
 .content {
   position: absolute;
@@ -31,10 +54,11 @@ body{
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
+  z-index: 2;
 }
 
 .text {
-  color: white;
+  color: #ffffff;
   font-size: 1.8rem; /* ~18px */
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     
@@ -42,21 +66,24 @@ body{
 }
 
 .btn_shop {
-  color: rgb(255, 255, 255);
+  color: #ffffff;
   font-weight: bold;
   padding: 18px 24px;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.3s ease-in-out;
-  border: none;
-    z-index: 99;
-    font-size: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--app-overlay) 54%, transparent);
+  box-shadow: var(--ui-shadow-sm);
+  z-index: 99;
+  font-size: 19px;
 
 }
 
 .btn_shop:hover{
-    color: rgb(0, 0, 0);
-    opacity: 0.5;
+    color: #ffffff;
+    background: color-mix(in srgb, var(--app-overlay-strong) 72%, transparent);
+    opacity: 1;
     font-weight: bold;
     transform: rotate(15deg);
 }

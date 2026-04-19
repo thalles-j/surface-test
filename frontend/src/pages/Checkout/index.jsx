@@ -1,25 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import useAuth from "../../hooks/useAuth";
-import { useToast } from "../../context/ToastContext";
-import { api } from "../../services/api";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { api } from "../../services/api";
 
 const CHECKOUT_COUPON_STORAGE_KEY = "checkoutCouponApplied";
 
 export default function Checkout() {
   const {
     cartItems,
-    createOrder,
-    checkoutLoading,
-    preCheckoutData,
-    setPreCheckoutData,
+    preCheckoutData
   } = useCart();
 
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
   const orderCompletedRef = useRef(false);
 
   const [couponCode, setCouponCode] = useState("");
@@ -35,13 +28,8 @@ export default function Checkout() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
 
-  const [preCheckoutErrors, setPreCheckoutErrors] = useState({});
-
   const formatCurrency = (value) =>
     `R$ ${(Number(value) || 0).toFixed(2).replace(".", ",")}`;
-
-  const validateEmail = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
 
   const buildItems = useCallback(
     () =>
@@ -53,11 +41,6 @@ export default function Checkout() {
       })),
     [cartItems]
   );
-
-  const isPreCheckoutValid =
-    String(preCheckoutData?.nome || "").trim().length > 1 &&
-    validateEmail(preCheckoutData?.email || "") &&
-    String(preCheckoutData?.telefone || "").replace(/\D/g, "").length >= 10;
 
   const fetchPreview = useCallback(async () => {
     if (cartItems.length === 0) return;
@@ -94,16 +77,6 @@ export default function Checkout() {
       localStorage.removeItem(CHECKOUT_COUPON_STORAGE_KEY);
     }
   }, [couponApplied]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setPreCheckoutData((prev) => ({
-      nome: prev.nome || user.nome || "",
-      email: prev.email || user.email || "",
-      telefone: prev.telefone || user.telefone || "",
-    }));
-  }, [user, setPreCheckoutData]);
 
   useEffect(() => {
     if (cartItems.length === 0 && !orderCompletedRef.current) {
@@ -162,74 +135,6 @@ export default function Checkout() {
     setPreviewError("");
   };
 
-  const handleCustomerFieldChange = (field, value) => {
-    setPreCheckoutData((prev) => ({ ...prev, [field]: value }));
-    setPreCheckoutErrors((prev) => ({ ...prev, [field]: "" }));
-  };
-
-  const validatePreCheckout = () => {
-    const errors = {};
-
-    if (!String(preCheckoutData?.nome || "").trim()) {
-      errors.nome = "Nome obrigatorio.";
-    }
-
-    if (!validateEmail(preCheckoutData?.email || "")) {
-      errors.email = "Email invalido.";
-    }
-
-    const cleanPhone = String(preCheckoutData?.telefone || "").replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      errors.telefone = "Telefone invalido.";
-    }
-
-    setPreCheckoutErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleFinalize = async () => {
-    if (checkoutLoading) return;
-
-    if (!validatePreCheckout()) {
-      toast.error("Preencha nome, email e telefone para continuar.");
-      return;
-    }
-
-    try {
-      orderCompletedRef.current = true;
-      const result = await createOrder(couponApplied, preCheckoutData);
-
-      if (result) {
-        setCouponApplied(null);
-        localStorage.removeItem(CHECKOUT_COUPON_STORAGE_KEY);
-
-        toast.success("Pedido criado com sucesso!");
-
-        if (result.whatsappUrl) {
-          window.location.href = result.whatsappUrl;
-        } else if (user) {
-          navigate("/account");
-        } else {
-          navigate(
-            `/entrar?modo=first-access&email=${encodeURIComponent(
-              preCheckoutData.email || ""
-            )}`
-          );
-        }
-      } else {
-        orderCompletedRef.current = false;
-        toast.error("Nao foi possivel criar o pedido.");
-      }
-    } catch (err) {
-      orderCompletedRef.current = false;
-      toast.error(
-        err.response?.data?.mensagem ||
-          err.message ||
-          "Erro ao criar pedido."
-      );
-    }
-  };
-
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/60?text=Img";
     return resolveImageUrl(path);
@@ -246,6 +151,14 @@ export default function Checkout() {
     return null;
   }
 
+  const panelStyle = {
+    marginBottom: "1.5rem",
+    padding: "1rem",
+    background: "var(--app-surface-alt)",
+    borderRadius: 8,
+    border: "1px solid var(--app-border)",
+  };
+
   return (
     <section style={{ maxWidth: 800, margin: "2rem auto", padding: "0 1rem" }}>
       <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>
@@ -253,77 +166,18 @@ export default function Checkout() {
       </h2>
 
       <div
-        style={{
-          marginBottom: "1.5rem",
-          padding: "1rem",
-          background: "#f9f9f9",
-          borderRadius: 8,
-        }}
+        style={panelStyle}
       >
         <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
-          Antes de finalizar
+          Dados do Pré-checkout
         </h3>
 
         <div style={{ display: "grid", gap: "0.6rem" }}>
-          <div>
-            <input
-              type="text"
-              placeholder="Nome completo"
-              value={preCheckoutData.nome}
-              onChange={(e) => handleCustomerFieldChange("nome", e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.55rem",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-              }}
-            />
-            {preCheckoutErrors.nome && (
-              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
-                {preCheckoutErrors.nome}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <input
-              type="email"
-              placeholder="Email"
-              value={preCheckoutData.email}
-              onChange={(e) => handleCustomerFieldChange("email", e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.55rem",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-              }}
-            />
-            {preCheckoutErrors.email && (
-              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
-                {preCheckoutErrors.email}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <input
-              type="tel"
-              placeholder="Telefone"
-              value={preCheckoutData.telefone}
-              onChange={(e) => handleCustomerFieldChange("telefone", e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.55rem",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-              }}
-            />
-            {preCheckoutErrors.telefone && (
-              <p style={{ color: "#d32f2f", fontSize: "0.82rem" }}>
-                {preCheckoutErrors.telefone}
-              </p>
-            )}
-          </div>
+          <p style={{ margin: 0, color: "var(--app-muted-text)" }}><strong>Nome:</strong> {preCheckoutData.nome}</p>
+          <p style={{ margin: 0, color: "var(--app-muted-text)" }}><strong>Email:</strong> {preCheckoutData.email}</p>
+          <p style={{ margin: 0, color: "var(--app-muted-text)" }}><strong>Telefone:</strong> {preCheckoutData.telefone}</p>
+          <p style={{ margin: 0, color: "var(--app-muted-text)" }}><strong>Endereco:</strong> {preCheckoutData.endereco}</p>
+          <p style={{ margin: 0, color: "var(--app-muted-text)" }}><strong>Pagamento:</strong> {preCheckoutData.tipo_pagamento}</p>
         </div>
       </div>
 
@@ -339,7 +193,7 @@ export default function Checkout() {
               display: "flex",
               gap: "1rem",
               padding: "0.75rem 0",
-              borderBottom: "1px solid #eee",
+              borderBottom: "1px solid var(--app-border)",
               alignItems: "center",
             }}
           >
@@ -355,12 +209,12 @@ export default function Checkout() {
               <p style={{ fontWeight: 600 }}>{item.nome_produto}</p>
 
               {item.selectedSize && (
-                <p style={{ fontSize: "0.85rem", color: "#666" }}>
+                <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>
                   Tamanho: {item.selectedSize}
                 </p>
               )}
 
-              <p style={{ fontSize: "0.85rem", color: "#666" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>
                 {item.quantity}x {formatCurrency(item.preco)}
               </p>
             </div>
@@ -373,12 +227,7 @@ export default function Checkout() {
       </div>
 
       <div
-        style={{
-          marginBottom: "1.5rem",
-          padding: "1rem",
-          background: "#f9f9f9",
-          borderRadius: 8,
-        }}
+        style={panelStyle}
       >
         <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
           Cupom de Desconto
@@ -388,7 +237,8 @@ export default function Checkout() {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span
               style={{
-                background: "#e8f5e9",
+                background: "var(--app-surface)",
+                color: "var(--app-success)",
                 padding: "0.35rem 0.75rem",
                 borderRadius: 4,
                 fontWeight: 600,
@@ -403,7 +253,7 @@ export default function Checkout() {
               style={{
                 background: "none",
                 border: "none",
-                color: "#d32f2f",
+                color: "var(--app-danger)",
                 cursor: "pointer",
                 fontSize: "0.85rem",
                 textDecoration: "underline",
@@ -422,9 +272,11 @@ export default function Checkout() {
               style={{
                 flex: 1,
                 padding: "0.5rem",
-                border: "1px solid #ddd",
+                border: "1px solid var(--app-border)",
                 borderRadius: 4,
                 fontSize: "0.9rem",
+                background: "var(--app-input-bg)",
+                color: "var(--app-input-text)",
               }}
               onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
             />
@@ -434,9 +286,9 @@ export default function Checkout() {
               disabled={couponLoading || !couponCode.trim()}
               style={{
                 padding: "0.5rem 1rem",
-                background: "#222",
-                color: "#fff",
-                border: "none",
+                background: "var(--app-primary-bg)",
+                color: "var(--app-primary-text)",
+                border: "1px solid var(--app-primary-bg)",
                 borderRadius: 4,
                 cursor: "pointer",
                 fontSize: "0.9rem",
@@ -448,7 +300,7 @@ export default function Checkout() {
         )}
 
         {couponError && (
-          <p style={{ color: "#d32f2f", fontSize: "0.85rem", marginTop: "0.4rem" }}>
+          <p style={{ color: "var(--app-danger)", fontSize: "0.85rem", marginTop: "0.4rem" }}>
             {couponError}
           </p>
         )}
@@ -456,9 +308,7 @@ export default function Checkout() {
 
       <div
         style={{
-          padding: "1rem",
-          background: "#f9f9f9",
-          borderRadius: 8,
+          ...panelStyle,
           marginBottom: "1.5rem",
         }}
       >
@@ -466,8 +316,8 @@ export default function Checkout() {
           Resumo do Pedido
         </h3>
 
-        {previewLoading && <p style={{ color: "#666" }}>Calculando...</p>}
-        {previewError && <p style={{ color: "#d32f2f" }}>{previewError}</p>}
+        {previewLoading && <p style={{ color: "var(--app-muted-text)" }}>Calculando...</p>}
+        {previewError && <p style={{ color: "var(--app-danger)" }}>{previewError}</p>}
 
         {preview && !previewLoading && (
           <>
@@ -488,7 +338,7 @@ export default function Checkout() {
                   display: "flex",
                   justifyContent: "space-between",
                   marginBottom: "0.4rem",
-                  color: "#2e7d32",
+                  color: "var(--app-success)",
                 }}
               >
                 <span>
@@ -506,7 +356,7 @@ export default function Checkout() {
               }}
             >
               <span>Frete</span>
-              <span style={{ color: preview.frete === 0 ? "#2e7d32" : "inherit" }}>
+              <span style={{ color: preview.frete === 0 ? "var(--app-success)" : "inherit" }}>
                 {preview.frete === 0 ? "Gratis" : formatCurrency(preview.frete)}
               </span>
             </div>
@@ -515,7 +365,7 @@ export default function Checkout() {
               style={{
                 margin: "0.75rem 0",
                 border: "none",
-                borderTop: "1px solid #ddd",
+                borderTop: "1px solid var(--app-border)",
               }}
             />
 
@@ -540,8 +390,9 @@ export default function Checkout() {
           style={{
             flex: 1,
             padding: "0.75rem",
-            background: "#fff",
-            border: "1px solid #222",
+            background: "var(--app-surface)",
+            color: "var(--app-text)",
+            border: "1px solid var(--app-border)",
             borderRadius: 4,
             cursor: "pointer",
             fontSize: "1rem",
@@ -551,26 +402,28 @@ export default function Checkout() {
         </button>
 
         <button
-          onClick={handleFinalize}
-          disabled={checkoutLoading || previewLoading || !isPreCheckoutValid}
+          onClick={() => navigate("/pre-checkout")}
+          disabled={previewLoading}
           style={{
             flex: 1,
             padding: "0.75rem",
-            background: "#222",
-            color: "#fff",
-            border: "none",
+            background: "var(--app-primary-bg)",
+            color: "var(--app-primary-text)",
+            border: "1px solid var(--app-primary-bg)",
             borderRadius: 4,
             cursor:
-              checkoutLoading || previewLoading || !isPreCheckoutValid
+              previewLoading
                 ? "not-allowed"
                 : "pointer",
             fontSize: "1rem",
             fontWeight: 600,
             opacity:
-              checkoutLoading || previewLoading || !isPreCheckoutValid ? 0.6 : 1,
+              previewLoading
+                ? 0.6
+                : 1
           }}
         >
-          {checkoutLoading ? "Processando..." : "Finalizar via WhatsApp"}
+          Editar dados no Pré-checkout
         </button>
       </div>
     </section>

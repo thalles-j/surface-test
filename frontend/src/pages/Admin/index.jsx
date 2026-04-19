@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { ExternalLink, LogOut, Menu } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
+import useTheme from '../../hooks/useTheme';
+import styles from './adminTheme.module.css';
+import ThemeToggle from '../../components/ThemeToggle';
 
 import Sidebar from '../../components/Admin/Sidebar/Sidebar';
 import Dashboard from '../../components/Admin/Dashboard/Dashboard';
@@ -19,6 +22,7 @@ import InPersonSales from '../../components/Admin/InPersonSales/InPersonSales';
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -85,7 +89,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex font-sans text-white overflow-x-hidden">
+    <div data-admin-theme={theme} className={`${styles.adminRoot} flex font-sans overflow-x-hidden`}>
       <div className="hidden xl:block">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
@@ -99,45 +103,52 @@ export default function AdminPage() {
         />
       )}
 
-      <main className="w-full xl:ml-64 flex-1 p-3 sm:p-5 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden">
-        <div className="flex flex-col gap-4 mb-6 sm:mb-8">
-          <a
-            href="/shop"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-fit items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 text-sm font-semibold"
-          >
-            <ExternalLink size={16} />
-            Voltar para loja
-          </a>
+      <main className={`${styles.adminMain} w-full xl:ml-64 flex-1 p-3 sm:p-5 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden`}>
+        <div className={`${styles.hero} mb-6 sm:mb-8`}>
+          <div className={styles.topActions}>
+            <a
+              href="/shop"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${styles.shopLink} text-sm font-semibold`}
+            >
+              <ExternalLink size={16} />
+              Voltar para loja
+            </a>
+
+            <ThemeToggle className={styles.adminTopToggle} />
+          </div>
 
           <div className="flex justify-between items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-start gap-3 min-w-0">
-            <button
-              type="button"
-              onClick={() => setMobileSidebarOpen(true)}
-              className="xl:hidden p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200"
-              aria-label="Abrir menu"
-            >
-              <Menu size={18} />
-            </button>
-            <div className="min-w-0">
-              <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight break-words">
-                {getPageTitle()}
-              </h2>
-              <p className="text-xs sm:text-sm text-zinc-500 font-medium mt-1">Dados atualizados em tempo real.</p>
-            </div>
+              <button
+                type="button"
+                onClick={() => setMobileSidebarOpen(true)}
+                className={`${styles.mobileMenuButton} xl:hidden p-2`}
+                aria-label="Abrir menu"
+              >
+                <Menu size={18} />
+              </button>
+              <div className="min-w-0">
+                <p className="admin-kpi-label mb-1">Admin Surface</p>
+                <h2 className={`${styles.heroTitle} text-xl sm:text-3xl font-black uppercase tracking-tight break-words`}>
+                  {getPageTitle()}
+                </h2>
+                <p className={`${styles.heroSubtitle} text-xs sm:text-sm font-medium mt-1`}>
+                  Dados atualizados em tempo real com controles, análise e operação em um único painel.
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 bg-zinc-900 px-2.5 sm:px-3 py-2 rounded-lg border border-zinc-800 max-w-full">
-              <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0" />
+            <div className={`${styles.profileCard} gap-2 sm:gap-3 px-2.5 sm:px-3 py-2`}>
+              <div className={styles.avatar} />
               <div className="min-w-0 hidden sm:block">
-                <p className="text-xs font-bold text-zinc-200 truncate">{displayName}</p>
-                <p className="text-[11px] text-zinc-500 truncate">{displayEmail}</p>
+                <p className={`${styles.userName} text-xs font-bold truncate`}>{displayName}</p>
+                <p className={`${styles.userEmail} text-[11px] truncate`}>{displayEmail}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-0.5 sm:ml-1 p-1 text-zinc-500 hover:text-red-400 transition-colors"
+                className={`${styles.logoutButton} ml-0.5 sm:ml-1 p-1 transition-colors`}
                 title="Sair"
               >
                 <LogOut size={16} />

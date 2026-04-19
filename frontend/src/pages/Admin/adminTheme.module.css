@@ -1,0 +1,414 @@
+.adminRoot {
+  --admin-bg: var(--app-bg);
+  --admin-surface: var(--app-surface);
+  --admin-surface-muted: var(--app-surface-alt);
+  --admin-surface-strong: color-mix(in srgb, var(--app-text) 10%, var(--app-surface));
+  --admin-border: var(--app-border);
+  --admin-border-strong: var(--app-border-strong);
+  --admin-text: var(--app-text);
+  --admin-text-secondary: var(--app-text-secondary);
+  --admin-muted: var(--app-muted-text);
+  --admin-hover: color-mix(in srgb, var(--app-surface-alt) 75%, var(--app-text) 4%);
+  --admin-primary-bg: var(--app-primary-bg);
+  --admin-primary-text: var(--app-primary-text);
+  --admin-danger: var(--app-danger);
+  --admin-danger-soft: var(--app-danger-soft);
+  --admin-danger-border: var(--app-danger-border);
+  --admin-success: var(--app-success);
+  --admin-success-soft: var(--app-success-soft);
+  --admin-success-border: var(--app-success-border);
+  --admin-warning: var(--app-warning);
+  --admin-warning-soft: var(--app-warning-soft);
+  --admin-warning-border: var(--app-warning-border);
+  --admin-info: var(--app-info);
+  --admin-info-soft: var(--app-info-soft);
+  --admin-info-border: var(--app-info-border);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--admin-surface-muted) 82%, transparent), transparent 35%),
+    linear-gradient(180deg, color-mix(in srgb, var(--admin-bg) 88%, var(--admin-surface-muted)) 0%, var(--admin-bg) 22%);
+  color: var(--admin-text);
+}
+
+.adminRoot[data-admin-theme='light'],
+.adminRoot[data-admin-theme='dark'] {
+  color: var(--app-text);
+}
+
+.adminRoot :global(*) {
+  scrollbar-color: var(--app-scrollbar-thumb) transparent;
+}
+
+.adminRoot :global(*::-webkit-scrollbar) {
+  width: 8px;
+  height: 8px;
+}
+
+.adminRoot :global(*::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+.adminRoot :global(*::-webkit-scrollbar-thumb) {
+  background: var(--app-scrollbar-thumb);
+  border-radius: 999px;
+}
+
+.adminRoot :global(*::-webkit-scrollbar-thumb:hover) {
+  background: var(--app-scrollbar-thumb-hover);
+}
+
+.adminMain {
+  color: var(--app-text);
+}
+
+.adminThemeToggle {
+  min-width: 42px !important;
+  padding-right: 6px !important;
+}
+
+.adminThemeToggle span:last-child {
+  display: none;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.adminTopToggle {
+  flex-shrink: 0;
+  background: var(--app-surface-raised) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-text) !important;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.heroTitle {
+  color: var(--app-text);
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.heroSubtitle {
+  color: var(--app-muted-text);
+  max-width: 56ch;
+  line-height: 1.55;
+}
+
+.shopLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: var(--app-surface-raised);
+  color: var(--app-text);
+  box-shadow: var(--ui-shadow-sm);
+  transition: transform 0.18s ease;
+}
+
+.shopLink:hover {
+  background: var(--app-surface-raised);
+  border-color: var(--app-border-strong);
+  transform: translateY(-1px);
+}
+
+.mobileMenuButton {
+  background: var(--app-surface-raised);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  box-shadow: var(--ui-shadow-sm);
+}
+
+.profileCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  background: var(--app-surface-raised);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 640px) {
+  .topActions {
+    align-items: stretch;
+  }
+
+  .adminTopToggle {
+    width: fit-content;
+  }
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--app-surface-alt), var(--app-surface));
+  border: 1px solid var(--app-border);
+}
+
+.userName {
+  color: var(--app-text);
+}
+
+.userEmail {
+  color: var(--app-muted-text);
+}
+
+.logoutButton {
+  color: var(--app-muted-text);
+}
+
+.logoutButton:hover {
+  color: var(--app-danger);
+}
+
+.adminRoot :global(.animate-in) {
+  animation-duration: 180ms !important;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.adminRoot :global(.bg-white),
+.adminRoot :global(.bg-zinc-900),
+.adminRoot :global(.bg-\[\#111111\]),
+.adminRoot :global(.bg-\[\#0a0a0a\]) {
+  background-color: var(--admin-surface) !important;
+}
+
+.adminRoot :global(.bg-slate-50),
+.adminRoot :global(.bg-slate-50\/50),
+.adminRoot :global(.bg-slate-50\/30),
+.adminRoot :global(.bg-gray-50),
+.adminRoot :global(.bg-gray-100),
+.adminRoot :global(.bg-zinc-50),
+.adminRoot :global(.bg-zinc-800),
+.adminRoot :global(.bg-zinc-800\/50),
+.adminRoot :global(.bg-zinc-700),
+.adminRoot :global(.bg-zinc-700\/50),
+.adminRoot :global(.bg-slate-900),
+.adminRoot :global(.bg-gray-900),
+.adminRoot :global(.bg-\[\#f8fafc\]) {
+  background-color: var(--admin-surface-muted) !important;
+}
+
+.adminRoot :global([class*="border-gray-"]),
+.adminRoot :global([class*="border-slate-"]),
+.adminRoot :global([class*="border-zinc-"]) {
+  border-color: var(--admin-border) !important;
+}
+
+.adminRoot :global(.text-gray-900),
+.adminRoot :global(.text-gray-800),
+.adminRoot :global(.text-slate-900),
+.adminRoot :global(.text-slate-800),
+.adminRoot :global(.text-zinc-900),
+.adminRoot :global(.text-zinc-800),
+.adminRoot :global(.text-zinc-200),
+.adminRoot :global(.text-zinc-300),
+.adminRoot :global(.text-white),
+.adminRoot :global(.text-black) {
+  color: var(--admin-text) !important;
+}
+
+.adminRoot :global(.text-gray-700),
+.adminRoot :global(.text-gray-600),
+.adminRoot :global(.text-slate-700),
+.adminRoot :global(.text-slate-600),
+.adminRoot :global(.text-zinc-700),
+.adminRoot :global(.text-zinc-600) {
+  color: var(--admin-text-secondary) !important;
+}
+
+.adminRoot :global(.text-gray-500),
+.adminRoot :global(.text-gray-400),
+.adminRoot :global(.text-slate-500),
+.adminRoot :global(.text-slate-400),
+.adminRoot :global(.text-zinc-500),
+.adminRoot :global(.text-zinc-400) {
+  color: var(--admin-muted) !important;
+}
+
+.adminRoot :global(.bg-indigo-50),
+.adminRoot :global(.bg-blue-50),
+.adminRoot :global(.bg-sky-100),
+.adminRoot :global(.bg-blue-100) {
+  background-color: var(--admin-info-soft) !important;
+}
+
+.adminRoot :global(.text-indigo-600),
+.adminRoot :global(.text-indigo-700),
+.adminRoot :global(.text-blue-600),
+.adminRoot :global(.text-blue-700),
+.adminRoot :global(.text-sky-700) {
+  color: var(--admin-info) !important;
+}
+
+.adminRoot :global(.border-indigo-100),
+.adminRoot :global(.border-indigo-200),
+.adminRoot :global(.border-blue-100),
+.adminRoot :global(.border-blue-200) {
+  border-color: var(--admin-info-border) !important;
+}
+
+.adminRoot :global(.bg-emerald-50),
+.adminRoot :global(.bg-emerald-100),
+.adminRoot :global(.bg-green-100),
+.adminRoot :global(.bg-teal-100) {
+  background-color: var(--admin-success-soft) !important;
+}
+
+.adminRoot :global(.text-emerald-600),
+.adminRoot :global(.text-emerald-700),
+.adminRoot :global(.text-green-600),
+.adminRoot :global(.text-green-700),
+.adminRoot :global(.text-teal-700) {
+  color: var(--admin-success) !important;
+}
+
+.adminRoot :global(.border-emerald-100),
+.adminRoot :global(.border-emerald-200),
+.adminRoot :global(.border-green-200),
+.adminRoot :global(.border-teal-200) {
+  border-color: var(--admin-success-border) !important;
+}
+
+.adminRoot :global(.bg-red-50),
+.adminRoot :global(.bg-rose-100),
+.adminRoot :global(.bg-red-100),
+.adminRoot :global(.bg-red-950\/50) {
+  background-color: var(--admin-danger-soft) !important;
+}
+
+.adminRoot :global(.text-red-600),
+.adminRoot :global(.text-red-700),
+.adminRoot :global(.text-red-800),
+.adminRoot :global(.text-rose-600),
+.adminRoot :global(.text-rose-700),
+.adminRoot :global(.text-red-400) {
+  color: var(--admin-danger) !important;
+}
+
+.adminRoot :global(.border-red-200),
+.adminRoot :global(.border-rose-200),
+.adminRoot :global(.border-red-800),
+.adminRoot :global(.border-red-700) {
+  border-color: var(--admin-danger-border) !important;
+}
+
+.adminRoot :global(.bg-amber-50),
+.adminRoot :global(.bg-amber-100),
+.adminRoot :global(.bg-yellow-50),
+.adminRoot :global(.bg-yellow-100),
+.adminRoot :global(.bg-orange-50),
+.adminRoot :global(.bg-orange-100) {
+  background-color: var(--admin-warning-soft) !important;
+}
+
+.adminRoot :global(.text-amber-600),
+.adminRoot :global(.text-amber-700),
+.adminRoot :global(.text-yellow-700),
+.adminRoot :global(.text-orange-600),
+.adminRoot :global(.text-orange-700),
+.adminRoot :global(.text-yellow-900) {
+  color: var(--admin-warning) !important;
+}
+
+.adminRoot :global(.border-amber-100),
+.adminRoot :global(.border-amber-200),
+.adminRoot :global(.border-yellow-200),
+.adminRoot :global(.border-orange-200),
+.adminRoot :global(.border-orange-300) {
+  border-color: var(--admin-warning-border) !important;
+}
+
+.adminRoot :global(.bg-purple-50),
+.adminRoot :global(.bg-purple-100),
+.adminRoot :global(.bg-purple-950) {
+  background-color: color-mix(in srgb, var(--admin-info-soft) 55%, var(--admin-danger-soft)) !important;
+}
+
+.adminRoot :global(.text-purple-600),
+.adminRoot :global(.text-purple-700),
+.adminRoot :global(.text-purple-400) {
+  color: color-mix(in srgb, var(--admin-info) 60%, var(--admin-danger) 40%) !important;
+}
+
+.adminRoot :global(.border-purple-200) {
+  border-color: color-mix(in srgb, var(--admin-info-border) 60%, var(--admin-danger-border) 40%) !important;
+}
+
+.adminRoot :global(.hover\:bg-gray-50:hover),
+.adminRoot :global(.hover\:bg-slate-50:hover),
+.adminRoot :global(.hover\:bg-zinc-50:hover),
+.adminRoot :global(.hover\:bg-zinc-800:hover),
+.adminRoot :global(.hover\:bg-zinc-800\/50:hover),
+.adminRoot :global(.hover\:bg-zinc-700:hover),
+.adminRoot :global(.hover\:bg-black:hover),
+.adminRoot :global(.hover\:bg-slate-900:hover) {
+  background-color: var(--admin-hover) !important;
+}
+
+.adminRoot :global(.hover\:text-white:hover),
+.adminRoot :global(.group:hover .group-hover\:text-indigo-600),
+.adminRoot :global(.hover\:text-black:hover) {
+  color: var(--admin-text) !important;
+}
+
+.adminRoot :global(.shadow-sm),
+.adminRoot :global(.shadow),
+.adminRoot :global(.shadow-lg),
+.adminRoot :global(.shadow-xl),
+.adminRoot :global(.shadow-2xl) {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.07) !important;
+}
+
+.adminRoot :global(.rounded-xl),
+.adminRoot :global(.rounded-2xl),
+.adminRoot :global(.rounded-\[24px\]),
+.adminRoot :global(.rounded-\[32px\]) {
+  border-radius: 20px !important;
+}
+
+.adminRoot :global(.rounded-lg) {
+  border-radius: 14px !important;
+}
+
+.adminRoot :global(.rounded-md) {
+  border-radius: 12px !important;
+}
+
+.adminRoot :global(.focus\:ring-indigo-500:focus),
+.adminRoot :global(.focus\:ring-blue-100:focus),
+.adminRoot :global(.focus\:ring-slate-200:focus),
+.adminRoot :global(.focus\:ring-emerald-500:focus),
+.adminRoot :global(.focus\:ring-emerald-500\/20:focus) {
+  --tw-ring-color: color-mix(in srgb, var(--ui-focus-ring) 26%, transparent) !important;
+}
+
+.adminRoot :global(.bg-black\/50),
+.adminRoot :global(.bg-slate-900\/80) {
+  background-color: var(--app-overlay-strong) !important;
+}
+
+.adminRoot :global(.border-2) {
+  border-width: 1px !important;
+}

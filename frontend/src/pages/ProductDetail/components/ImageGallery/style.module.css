@@ -30,16 +30,16 @@
   overflow: hidden;
   border: 2px solid transparent;
   transition: border-color 0.2s ease;
-  border-color: #9999993f;
+  border-color: var(--app-border);
 }
 
 .thumbnailSlide:hover {
-  border-color: #ddd;
+  border-color: var(--app-text);
 }
 
 .thumbnailsSwiper :global(.swiper-slide-thumb-active) {
   border: 3px solid;
-  border-color: #000 !important;
+  border-color: var(--app-text) !important;
 }
 
 .thumbnailImage {
@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   background: inherit;
-  color: #999;
+  color: var(--app-muted-text);
   font-size: 0.9rem;
 }
 
@@ -92,7 +92,7 @@
 .swiperContainer :global(.swiper-pagination-bullet) {
   width: 9px;
   height: 9px;
-  background: rgba(63, 63, 63, 0.5);
+  background: var(--app-muted-text);
   opacity: 0.7;
   transition: all 0.3s ease;
 }
@@ -100,7 +100,7 @@
 .swiperContainer :global(.swiper-pagination-bullet-active) {
   width: 20px;
   border-radius: 4px;
-  background: rgb(3, 3, 3);
+  background: var(--app-text);
   opacity: 1;
 }
 

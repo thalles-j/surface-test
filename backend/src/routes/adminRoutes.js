@@ -91,6 +91,10 @@ router.post('/marketing/campaigns', adminController.createCampaign);
 router.get('/settings', adminController.getStoreSettings);
 router.patch('/settings', adminController.updateStoreSettings);
 router.patch('/settings/toggle-store', adminController.toggleStoreStatus);
+router.get('/security/exclusions', adminController.listSecurityExclusions);
+router.post('/security/exclusions', adminController.createSecurityExclusion);
+router.patch('/security/exclusions/:id', adminController.updateSecurityExclusion);
+router.delete('/security/exclusions/:id', adminController.deleteSecurityExclusion);
 
 // ===== CUSTOMIZATION =====
 router.get('/customization', adminController.getCustomizationSettings);

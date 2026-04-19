@@ -7,6 +7,7 @@ export { getAllCustomers, getCustomerDetails, getCustomerClassification, getCust
 export { getCollections, createCollection, updateCollection, deleteCollection, toggleCollectionLock, addProductsToCollection, removeProductFromCollection, bulkUpdateCollectionStatus } from './admin/collectionService.js';
 export { getCategories, createCategory, updateCategory, deleteCategory, getCoupons, createCoupon, deleteCoupon, getCampaigns, createCampaign } from './admin/marketingService.js';
 export { getStoreSettings, updateStoreSettings, toggleStoreStatus, getCustomizationSettings, updateCustomization, uploadBanner } from './admin/settingsService.js';
+export { listSecurityExclusions, createSecurityExclusion, updateSecurityExclusion, deleteSecurityExclusion } from './admin/securityExclusionService.js';
 export { getAdminUsers, createAdminUser, updateAdminUser, deleteAdminUser, getActivityLogs } from './admin/adminUserService.js';
 export { subscribeEarlyAccess, checkEarlyAccess, getStoreLaunchInfo, listEarlyAccessEmails, grantEarlyAccess, revokeEarlyAccess } from './admin/earlyAccessService.js';
 

@@ -17,6 +17,8 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState(null);
 
   useEffect(() => {
+    setSelectedSize(null);
+
     const fetchProduto = async () => {
       setLoading(true);
       try {

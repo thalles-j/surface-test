@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Power, AlertCircle } from 'lucide-react';
+import { Save, Power, AlertCircle, Shield, Trash2 } from 'lucide-react';
 import AlertModal from '../../AlertModal';
 import { api } from '../../../services/api';
 
-const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500 transition-colors';
-const labelCls = 'text-sm font-medium mb-1 block text-zinc-300';
+const inputCls = 'admin-input';
+const labelCls = 'text-sm font-medium mb-1 block';
 
 function Field({ label, children, error }) {
   return (
     <div>
-      <label className={labelCls}>{label}</label>
+      <label className={labelCls} style={{ color: 'var(--app-text-secondary)' }}>{label}</label>
       {children}
-      {error && <p className="text-xs text-red-400 mt-1 flex items-center gap-1"><AlertCircle size={12} />{error}</p>}
+      {error && <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--app-danger)' }}><AlertCircle size={12} />{error}</p>}
     </div>
   );
 }
@@ -34,12 +34,26 @@ export default function AdminSettings() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [confirmToggle, setConfirmToggle] = useState(false);
+  const [securityExclusions, setSecurityExclusions] = useState([]);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [securitySaving, setSecuritySaving] = useState(false);
+  const [securityError, setSecurityError] = useState('');
+  const [exclusionForm, setExclusionForm] = useState({
+    tipo: 'hash',
+    valor: '',
+    algoritmo_hash: 'sha256',
+    descricao: '',
+    escopo_ml: false,
+  });
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await api.get('/admin/settings');
-        const s = res.data || {};
+        const [settingsRes, exclusionsRes] = await Promise.all([
+          api.get('/admin/settings'),
+          api.get('/admin/security/exclusions'),
+        ]);
+        const s = settingsRes.data || {};
         setSettings({
           storeName: s.nome_loja || '', storeEmail: s.email || '', phone: s.telefone || '',
           address: s.endereco || '', cnpj: s.cnpj || '', descricaoMarca: s.descricao_marca || '',
@@ -54,6 +68,7 @@ export default function AdminSettings() {
           whatsappVendas: s.whatsapp_vendas || '', textoInstitucional: s.texto_institucional || '',
           atualizadoEm: s.atualizado_em || null,
         });
+        setSecurityExclusions(Array.isArray(exclusionsRes.data) ? exclusionsRes.data : []);
       } catch (err) {
         console.error('Erro ao carregar configurações:', err);
       } finally {
@@ -118,18 +133,105 @@ export default function AdminSettings() {
     }
   };
 
+  const handleExclusionFieldChange = (field, value) => {
+    setExclusionForm(prev => {
+      if (field === 'tipo') {
+        return {
+          ...prev,
+          tipo: value,
+          algoritmo_hash: value === 'hash' ? (prev.algoritmo_hash || 'sha256') : '',
+          escopo_ml: value === 'path' ? prev.escopo_ml : false,
+        };
+      }
+      return { ...prev, [field]: value };
+    });
+    if (securityError) setSecurityError('');
+  };
+
+  const handleCreateExclusion = async () => {
+    if (!exclusionForm.valor.trim()) {
+      setSecurityError('Informe um hash ou caminho para cadastrar.');
+      return;
+    }
+
+    if (exclusionForm.tipo === 'path' && !exclusionForm.descricao.trim()) {
+      setSecurityError('Justificativa obrigatoria para exclusao do tipo PATH.');
+      return;
+    }
+
+    setSecuritySaving(true);
+    setSecurityError('');
+    try {
+      const payload = {
+        tipo: exclusionForm.tipo,
+        valor: exclusionForm.valor.trim(),
+        descricao: exclusionForm.descricao.trim(),
+      };
+
+      if (exclusionForm.tipo === 'hash') {
+        payload.algoritmo_hash = exclusionForm.algoritmo_hash;
+      } else {
+        payload.escopo_ml = exclusionForm.escopo_ml;
+      }
+
+      const res = await api.post('/admin/security/exclusions', payload);
+      setSecurityExclusions(prev => [res.data, ...prev]);
+      setExclusionForm({ tipo: 'hash', valor: '', algoritmo_hash: 'sha256', descricao: '', escopo_ml: false });
+    } catch (err) {
+      setSecurityError(
+        err.response?.data?.mensagem || err.response?.data?.message || 'Nao foi possivel cadastrar a exclusao.'
+      );
+    } finally {
+      setSecuritySaving(false);
+    }
+  };
+
+  const handleToggleExclusion = async (entry) => {
+    setSecurityLoading(true);
+    setSecurityError('');
+    try {
+      const res = await api.patch(`/admin/security/exclusions/${entry.id_exclusao}`, {
+        ativo: !entry.ativo,
+      });
+      setSecurityExclusions(prev =>
+        prev.map(item => (item.id_exclusao === entry.id_exclusao ? res.data : item))
+      );
+    } catch (err) {
+      setSecurityError(
+        err.response?.data?.mensagem || err.response?.data?.message || 'Nao foi possivel atualizar a exclusao.'
+      );
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  const handleDeleteExclusion = async (entry) => {
+    setSecurityLoading(true);
+    setSecurityError('');
+    try {
+      await api.delete(`/admin/security/exclusions/${entry.id_exclusao}`);
+      setSecurityExclusions(prev => prev.filter(item => item.id_exclusao !== entry.id_exclusao));
+    } catch (err) {
+      setSecurityError(
+        err.response?.data?.mensagem || err.response?.data?.message || 'Nao foi possivel remover a exclusao.'
+      );
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
   if (loading) return <div className="text-center py-12">Carregando...</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+      <div className="admin-panel overflow-hidden">
+        <div className="p-6 border-b flex justify-between items-center" style={{ borderColor: 'var(--app-border)', background: 'var(--app-surface-alt)' }}>
           <h2 className="text-xl font-bold">Configurações da Loja</h2>
           {edited && (
             <button
               onClick={() => { if (validate()) setConfirmSave(true); }}
               disabled={saving}
-              className="flex items-center gap-2 bg-white text-black px-6 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50"
+              className="admin-btn-primary px-6 py-2 disabled:opacity-50"
             >
               <Save size={16} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
@@ -143,7 +245,7 @@ export default function AdminSettings() {
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
               <span className="text-xl">🏪</span> Informações da Loja
             </h3>
-            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
+            <div className="space-y-4 admin-panel-muted p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Nome da Loja *" error={errors.storeName}>
                   <input type="text" value={settings.storeName} onChange={e => handleChange('storeName', e.target.value)} className={inputCls} />
@@ -183,18 +285,19 @@ export default function AdminSettings() {
           {/* SEÇÃO 2 — OPERAÇÃO DA LOJA */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">⚙️</span> Operação da Loja</h3>
-            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
+            <div className="space-y-4 admin-panel-muted p-6">
               {/* Toggle Loja Ativa */}
-              <div className={`p-4 rounded-lg border-2 ${settings.lojaAtiva ? 'bg-emerald-950/50 border-emerald-800' : 'bg-red-950/50 border-red-800'}`}>
+              <div className="p-4 rounded-lg border" style={settings.lojaAtiva ? { background: 'var(--app-success-soft)', borderColor: 'var(--app-success-border)' } : { background: 'var(--app-danger-soft)', borderColor: 'var(--app-danger-border)' }}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-bold">{settings.lojaAtiva ? 'Loja Ativa' : 'Loja Desativada'}</p>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs mt-1" style={{ color: 'var(--app-muted-text)' }}>
                       {settings.lojaAtiva ? 'Aceitando pedidos normalmente.' : 'Em manutenção. Clientes verão indisponibilidade.'}
                     </p>
                   </div>
                   <button onClick={() => setConfirmToggle(true)}
-                    className={`px-5 py-2 rounded-lg font-bold text-sm transition-all ${settings.lojaAtiva ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+                    className={settings.lojaAtiva ? 'admin-btn-secondary px-5 py-2 text-sm' : 'admin-btn-primary px-5 py-2 text-sm'}
+                    style={settings.lojaAtiva ? { color: 'var(--app-danger)', borderColor: 'var(--app-danger-border)' } : undefined}>
                     <Power size={14} className="inline mr-1" />{settings.lojaAtiva ? 'Desativar' : 'Ativar'}
                   </button>
                 </div>
@@ -247,7 +350,7 @@ export default function AdminSettings() {
           {/* SEÇÃO 3 — COMERCIAL */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">💼</span> Comercial</h3>
-            <div className="space-y-4 bg-zinc-800/50 p-6 rounded-lg">
+            <div className="space-y-4 admin-panel-muted p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Email Comercial" error={errors.emailComercial}>
                   <input type="email" value={settings.emailComercial} onChange={e => handleChange('emailComercial', e.target.value)} className={inputCls} placeholder="comercial@surface.com" />
@@ -266,10 +369,128 @@ export default function AdminSettings() {
             </div>
           </section>
 
+          <section>
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Shield size={18} /> Exclusoes de Seguranca</h3>
+            <div className="admin-panel-muted p-6 rounded-lg space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <Field label="Tipo">
+                  <select
+                    value={exclusionForm.tipo}
+                    onChange={e => handleExclusionFieldChange('tipo', e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="hash">Hash</option>
+                    <option value="path">Path (ML)</option>
+                  </select>
+                </Field>
+
+                <Field label={exclusionForm.tipo === 'hash' ? 'Hash' : 'Caminho Absoluto'}>
+                  <input
+                    type="text"
+                    value={exclusionForm.valor}
+                    onChange={e => handleExclusionFieldChange('valor', e.target.value)}
+                    className={inputCls}
+                    placeholder={exclusionForm.tipo === 'hash' ? 'Ex: 9F86D081... (SHA-256)' : 'Ex: C:\\Program Files\\App\\app.exe'}
+                  />
+                </Field>
+
+                {exclusionForm.tipo === 'hash' && (
+                  <Field label="Algoritmo">
+                    <select
+                      value={exclusionForm.algoritmo_hash}
+                      onChange={e => handleExclusionFieldChange('algoritmo_hash', e.target.value)}
+                      className={inputCls}
+                    >
+                      <option value="md5">MD5</option>
+                      <option value="sha1">SHA1</option>
+                      <option value="sha256">SHA256</option>
+                      <option value="sha512">SHA512</option>
+                    </select>
+                  </Field>
+                )}
+
+                <Field label={exclusionForm.tipo === 'path' ? 'Justificativa *' : 'Descricao (opcional)'}>
+                  <input
+                    type="text"
+                    value={exclusionForm.descricao}
+                    onChange={e => handleExclusionFieldChange('descricao', e.target.value)}
+                    className={inputCls}
+                    placeholder="Motivo da excecao"
+                  />
+                </Field>
+
+                <div className="flex items-end">
+                  <button
+                    onClick={handleCreateExclusion}
+                    disabled={securitySaving}
+                    className="admin-btn-primary w-full px-4 py-2 disabled:opacity-50"
+                  >
+                    {securitySaving ? 'Salvando...' : 'Adicionar'}
+                  </button>
+                </div>
+              </div>
+
+              {exclusionForm.tipo === 'path' && (
+                <label className="inline-flex items-center gap-2 text-sm" style={{ color: 'var(--app-text-secondary)' }}>
+                  <input
+                    type="checkbox"
+                    checked={exclusionForm.escopo_ml}
+                    onChange={e => handleExclusionFieldChange('escopo_ml', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  Aplicar para fluxo de ML
+                </label>
+              )}
+
+              {securityError && <p className="text-sm" style={{ color: 'var(--app-danger)' }}>{securityError}</p>}
+
+              <div className="space-y-2">
+                {securityExclusions.length === 0 ? (
+                  <p className="text-sm" style={{ color: 'var(--app-muted-text)' }}>Nenhuma exclusao cadastrada.</p>
+                ) : (
+                  securityExclusions.map(entry => (
+                    <div key={entry.id_exclusao} className="admin-panel p-3 flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase">{entry.tipo === 'path' ? 'Path' : 'Hash'}</p>
+                        <p className="text-xs font-mono break-all" style={{ color: 'var(--app-text-secondary)' }}>{entry.valor}</p>
+                        <p className="text-xs" style={{ color: 'var(--app-muted-text)' }}>
+                          {entry.descricao || 'Sem descricao'}
+                          {entry.tipo === 'hash' && entry.algoritmo_hash ? ` • ${String(entry.algoritmo_hash).toUpperCase()}` : ''}
+                          {entry.tipo === 'path' && entry.escopo_ml ? ' • ML ativo' : ''}
+                          {entry.prioridade_confianca ? ` • Prioridade ${entry.prioridade_confianca}` : ''}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleToggleExclusion(entry)}
+                          disabled={securityLoading}
+                          className={entry.ativo ? 'admin-badge admin-badge-success' : 'admin-badge admin-badge-neutral'}
+                        >
+                          {entry.ativo ? 'Ativa' : 'Inativa'}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteExclusion(entry)}
+                          disabled={securityLoading}
+                          className="admin-btn-secondary p-2 disabled:opacity-50"
+                          style={{ color: 'var(--app-danger)', borderColor: 'var(--app-danger-border)' }}
+                          aria-label="Remover exclusao"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+
           {/* SEÇÃO 4 — SISTEMA */}
           <section>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><span className="text-xl">🔧</span> Sistema</h3>
-            <div className="bg-zinc-800/50 p-6 rounded-lg space-y-3">
+            <div className="admin-panel-muted p-6 rounded-lg space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-zinc-500">Última atualização</span>
                 <span className="font-mono font-bold">

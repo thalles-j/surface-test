@@ -84,10 +84,10 @@ export default function Analytics() {
           <div className="flex flex-col items-center justify-center py-4">
             <div className="relative w-40 h-40 mb-6">
               <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                <circle cx="18" cy="18" r="16" fill="none" stroke="#27272a" strokeWidth="3" />
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--app-border)" strokeWidth="3" />
                 {(() => {
                   const total = categorySales.reduce((s, c) => s + c.value, 0);
-                  const colors = ['#fff', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'];
+                  const colors = ['var(--app-text)', 'var(--app-muted-text)', '#71717a', '#52525b', '#3f3f46'];
                   let offset = 0;
                   return categorySales.map((cat, i) => {
                     const pct = total > 0 ? (cat.value / total) * 100 : 0;
@@ -105,7 +105,7 @@ export default function Analytics() {
             <div className="w-full space-y-2">
               {(() => {
                 const total = categorySales.reduce((s, c) => s + c.value, 0);
-                const colors = ['#ffffff', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'];
+                const colors = ['var(--app-text)', 'var(--app-muted-text)', '#71717a', '#52525b', '#3f3f46'];
                 const cats = categorySales.length > 0 ? categorySales : [{ name: 'Sem dados', value: 0 }];
                 return cats.map((cat, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">

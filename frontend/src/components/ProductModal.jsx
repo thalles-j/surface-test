@@ -47,12 +47,16 @@ export default function ProductModal({ isOpen, onClose, produto }) {
     });
 
   const hasVariations = variacoes.length > 0;
+  const availableVariacoes = isProductInactive
+    ? variacoes
+    : variacoes.filter((v) => Number(v?.estoque || 0) > 0);
   const selectedVariacao = variacoes.find((v) => v.tamanho === selectedSize);
 
   const isOutOfStock =
     hasVariations &&
     selectedSize &&
     Number(selectedVariacao?.estoque || 0) <= 0;
+  const isAllSoldOut = !isProductInactive && hasVariations && availableVariacoes.length === 0;
 
   const handleAction = async () => {
     if (loading) return;
@@ -107,10 +111,14 @@ export default function ProductModal({ isOpen, onClose, produto }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-[1000px] flex flex-col md:flex-row relative shadow-2xl">
+      <div
+        className="w-full max-w-[1000px] flex flex-col md:flex-row relative shadow-2xl"
+        style={{ background: "var(--app-surface)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-50"
+          style={{ color: "var(--app-text)" }}
         >
           <X />
         </button>
@@ -129,35 +137,61 @@ export default function ProductModal({ isOpen, onClose, produto }) {
           <p className="mb-6">R$ {formatPrice(produto.preco)}</p>
 
           {hasVariations && (
-            <div className="mb-6 flex gap-2 flex-wrap">
-              {variacoes.map((v) => {
-                const outOfStock = Number(v?.estoque || 0) <= 0;
-                const disabled = isProductInactive || outOfStock;
+            <div className="mb-6">
+              <div className="flex gap-2 flex-wrap">
+                {isProductInactive
+                  ? variacoes.map((v) => (
+                      <button
+                        key={v.sku || v.tamanho}
+                        disabled
+                        className="px-4 py-2 border text-sm opacity-40 cursor-not-allowed line-through"
+                        style={{
+                          background: "var(--app-surface-alt)",
+                          color: "var(--app-muted-text)",
+                          borderColor: "var(--app-border)",
+                        }}
+                      >
+                        {v.tamanho} - ESGOTADO
+                      </button>
+                    ))
+                  : availableVariacoes.map((v) => (
+                      <button
+                        key={v.sku || v.tamanho}
+                        onClick={() => setSelectedSize(v.tamanho)}
+                        className="px-4 py-2 border text-sm transition"
+                        style={{
+                          background: selectedSize === v.tamanho ? "var(--app-primary-bg)" : "var(--app-surface)",
+                          color: selectedSize === v.tamanho ? "var(--app-primary-text)" : "var(--app-text)",
+                          borderColor: "var(--app-border)",
+                        }}
+                      >
+                        {v.tamanho}
+                      </button>
+                    ))}
+              </div>
 
-                return (
-                  <button
-                    key={v.sku || v.tamanho}
-                    onClick={() => {
-                      if (disabled) return;
-                      setSelectedSize(v.tamanho);
-                    }}
-                    disabled={disabled}
-                    className={`px-4 py-2 border text-sm transition
-                      ${selectedSize === v.tamanho ? 'bg-black text-white' : ''}
-                      ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-black'}
-                    `}
-                  >
-                    {v.tamanho}
-                  </button>
-                );
-              })}
+              {isAllSoldOut && (
+                <p className="mt-3 text-sm" style={{ color: "var(--app-muted-text)" }}>
+                  Todos os tamanhos estao esgotados no momento.
+                </p>
+              )}
+
+              {isProductInactive && (
+                <p className="mt-3 text-sm" style={{ color: "var(--app-muted-text)" }}>
+                  Produto indisponivel. Nenhum tamanho pode ser comprado enquanto estiver inativo.
+                </p>
+              )}
             </div>
           )}
 
           <button
             onClick={handleAction}
-            disabled={(hasVariations && !selectedSize) || loading || isProductInactive}
-            className="w-full h-[60px] bg-black text-white flex items-center justify-center gap-2 disabled:bg-gray-300"
+            disabled={(hasVariations && !selectedSize) || loading || isProductInactive || isAllSoldOut}
+            className="w-full h-[60px] flex items-center justify-center gap-2"
+            style={{
+              background: (hasVariations && !selectedSize) || loading || isProductInactive || isAllSoldOut ? "var(--app-border)" : "var(--app-primary-bg)",
+              color: (hasVariations && !selectedSize) || loading || isProductInactive || isAllSoldOut ? "var(--app-muted-text)" : "var(--app-primary-text)",
+            }}
           >
             <ShoppingBag />
 
@@ -165,6 +199,8 @@ export default function ProductModal({ isOpen, onClose, produto }) {
               ? "CARREGANDO..."
               : isProductInactive
                 ? "INDISPONIVEL"
+                : isAllSoldOut
+                  ? "ESGOTADO"
                 : hasVariations && !selectedSize
                   ? "SELECIONE UM TAMANHO"
                   : isOutOfStock

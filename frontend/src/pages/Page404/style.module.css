@@ -1,16 +1,15 @@
-
 .errorSection {
     display: flex;
     margin-top: 9rem;
     height: 80vh;
-    display: flex;
     flex-direction: column;
     align-items: center;
     transition: all 0.3s ease;
+    background: var(--app-bg);
+    color: var(--app-text);
 }
 
 .mainContent{
-    
     display: flex;
     padding: 2rem;
     width: 90%;
@@ -18,28 +17,27 @@
     flex-direction: column;
     text-align: center;
     font-size: 1.3rem;
-    
-} 
+}
 
 .mainContent h1 span{
     font-weight: bold;
-    color: #ff0000;
+    color: var(--app-danger);
 }
 
 .backHomeLink {
     display: flex;
     justify-content: center;
     margin-top: 1rem;
-    
 }
+
 .backHomeLinkButton{
     display: inline-block;
     padding: 0.6rem 1.2rem;
-    background-color: #494444;
-    border: #000000 solid 2px;
+    background-color: var(--app-primary-bg);
+    border: var(--app-primary-bg) solid 2px;
     border-radius: 7px;
     text-decoration: none;
-    color: #ffffff;
+    color: var(--app-primary-text);
     font-weight: 700;
     font-size: 1.3rem;
     transition: all 0.3s ease;
@@ -47,8 +45,6 @@
 }
 
 .backHomeLinkButton:hover {
-    transition: all 0.3s ease;
-    background-color: #ffffff;
-    color: black;
-    
+    background-color: var(--app-surface);
+    color: var(--app-text);
 }

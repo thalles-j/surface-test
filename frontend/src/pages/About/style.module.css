@@ -2,20 +2,13 @@
 
 :global(body) {
     font-family: "apple", sans-serif;
-    background-color: #ffffff;
-    color: #000000;
-}
-
-:root {
-    --brand-red: #ff3b30;
-    --brand-black: #000000;
-    --brand-white: #ffffff;
-    --brand-gray-muted: #9ca3af;
+    background-color: var(--app-bg);
+    color: var(--app-text);
 }
 
 .page {
     min-height: 100vh;
-    color: var(--brand-black);
+    color: var(--app-text);
     margin-top: 10rem;
 }
 
@@ -25,7 +18,7 @@
     text-transform: uppercase;
     letter-spacing: 0.4em;
     margin-bottom: 1rem;
-    color: #9ca3af;
+    color: var(--app-muted-text);
 }
 
 .heroManifesto {
@@ -39,13 +32,13 @@
 .videoPlaceholder {
     width: 100%;
     aspect-ratio: 25/2;
-    background-color: #f3f4f6;
+    background-color: var(--app-surface-alt);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     position: relative;
-    color: rgba(0, 0, 0, 0.04);
+    color: var(--app-muted-text);
 }
 
 .videoGhost {
@@ -69,7 +62,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    color: #000000;
+    color: var(--app-text);
 }
 
 .valuesSection {
@@ -78,8 +71,9 @@
 
 .surfaceInput {
     width: 100%;
-    background-color: var(--brand-white);
-    border: 1px solid #e5e7eb;
+    background-color: var(--app-input-bg);
+    border: 1px solid var(--app-input-border);
+    color: var(--app-input-text);
     padding: 12px;
     font-size: 12px;
     font-weight: 700;
@@ -89,7 +83,7 @@
 }
 
 .surfaceInput:focus {
-    border-color: var(--brand-black);
+    border-color: var(--app-text);
 }
 
 .fadeInSection {
@@ -111,7 +105,7 @@
 .footerDivider {
     height: 1px;
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--app-border);
 }
 
 .footerHeading {
@@ -142,4 +136,16 @@
     .valuesHeading {
         font-size: 2rem;
     }
+}
+
+.page :global(.text-gray-400) {
+    color: var(--app-muted-text) !important;
+}
+
+.page :global(.border-black) {
+    border-color: var(--app-text) !important;
+}
+
+.page :global(.border-gray-100) {
+    border-color: var(--app-border) !important;
 }

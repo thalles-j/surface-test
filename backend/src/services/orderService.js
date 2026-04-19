@@ -24,15 +24,71 @@ function normalizeCustomerInfo(customerInfo = {}) {
   };
 }
 
+function buildVariationKey(item) {
+  return `${item.id_produto}::${item.sku_variacao || item.selectedSize}`;
+}
+
+export function normalizeOrderItems(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new ErroValidation('Carrinho vazio.');
+  }
+
+  return items.map((item, index) => {
+    const idProduto = Number(item?.id_produto);
+    const quantity = Number(item?.quantity);
+    const selectedSize = String(item?.selectedSize || '').trim();
+    const skuVariacao = String(item?.sku_variacao || '').trim();
+
+    if (!Number.isInteger(idProduto) || idProduto <= 0) {
+      throw new ErroValidation(`Item ${index + 1}: produto invalido.`);
+    }
+
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new ErroValidation(`Item ${index + 1}: quantidade invalida.`);
+    }
+
+    if (!selectedSize && !skuVariacao) {
+      throw new ErroValidation(`Item ${index + 1}: variacao obrigatoria.`);
+    }
+
+    return {
+      id_produto: idProduto,
+      quantity,
+      selectedSize: selectedSize || null,
+      sku_variacao: skuVariacao || null,
+    };
+  });
+}
+
+function aggregateOrderItems(items) {
+  const normalizedItems = normalizeOrderItems(items);
+  const aggregated = new Map();
+
+  for (const item of normalizedItems) {
+    const key = buildVariationKey(item);
+    const current = aggregated.get(key);
+
+    if (current) {
+      current.quantity += item.quantity;
+      continue;
+    }
+
+    aggregated.set(key, { ...item });
+  }
+
+  return Array.from(aggregated.values());
+}
+
 /**
  * Validates stock availability for all items in the cart.
  * Returns the product records with their current variations for use in order creation.
  */
 export async function validateStock(items) {
+  const normalizedItems = aggregateOrderItems(items);
   const errors = [];
   const productData = [];
 
-  for (const item of items) {
+  for (const item of normalizedItems) {
     const product = await prisma.produtos.findUnique({
       where: { id_produto: item.id_produto },
       include: { fotos: true },
@@ -87,6 +143,40 @@ export async function validateStock(items) {
   return productData;
 }
 
+export async function calculateOrderPricing(items, codigoCupom = null) {
+  const productData = await validateStock(items);
+
+  const subtotal = productData.reduce(
+    (sum, { product, quantity }) => sum + Number(product.preco) * quantity,
+    0
+  );
+
+  let desconto = 0;
+  let cupomValidado = null;
+
+  if (codigoCupom) {
+    cupomValidado = await validateCoupon(codigoCupom);
+    desconto = applyCoupon(cupomValidado, subtotal);
+
+    if (desconto <= 0 || desconto > subtotal) {
+      throw new ErroValidation('Desconto do cupom invalido para este carrinho.');
+    }
+  }
+
+  const subtotalComDesconto = subtotal - desconto;
+  const frete = await calculateShipping(subtotalComDesconto);
+  const total = subtotalComDesconto + frete;
+
+  return {
+    productData,
+    subtotal: Math.round(subtotal * 100) / 100,
+    desconto: Math.round(desconto * 100) / 100,
+    frete: Math.round(frete * 100) / 100,
+    total: Math.round(total * 100) / 100,
+    cupomValidado,
+  };
+}
+
 /**
  * Reduces stock for each purchased variation within a transaction.
  * Must be called inside a prisma.$transaction.
@@ -117,10 +207,6 @@ async function reduceStock(tx, productData) {
  * - Increments coupon usage
  */
 export async function createOrder(userId, items, codigoCupom = null, customerInfo = {}) {
-  if (!items || items.length === 0) {
-    throw new ErroValidation('Carrinho vazio.');
-  }
-
   let customer = normalizeCustomerInfo(customerInfo);
 
   if (
@@ -163,29 +249,14 @@ export async function createOrder(userId, items, codigoCupom = null, customerInf
     }
   }
 
-  // 1. Validate stock availability
-  const productData = await validateStock(items);
-
-  // 2. Calculate subtotal using current DB prices (not client-sent prices)
-  const subtotal = productData.reduce(
-    (sum, { product, quantity }) => sum + Number(product.preco) * quantity,
-    0
-  );
-
-  // 3. Apply coupon if provided
-  let desconto = 0;
-  let cupomValidado = null;
-  if (codigoCupom) {
-    cupomValidado = await validateCoupon(codigoCupom);
-    desconto = applyCoupon(cupomValidado, subtotal);
-  }
-
-  // 4. Calculate shipping
-  const subtotalComDesconto = subtotal - desconto;
-  const frete = await calculateShipping(subtotalComDesconto);
-
-  // 5. Final total
-  const total = subtotalComDesconto + frete;
+  const {
+    productData,
+    subtotal,
+    desconto,
+    frete,
+    total,
+    cupomValidado,
+  } = await calculateOrderPricing(items, codigoCupom);
 
   // 6. Create order + items + reduce stock + increment coupon in a single transaction
   const order = await prisma.$transaction(async (tx) => {
@@ -197,7 +268,7 @@ export async function createOrder(userId, items, codigoCupom = null, customerInf
         desconto: Math.round(desconto * 100) / 100,
         frete: Math.round(frete * 100) / 100,
         total: Math.round(total * 100) / 100,
-        codigo_cupom: codigoCupom || null,
+        codigo_cupom: cupomValidado?.codigo || null,
         nome_cliente: customer.nome,
         endereco_entrega: {
           contato: {

@@ -116,17 +116,31 @@ export default function AdminPanel() {
     }
   };
 
+  const sectionStyle = {
+    background: 'var(--app-surface)',
+    border: '1px solid var(--app-border)',
+    color: 'var(--app-text)',
+  };
+
+  const mutedSurfaceStyle = {
+    background: 'var(--app-surface-muted)',
+    borderColor: 'var(--app-border)',
+  };
+
+  const subtleTextStyle = { color: 'var(--app-muted-text)' };
+  const secondaryTextStyle = { color: 'var(--app-text-secondary)' };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* ADMINS */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+      <div className="rounded-xl overflow-hidden" style={sectionStyle}>
+        <div className="p-6 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)' }}>
           <h2 className="text-lg font-bold flex items-center gap-2">
             <Shield size={20} /> Controle de Admins
           </h2>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-zinc-200 transition-colors"
+            className="admin-btn-primary flex items-center gap-2 px-4 py-2 rounded-lg font-bold"
           >
             <Plus size={16} /> Novo Admin
           </button>
@@ -140,14 +154,14 @@ export default function AdminPanel() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Nome completo"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
+                className="admin-input p-2 rounded-lg"
               />
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Email"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
+                className="admin-input p-2 rounded-lg"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,12 +170,12 @@ export default function AdminPanel() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Senha temporária"
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white placeholder-zinc-500"
+                className="admin-input p-2 rounded-lg"
               />
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 text-white"
+                className="admin-select p-2 rounded-lg"
               >
                 <option>Super Admin</option>
                 <option>Gerente</option>
@@ -172,13 +186,13 @@ export default function AdminPanel() {
             <div className="flex gap-2">
               <button
                 onClick={submitAdmin}
-                className="flex-1 bg-emerald-600 text-white py-2 font-bold hover:bg-emerald-700 rounded-lg"
+                className="admin-btn-primary flex-1 py-2 font-bold rounded-lg"
               >
                 {editingId ? 'Salvar' : 'Criar Admin'}
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="px-6 py-2 border border-zinc-700 text-zinc-400 font-bold hover:text-white hover:border-zinc-500 rounded-lg"
+                className="admin-btn-secondary px-6 py-2 font-bold rounded-lg"
               >
                 Cancelar
               </button>
@@ -189,7 +203,7 @@ export default function AdminPanel() {
         <div className="hidden md:block">
           <table className="w-full">
           <thead>
-            <tr className="bg-zinc-800/50 text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800">
+            <tr className="text-xs font-bold uppercase" style={{ ...mutedSurfaceStyle, ...subtleTextStyle, borderBottom: '1px solid var(--app-border)' }}>
               <th className="px-6 py-4">Nome</th>
               <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4">Função</th>
@@ -198,29 +212,29 @@ export default function AdminPanel() {
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800">
+          <tbody className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
             {admins.map((admin) => (
-              <tr key={admin.id} className="hover:bg-zinc-800/50 transition-colors">
+              <tr key={admin.id} className="transition-colors hover:bg-[var(--app-surface-muted)]">
                 <td className="px-6 py-4 font-bold text-sm">{admin.name}</td>
-                <td className="px-6 py-4 text-sm text-zinc-400">{admin.email}</td>
+                <td className="px-6 py-4 text-sm" style={secondaryTextStyle}>{admin.email}</td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-purple-950 text-purple-400">
+                  <span className="admin-badge admin-badge-info px-3 py-1 text-[10px] font-bold uppercase">
                     {admin.role}
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-950 text-emerald-400">
+                  <span className="admin-badge admin-badge-success px-3 py-1 text-[10px] font-bold uppercase">
                     {admin.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-zinc-500 flex items-center gap-1">
+                <td className="px-6 py-4 text-sm flex items-center gap-1" style={subtleTextStyle}>
                   <Clock size={14} /> {admin.lastLogin}
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
-                  <button onClick={() => openEditAdmin(admin)} className="p-2 text-zinc-500 hover:text-white transition-colors">
+                  <button onClick={() => openEditAdmin(admin)} className="p-2 transition-colors" style={subtleTextStyle}>
                     <Edit size={16} />
                   </button>
-                  <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2 text-zinc-500 hover:text-red-400 transition-colors">
+                  <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2 transition-colors" style={subtleTextStyle}>
                     <Trash2 size={16} />
                   </button>
                 </td>
@@ -233,20 +247,20 @@ export default function AdminPanel() {
         {/* mobile list */}
         <div className="md:hidden space-y-3 p-4">
           {admins.map(admin => (
-            <div key={admin.id} className="bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+            <div key={admin.id} className="p-4 rounded-lg border" style={mutedSurfaceStyle}>
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-bold">{admin.name}</div>
-                  <div className="text-xs text-zinc-500">{admin.email}</div>
+                  <div className="text-xs" style={subtleTextStyle}>{admin.email}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => openEditAdmin(admin)} className="p-2 text-zinc-500 hover:text-white"><Edit size={14} /></button>
-                  <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 size={14} /></button>
+                  <button onClick={() => openEditAdmin(admin)} className="p-2" style={subtleTextStyle}><Edit size={14} /></button>
+                  <button onClick={() => handleDeleteAdmin(admin.id)} className="p-2" style={subtleTextStyle}><Trash2 size={14} /></button>
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-between text-xs">
-                <span className="px-2 py-1 rounded-full bg-zinc-700">{admin.role}</span>
-                <span className="text-zinc-500">{admin.lastLogin}</span>
+                <span className="admin-badge admin-badge-info px-2 py-1">{admin.role}</span>
+                <span style={subtleTextStyle}>{admin.lastLogin}</span>
               </div>
             </div>
           ))}
@@ -265,18 +279,18 @@ export default function AdminPanel() {
       />
 
       {/* PERMISSÕES */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800">
+      <div className="rounded-xl overflow-hidden" style={sectionStyle}>
+        <div className="p-6" style={{ borderBottom: '1px solid var(--app-border)' }}>
           <h2 className="text-lg font-bold">Níveis de Permissão</h2>
         </div>
 
-        <div className="divide-y divide-zinc-800">
+        <div className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
           {Object.entries(permissions).map(([role, perms]) => (
             <div key={role} className="p-6">
               <h3 className="font-bold mb-3">{role}</h3>
               <div className="flex flex-wrap gap-2">
                 {perms.map((perm, i) => (
-                  <span key={i} className="px-3 py-1 bg-zinc-800 text-zinc-300 rounded-full text-xs font-semibold">
+                  <span key={i} className="admin-badge admin-badge-neutral px-3 py-1 text-xs font-semibold">
                     ✓ {perm}
                   </span>
                 ))}
@@ -287,22 +301,22 @@ export default function AdminPanel() {
       </div>
 
       {/* LOGS */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 flex items-center gap-2">
+      <div className="rounded-xl overflow-hidden" style={sectionStyle}>
+        <div className="p-6 flex items-center gap-2" style={{ borderBottom: '1px solid var(--app-border)' }}>
           <Activity size={20} /> <h2 className="text-lg font-bold">Logs de Atividades</h2>
         </div>
 
-        <div className="divide-y divide-zinc-800">
+        <div className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
           {logs.map((log) => (
-            <div key={log.id} className="p-6 hover:bg-zinc-800/50 transition-colors">
+            <div key={log.id} className="p-6 transition-colors hover:bg-[var(--app-surface-muted)]">
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <p className="font-bold text-sm">{log.action}</p>
-                  <p className="text-xs text-zinc-500">por {log.user}</p>
+                  <p className="text-xs" style={subtleTextStyle}>por {log.user}</p>
                 </div>
-                <span className="text-xs text-zinc-600 font-mono">{log.timestamp}</span>
+                <span className="text-xs font-mono" style={secondaryTextStyle}>{log.timestamp}</span>
               </div>
-              <p className="text-sm text-zinc-400 pl-4 border-l-2 border-zinc-700">{log.details}</p>
+              <p className="text-sm pl-4 border-l-2" style={{ ...secondaryTextStyle, borderColor: 'var(--app-border)' }}>{log.details}</p>
             </div>
           ))}
         </div>

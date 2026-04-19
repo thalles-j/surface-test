@@ -1,40 +1,527 @@
-/* estilos personalizados opcionais */
+/* Global semantic tokens (light by default) */
+:root {
+  color-scheme: light;
+  --ui-bg: #f7f8fa;
+  --ui-bg-layer-1: #ffffff;
+  --ui-bg-layer-2: #f1f3f6;
+  --ui-bg-layer-3: #e9edf2;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f1f3f6;
+  --ui-surface-raised: #ffffff;
+  --ui-border: #d8dde5;
+  --ui-border-strong: #c7ced9;
+  --ui-text-primary: #111827;
+  --ui-text-secondary: #374151;
+  --ui-text-muted: #606a7b;
+  --ui-text: var(--ui-text-primary);
+  --ui-hover: #eceff4;
+  --ui-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --ui-shadow-md: 0 8px 20px rgba(15, 23, 42, 0.12);
+  --ui-focus-ring: #737b8a;
+  --ui-primary-bg: #111827;
+  --ui-primary-text: #ffffff;
+  --ui-danger: #dc2626;
+  --ui-success: #15803d;
+  --ui-info: #1d4ed8;
+  --ui-warning: #b45309;
+  --ui-info-soft: #eff6ff;
+  --ui-warning-soft: #fff7ed;
+  --ui-success-soft: #f0fdf4;
+  --ui-danger-soft: #fef2f2;
+  --ui-info-border: #bfdbfe;
+  --ui-warning-border: #fed7aa;
+  --ui-success-border: #bbf7d0;
+  --ui-danger-border: #fecaca;
+  --ui-overlay: rgba(15, 23, 42, 0.56);
+  --ui-modal-overlay: rgba(15, 23, 42, 0.68);
+  --ui-overlay-strong: rgba(15, 23, 42, 0.72);
+  --ui-inverse-bg: #111827;
+  --ui-inverse-text: #ffffff;
+  --ui-scrollbar-thumb: #3f3f46;
+  --ui-scrollbar-thumb-hover: #52525b;
+
+  /* Backward-compatible aliases used by existing screens */
+  --app-bg: var(--ui-bg);
+  --app-text: var(--ui-text-primary);
+  --app-text-secondary: var(--ui-text-secondary);
+  --app-muted-text: var(--ui-text-muted);
+  --app-surface: var(--ui-surface);
+  --app-surface-alt: var(--ui-surface-soft);
+  --app-surface-muted: var(--ui-surface-soft);
+  --app-surface-raised: var(--ui-surface-raised);
+  --app-border: var(--ui-border);
+  --app-border-strong: var(--ui-border-strong);
+  --app-primary-bg: var(--ui-primary-bg);
+  --app-primary-text: var(--ui-primary-text);
+  --app-danger: var(--ui-danger);
+  --app-success: var(--ui-success);
+  --app-info: var(--ui-info);
+  --app-warning: var(--ui-warning);
+  --app-info-soft: var(--ui-info-soft);
+  --app-warning-soft: var(--ui-warning-soft);
+  --app-success-soft: var(--ui-success-soft);
+  --app-danger-soft: var(--ui-danger-soft);
+  --app-info-border: var(--ui-info-border);
+  --app-warning-border: var(--ui-warning-border);
+  --app-success-border: var(--ui-success-border);
+  --app-danger-border: var(--ui-danger-border);
+  --app-input-bg: var(--ui-surface);
+  --app-input-text: var(--ui-text-primary);
+  --app-input-border: var(--ui-border);
+  --app-overlay: var(--ui-overlay);
+  --app-modal-overlay: var(--ui-modal-overlay);
+  --app-overlay-strong: var(--ui-overlay-strong);
+  --app-inverse-bg: var(--ui-inverse-bg);
+  --app-inverse-text: var(--ui-inverse-text);
+  --app-scrollbar-thumb: var(--ui-scrollbar-thumb);
+  --app-scrollbar-thumb-hover: var(--ui-scrollbar-thumb-hover);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ui-bg: #0f1115;
+  --ui-bg-layer-1: #161a22;
+  --ui-bg-layer-2: #1d2330;
+  --ui-bg-layer-3: #242b3a;
+  --ui-surface: #161a22;
+  --ui-surface-soft: #1d2330;
+  --ui-surface-raised: #1d2330;
+  --ui-border: #2b3342;
+  --ui-border-strong: #3a4456;
+  --ui-text-primary: #e5e7eb;
+  --ui-text-secondary: #c1c7d0;
+  --ui-text-muted: #9ca3af;
+  --ui-text: var(--ui-text-primary);
+  --ui-hover: #202838;
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --ui-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+  --ui-focus-ring: #8f97a5;
+  --ui-primary-bg: #e5e7eb;
+  --ui-primary-text: #111827;
+  --ui-danger: #f87171;
+  --ui-success: #4ade80;
+  --ui-info: #93c5fd;
+  --ui-warning: #fbbf24;
+  --ui-info-soft: rgba(37, 99, 235, 0.16);
+  --ui-warning-soft: rgba(245, 158, 11, 0.18);
+  --ui-success-soft: rgba(34, 197, 94, 0.16);
+  --ui-danger-soft: rgba(248, 113, 113, 0.16);
+  --ui-info-border: rgba(147, 197, 253, 0.34);
+  --ui-warning-border: rgba(251, 191, 36, 0.34);
+  --ui-success-border: rgba(74, 222, 128, 0.34);
+  --ui-danger-border: rgba(248, 113, 113, 0.34);
+  --ui-overlay: rgba(2, 6, 23, 0.68);
+  --ui-modal-overlay: rgba(2, 6, 23, 0.78);
+  --ui-overlay-strong: rgba(2, 6, 23, 0.86);
+  --ui-inverse-bg: #e5e7eb;
+  --ui-inverse-text: #111827;
+  --ui-scrollbar-thumb: #3f3f46;
+  --ui-scrollbar-thumb-hover: #52525b;
+
+  --app-bg: var(--ui-bg);
+  --app-text: var(--ui-text-primary);
+  --app-text-secondary: var(--ui-text-secondary);
+  --app-muted-text: var(--ui-text-muted);
+  --app-surface: var(--ui-surface);
+  --app-surface-alt: var(--ui-surface-soft);
+  --app-surface-muted: var(--ui-surface-soft);
+  --app-surface-raised: var(--ui-surface-raised);
+  --app-border: var(--ui-border);
+  --app-border-strong: var(--ui-border-strong);
+  --app-primary-bg: var(--ui-primary-bg);
+  --app-primary-text: var(--ui-primary-text);
+  --app-danger: var(--ui-danger);
+  --app-success: var(--ui-success);
+  --app-info: var(--ui-info);
+  --app-warning: var(--ui-warning);
+  --app-info-soft: var(--ui-info-soft);
+  --app-warning-soft: var(--ui-warning-soft);
+  --app-success-soft: var(--ui-success-soft);
+  --app-danger-soft: var(--ui-danger-soft);
+  --app-info-border: var(--ui-info-border);
+  --app-warning-border: var(--ui-warning-border);
+  --app-success-border: var(--ui-success-border);
+  --app-danger-border: var(--ui-danger-border);
+  --app-input-bg: var(--ui-surface);
+  --app-input-text: var(--ui-text-primary);
+  --app-input-border: var(--ui-border);
+  --app-overlay: var(--ui-overlay);
+  --app-modal-overlay: var(--ui-modal-overlay);
+  --app-overlay-strong: var(--ui-overlay-strong);
+  --app-inverse-bg: var(--ui-inverse-bg);
+  --app-inverse-text: var(--ui-inverse-text);
+  --app-scrollbar-thumb: var(--ui-scrollbar-thumb);
+  --app-scrollbar-thumb-hover: var(--ui-scrollbar-thumb-hover);
+}
+
+/* Optional shared baseline */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 header {
   max-width: 100%;
-  display: flex;           
-  align-items: center;    
-  width: 100%;         
-  color: #ffffff;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  color: var(--app-text);
   z-index: 997;
 }
 
-
 img {
-    max-width: 100%;
-    width: 192px;
-    height: auto;
-    border: 0;
-    -ms-interpolation-mode: bicubic;
+  max-width: 100%;
+  width: 192px;
+  height: auto;
+  border: 0;
+  -ms-interpolation-mode: bicubic;
 }
 
 /* Improve visibility for form inputs across the app */
-input, textarea, select {
-  background-color: #f8fafc; /* light neutral */
+input,
+textarea,
+select {
+  background-color: var(--app-input-bg);
+  color: var(--app-input-text);
+  border: 1px solid var(--app-input-border);
   border-radius: 0.375rem;
 }
 
-/* Admin modal scrollbar — discreet dark style */
-.admin-scroll::-webkit-scrollbar { width: 6px; }
-.admin-scroll::-webkit-scrollbar-track { background: transparent; }
-.admin-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-.admin-scroll::-webkit-scrollbar-thumb:hover { background: #52525b; }
-.admin-scroll { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+input::placeholder,
+textarea::placeholder {
+  color: var(--app-muted-text);
+  opacity: 0.8;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Shared visual baseline for upcoming standardization */
+.ui-card {
+  background: var(--ui-surface);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-sm);
+  border-radius: 12px;
+}
+
+.ui-card-soft {
+  background: var(--ui-surface-soft);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+}
+
+.ui-btn-primary {
+  background: var(--ui-primary-bg);
+  color: var(--ui-primary-text);
+  border: 1px solid var(--ui-primary-bg);
+}
+
+.ui-btn-ghost {
+  background: transparent;
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border);
+}
+
+.ui-table {
+  background: var(--ui-surface);
+  color: var(--ui-text-primary);
+  border: 1px solid var(--ui-border);
+}
+
+/* Admin modal scrollbar - discreet dark style */
+.admin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: var(--app-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--app-scrollbar-thumb-hover);
+}
+
+.admin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-scrollbar-thumb) transparent;
+}
+
+.admin-page-shell {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--app-surface-alt) 84%, transparent), transparent 36%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--app-surface) 72%, transparent), transparent 28%),
+    var(--app-bg);
+  color: var(--app-text);
+}
+
+.admin-panel {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--app-surface) 97%, transparent), var(--app-surface));
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.admin-panel-muted {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--app-surface-alt) 94%, transparent), var(--app-surface-alt));
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--app-surface) 38%, transparent);
+}
+
+.admin-kpi-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--app-surface) 96%, transparent), var(--app-surface)),
+    linear-gradient(135deg, color-mix(in srgb, var(--app-surface-alt) 38%, transparent), transparent 55%);
+  color: var(--app-text);
+  border: 1px solid color-mix(in srgb, var(--app-border) 88%, var(--app-surface));
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 16px 30px rgba(15, 23, 42, 0.08);
+  padding: 1.25rem 1.35rem;
+}
+
+.admin-kpi-label {
+  color: var(--app-muted-text);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-kpi-value {
+  color: var(--app-text);
+  font-size: clamp(1.85rem, 1.45rem + 1.15vw, 2.7rem);
+  font-weight: 850;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.admin-kpi-meta {
+  color: var(--app-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.admin-page-title {
+  color: var(--app-text);
+  font-size: clamp(1.7rem, 1.3rem + 1.1vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.admin-section-title {
+  color: var(--app-text);
+  font-size: clamp(1rem, 0.92rem + 0.3vw, 1.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.admin-section-kicker {
+  color: var(--app-muted-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-input,
+.admin-select,
+.admin-textarea {
+  width: 100%;
+  min-height: 44px;
+  background: color-mix(in srgb, var(--app-surface) 96%, var(--app-surface-alt));
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.92rem;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--app-surface-alt) 42%, transparent);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.admin-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: var(--app-muted-text);
+}
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus {
+  outline: none;
+  border-color: var(--app-border-strong);
+  background: var(--app-surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--app-surface-alt) 18%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--ui-focus-ring) 18%, transparent);
+}
+
+.admin-btn-primary,
+.admin-btn-secondary,
+.admin-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.72rem 1rem;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.admin-btn-primary {
+  background: var(--app-primary-bg);
+  color: var(--app-primary-text);
+  border: 1px solid color-mix(in srgb, var(--app-primary-bg) 88%, var(--app-border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--app-inverse-text) 10%, transparent),
+    var(--ui-shadow-sm);
+}
+
+.admin-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ui-shadow-md);
+}
+
+.admin-btn-primary:active,
+.admin-btn-secondary:active,
+.admin-btn-ghost:active {
+  transform: translateY(0);
+}
+
+.admin-btn-secondary {
+  background: color-mix(in srgb, var(--app-surface) 96%, transparent);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--app-surface-alt) 44%, transparent);
+}
+
+.admin-btn-secondary:hover,
+.admin-btn-ghost:hover {
+  background: var(--app-surface-alt);
+}
+
+.admin-btn-ghost {
+  background: transparent;
+  color: var(--app-muted-text);
+  border: 1px solid transparent;
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--app-border);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-badge-neutral {
+  background: var(--app-surface-alt);
+  color: var(--app-text-secondary);
+  border-color: var(--app-border);
+}
+
+.admin-badge-info {
+  background: var(--app-info-soft);
+  color: var(--app-info);
+  border-color: var(--app-info-border);
+}
+
+.admin-badge-success {
+  background: var(--app-success-soft);
+  color: var(--app-success);
+  border-color: var(--app-success-border);
+}
+
+.admin-badge-warning {
+  background: var(--app-warning-soft);
+  color: var(--app-warning);
+  border-color: var(--app-warning-border);
+}
+
+.admin-badge-danger {
+  background: var(--app-danger-soft);
+  color: var(--app-danger);
+  border-color: var(--app-danger-border);
+}
+
+.admin-empty-state {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--app-muted-text);
+}
+
+.admin-table-shell {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.admin-table-header {
+  background: color-mix(in srgb, var(--app-surface-alt) 88%, transparent);
+}
+
+.admin-table-head-cell {
+  color: var(--app-muted-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-table-row {
+  transition: background-color 0.18s ease;
+}
+
+.admin-table-row:hover {
+  background: color-mix(in srgb, var(--app-surface-alt) 72%, transparent);
+}

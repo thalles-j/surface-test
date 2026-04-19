@@ -237,8 +237,14 @@ export default function Shop() {
       />
 
       {showNotification && (
-        <div className="fixed bottom-8 right-8 bg-black text-white px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]">
-          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
+        <div
+          className="fixed bottom-8 right-8 px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]"
+          style={{ background: "var(--app-primary-bg)", color: "var(--app-primary-text)" }}
+        >
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center"
+            style={{ background: "var(--app-surface)", color: "var(--app-text)" }}
+          >
             <Check className="w-4 h-4" strokeWidth={3} />
           </div>
           <span className="text-sm font-bold uppercase tracking-wider">Adicionado ao carrinho</span>

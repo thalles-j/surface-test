@@ -1,4 +1,4 @@
-import { getCheckoutPreview } from '../services/checkoutService.js';
+import { createPreCheckoutWhatsApp, getCheckoutPreview } from '../services/checkoutService.js';
 import { validateCoupon } from '../services/couponService.js';
 
 export async function previewCheckoutController(req, res, next) {
@@ -24,6 +24,15 @@ export async function validateCouponController(req, res, next) {
         desconto: Number(coupon.desconto),
       },
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function preCheckoutController(req, res, next) {
+  try {
+    const result = await createPreCheckoutWhatsApp(req.body || {});
+    return res.json(result);
   } catch (error) {
     next(error);
   }

@@ -234,3 +234,18 @@ model historico_pedidos {
 
   @@index([id_pedido])
 }
+
+model exclusoes_seguranca {
+  id_exclusao Int      @id @default(autoincrement())
+  tipo        String
+  valor       String
+  algoritmo_hash String?
+  escopo_ml   Boolean  @default(false)
+  descricao   String?
+  ativo       Boolean  @default(true)
+  criado_em   DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@unique([tipo, valor])
+  @@index([tipo, ativo])
+}

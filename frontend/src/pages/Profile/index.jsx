@@ -206,10 +206,10 @@ export default function Profile() {
       confirmado: "#1976d2",
       em_separacao: "#7b1fa2",
       enviado: "#0288d1",
-      finalizado: "#2e7d32",
-      cancelado: "#d32f2f",
+      finalizado: "var(--app-success)",
+      cancelado: "var(--app-danger)",
     };
-    return colors[status] || "#666";
+    return colors[status] || "var(--app-muted-text)";
   };
 
   if (loading) return <PageLoader />;
@@ -258,7 +258,7 @@ export default function Profile() {
 
                 <div className={styles.field}>
                   <label>Email</label>
-                  <input type="email" value={editedData.email || ""} disabled style={{ backgroundColor: "#f0f0f0" }} />
+                  <input type="email" value={editedData.email || ""} disabled style={{ backgroundColor: "var(--app-surface-alt)", color: "var(--app-muted-text)" }} />
                 </div>
 
                 <div className={styles.field}>
@@ -268,7 +268,7 @@ export default function Profile() {
 
                 <h4 className={styles.subtitle}>Endereços ({editedData.enderecos?.length || 0}/5)</h4>
                 
-                {editedData.enderecos?.length === 0 && <p style={{marginBottom: '1rem', color:'#666'}}>Nenhum endereço cadastrado.</p>}
+                {editedData.enderecos?.length === 0 && <p style={{marginBottom: '1rem', color:'var(--app-muted-text)'}}>Nenhum endereço cadastrado.</p>}
 
                 {editedData.enderecos?.map((endereco, index) => (
                   <div key={index} className={`${styles.enderecoCard} ${endereco.principal ? styles.enderecoPrincipal : ""}`}>
@@ -339,7 +339,7 @@ export default function Profile() {
                         <p>Data: {new Date(pedido.data_pedido || pedido.createdAt).toLocaleDateString("pt-BR")}</p>
                         <p>Status: <strong style={{ color: statusColor(pedido.status) }}>{statusLabel(pedido.status)}</strong></p>
                         {pedido.codigo_cupom && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Cupom: {pedido.codigo_cupom}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>Cupom: {pedido.codigo_cupom}</p>
                         )}
                       </div>
 
@@ -365,13 +365,13 @@ export default function Profile() {
 
                       <div className={styles.pedidoTotalContainer}>
                         {pedido.subtotal != null && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Subtotal: {formatCurrency(pedido.subtotal)}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>Subtotal: {formatCurrency(pedido.subtotal)}</p>
                         )}
                         {pedido.desconto != null && Number(pedido.desconto) > 0 && (
-                          <p style={{ fontSize: "0.85rem", color: "#2e7d32" }}>Desconto: -{formatCurrency(pedido.desconto)}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-success)" }}>Desconto: -{formatCurrency(pedido.desconto)}</p>
                         )}
                         {pedido.frete != null && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>
                             Frete: {Number(pedido.frete) > 0 ? formatCurrency(pedido.frete) : "Grátis"}
                           </p>
                         )}
@@ -379,7 +379,7 @@ export default function Profile() {
                       </div>
                     </div>
                   </div>
-                )) : <p style={{color: '#666'}}>Você ainda não fez pedidos.</p>
+                )) : <p style={{color: 'var(--app-muted-text)'}}>Você ainda não fez pedidos.</p>
               )}
             </div>
 
@@ -422,3 +422,4 @@ export default function Profile() {
     </section>
   );
 }
+

@@ -307,7 +307,7 @@ export default function Sales() {
   const formatCurrency = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 p-3 sm:p-4 md:p-10 font-sans animate-in fade-in duration-500">
+    <div className="admin-page-shell min-h-screen p-3 sm:p-4 md:p-10 font-sans animate-in fade-in duration-500">
       <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Dashboard Cards */}
@@ -318,27 +318,27 @@ export default function Sales() {
             { label: 'Ticket Médio', val: formatCurrency(stats.ticketMedio) },
             { label: 'Finalizados', val: stats.finalizados }
           ].map((card, i) => (
-            <div key={i} className="bg-[#111111] p-7 rounded-[24px] border border-slate-800 shadow-xl">
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">{card.label}</p>
-              <h3 className="text-xl sm:text-2xl font-black text-white break-words">{card.val}</h3>
+            <div key={i} className="admin-kpi-card p-7">
+              <p className="admin-kpi-label mb-3">{card.label}</p>
+              <h3 className="admin-kpi-value break-words">{card.val}</h3>
             </div>
           ))}
         </div>
 
         {/* Barra de Filtros */}
-        <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-4 shadow-sm">
+        <div className="admin-panel-muted p-5 rounded-2xl space-y-4 shadow-sm">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
-                className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-slate-200 font-medium"
+                className="admin-input pl-12 pr-4 font-medium"
                 placeholder="Buscar por cliente..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
             <select
-              className="w-full md:w-auto bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none font-bold text-sm"
+              className="admin-select w-full md:w-auto px-4 py-3 font-bold text-sm"
               value={selectedStatus}
               onChange={e => setSelectedStatus(e.target.value)}
             >
@@ -349,7 +349,7 @@ export default function Sales() {
             </select>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm border transition-all ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-200 text-slate-600'}`}
+              className={`w-full md:w-auto ${showFilters ? 'admin-btn-primary' : 'admin-btn-secondary'} px-6 py-3 text-sm`}
             >
               <Filter size={18} /> Filtros Avançados
             </button>
@@ -370,18 +370,18 @@ export default function Sales() {
 
         {/* Tabela Principal */}
         <div className="space-y-4">
-          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tight">
+          <h2 className="admin-section-title flex items-center gap-2 uppercase tracking-tight">
             <Package className="text-slate-400" size={20} /> Gestão de Pedidos
           </h2>
-          <div className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
+          <div className="admin-panel admin-table-shell overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[760px]">
-                <thead className="bg-slate-50/50 border-b border-slate-100">
+                <thead className="admin-table-header border-b border-slate-100">
                   <tr>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total</th>
+                    <th className="admin-table-head-cell px-6 py-5">ID</th>
+                    <th className="admin-table-head-cell px-6 py-5">Cliente</th>
+                    <th className="admin-table-head-cell px-6 py-5 text-center">Status</th>
+                    <th className="admin-table-head-cell px-6 py-5 text-right">Total</th>
                     <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
                   </tr>
                 </thead>
@@ -391,7 +391,7 @@ export default function Sales() {
                   ) : orders.length === 0 ? (
                     <tr><td colSpan={5} className="py-12 text-center text-slate-400 font-bold">Nenhum pedido encontrado.</td></tr>
                   ) : orders.map(o => (
-                    <tr key={o.rawId} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={o.rawId} className="admin-table-row">
                       <td className="px-6 py-6 font-bold text-slate-400">{o.id}</td>
                       <td className="px-6 py-6">
                         <div className="font-black text-slate-900 uppercase text-sm tracking-tight">{o.cliente}</div>
@@ -440,7 +440,7 @@ export default function Sales() {
               <option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
             </select>
           </div>
-          <div className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm">
+          <div className="admin-panel overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -469,7 +469,7 @@ export default function Sales() {
             onClick={() => setViewingOrder(null)} 
           />
           
-          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="relative admin-panel w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200" style={{ boxShadow: 'var(--ui-shadow-md)' }}>
             {/* HEADER DO MODAL */}
             <div className="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div>

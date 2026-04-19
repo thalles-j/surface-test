@@ -27,19 +27,24 @@ const getStockHealth = (stock) => {
 
 // --- SUB-COMPONENTS ---
 const StatCard = ({ title, value, variant = "default", subtitle }) => {
-  const cardClass = variant === 'warning' ? 'border-yellow-200 bg-yellow-50' : 
-                    variant === 'danger' ? 'border-red-200 bg-red-50' : 
-                    'border-gray-200 bg-white';
-
-  const textClass = variant === 'warning' ? 'text-yellow-900' :
-                    variant === 'danger' ? 'text-red-900' :
-                    'text-gray-900';
+  const cardClass = variant === 'warning'
+    ? 'admin-panel'
+    : variant === 'danger'
+      ? 'admin-panel'
+      : 'admin-kpi-card';
 
   return (
-    <div className={`p-6 border shadow-sm rounded-xl ${cardClass}`}>
-      <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">{title}</p>
-      <h2 className={`text-3xl font-bold mt-2 ${textClass}`}>{value}</h2>
-      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+    <div
+      className={`p-6 shadow-sm rounded-xl ${cardClass}`}
+      style={variant === 'warning'
+        ? { background: 'var(--app-warning-soft)', borderColor: 'var(--app-warning-border)' }
+        : variant === 'danger'
+          ? { background: 'var(--app-danger-soft)', borderColor: 'var(--app-danger-border)' }
+          : undefined}
+    >
+      <p className="admin-kpi-label">{title}</p>
+      <h2 className="admin-kpi-value mt-2">{value}</h2>
+      {subtitle && <p className="admin-kpi-meta mt-1">{subtitle}</p>}
     </div>
   );
 };
