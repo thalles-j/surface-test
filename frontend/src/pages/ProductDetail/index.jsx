@@ -49,13 +49,13 @@ export default function ProductDetail() {
   }, [slug]);
 
   if (loading) return <PageLoader />;
-  if (error) return <div className={styles.error}>{error}</div>;
-  if (!produto) return <div className={styles.error}>Produto não encontrado</div>;
+  if (error) return <div className={styles.erro}>{error}</div>;
+  if (!produto) return <div className={styles.erro}>Produto não encontrado</div>;
 
   const variacoes = produto.variacoes_estoque || [];
 
   return (
-    <div className={styles.productDetail}>
+    <div className={styles.detalheProduto}>
       <div className={styles.container}>
         <ImageGallery 
           fotos={produto.fotos} 

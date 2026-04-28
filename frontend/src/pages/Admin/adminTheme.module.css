@@ -180,16 +180,22 @@
   color: var(--app-danger);
 }
 
+/* ============================================================
+   MAPEAMENTO TAILWIND → TOKENS (sem !important)
+   Substitui o antigo :global() massivo com !important.
+   ============================================================ */
+
 .adminRoot :global(.animate-in) {
-  animation-duration: 180ms !important;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation-duration: 180ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Superfícies */
 .adminRoot :global(.bg-white),
 .adminRoot :global(.bg-zinc-900),
 .adminRoot :global(.bg-\[\#111111\]),
 .adminRoot :global(.bg-\[\#0a0a0a\]) {
-  background-color: var(--admin-surface) !important;
+  background-color: var(--admin-surface);
 }
 
 .adminRoot :global(.bg-slate-50),
@@ -205,15 +211,17 @@
 .adminRoot :global(.bg-slate-900),
 .adminRoot :global(.bg-gray-900),
 .adminRoot :global(.bg-\[\#f8fafc\]) {
-  background-color: var(--admin-surface-muted) !important;
+  background-color: var(--admin-surface-muted);
 }
 
+/* Bordas */
 .adminRoot :global([class*="border-gray-"]),
 .adminRoot :global([class*="border-slate-"]),
 .adminRoot :global([class*="border-zinc-"]) {
-  border-color: var(--admin-border) !important;
+  border-color: var(--admin-border);
 }
 
+/* Texto principal */
 .adminRoot :global(.text-gray-900),
 .adminRoot :global(.text-gray-800),
 .adminRoot :global(.text-slate-900),
@@ -224,32 +232,35 @@
 .adminRoot :global(.text-zinc-300),
 .adminRoot :global(.text-white),
 .adminRoot :global(.text-black) {
-  color: var(--admin-text) !important;
+  color: var(--admin-text);
 }
 
+/* Texto secundário */
 .adminRoot :global(.text-gray-700),
 .adminRoot :global(.text-gray-600),
 .adminRoot :global(.text-slate-700),
 .adminRoot :global(.text-slate-600),
 .adminRoot :global(.text-zinc-700),
 .adminRoot :global(.text-zinc-600) {
-  color: var(--admin-text-secondary) !important;
+  color: var(--admin-text-secondary);
 }
 
+/* Texto muted */
 .adminRoot :global(.text-gray-500),
 .adminRoot :global(.text-gray-400),
 .adminRoot :global(.text-slate-500),
 .adminRoot :global(.text-slate-400),
 .adminRoot :global(.text-zinc-500),
 .adminRoot :global(.text-zinc-400) {
-  color: var(--admin-muted) !important;
+  color: var(--admin-muted);
 }
 
+/* Info */
 .adminRoot :global(.bg-indigo-50),
 .adminRoot :global(.bg-blue-50),
 .adminRoot :global(.bg-sky-100),
 .adminRoot :global(.bg-blue-100) {
-  background-color: var(--admin-info-soft) !important;
+  background-color: var(--admin-info-soft);
 }
 
 .adminRoot :global(.text-indigo-600),
@@ -257,21 +268,22 @@
 .adminRoot :global(.text-blue-600),
 .adminRoot :global(.text-blue-700),
 .adminRoot :global(.text-sky-700) {
-  color: var(--admin-info) !important;
+  color: var(--admin-info);
 }
 
 .adminRoot :global(.border-indigo-100),
 .adminRoot :global(.border-indigo-200),
 .adminRoot :global(.border-blue-100),
 .adminRoot :global(.border-blue-200) {
-  border-color: var(--admin-info-border) !important;
+  border-color: var(--admin-info-border);
 }
 
+/* Success */
 .adminRoot :global(.bg-emerald-50),
 .adminRoot :global(.bg-emerald-100),
 .adminRoot :global(.bg-green-100),
 .adminRoot :global(.bg-teal-100) {
-  background-color: var(--admin-success-soft) !important;
+  background-color: var(--admin-success-soft);
 }
 
 .adminRoot :global(.text-emerald-600),
@@ -279,21 +291,22 @@
 .adminRoot :global(.text-green-600),
 .adminRoot :global(.text-green-700),
 .adminRoot :global(.text-teal-700) {
-  color: var(--admin-success) !important;
+  color: var(--admin-success);
 }
 
 .adminRoot :global(.border-emerald-100),
 .adminRoot :global(.border-emerald-200),
 .adminRoot :global(.border-green-200),
 .adminRoot :global(.border-teal-200) {
-  border-color: var(--admin-success-border) !important;
+  border-color: var(--admin-success-border);
 }
 
+/* Danger */
 .adminRoot :global(.bg-red-50),
 .adminRoot :global(.bg-rose-100),
 .adminRoot :global(.bg-red-100),
 .adminRoot :global(.bg-red-950\/50) {
-  background-color: var(--admin-danger-soft) !important;
+  background-color: var(--admin-danger-soft);
 }
 
 .adminRoot :global(.text-red-600),
@@ -302,23 +315,24 @@
 .adminRoot :global(.text-rose-600),
 .adminRoot :global(.text-rose-700),
 .adminRoot :global(.text-red-400) {
-  color: var(--admin-danger) !important;
+  color: var(--admin-danger);
 }
 
 .adminRoot :global(.border-red-200),
 .adminRoot :global(.border-rose-200),
 .adminRoot :global(.border-red-800),
 .adminRoot :global(.border-red-700) {
-  border-color: var(--admin-danger-border) !important;
+  border-color: var(--admin-danger-border);
 }
 
+/* Warning */
 .adminRoot :global(.bg-amber-50),
 .adminRoot :global(.bg-amber-100),
 .adminRoot :global(.bg-yellow-50),
 .adminRoot :global(.bg-yellow-100),
 .adminRoot :global(.bg-orange-50),
 .adminRoot :global(.bg-orange-100) {
-  background-color: var(--admin-warning-soft) !important;
+  background-color: var(--admin-warning-soft);
 }
 
 .adminRoot :global(.text-amber-600),
@@ -327,7 +341,7 @@
 .adminRoot :global(.text-orange-600),
 .adminRoot :global(.text-orange-700),
 .adminRoot :global(.text-yellow-900) {
-  color: var(--admin-warning) !important;
+  color: var(--admin-warning);
 }
 
 .adminRoot :global(.border-amber-100),
@@ -335,25 +349,27 @@
 .adminRoot :global(.border-yellow-200),
 .adminRoot :global(.border-orange-200),
 .adminRoot :global(.border-orange-300) {
-  border-color: var(--admin-warning-border) !important;
+  border-color: var(--admin-warning-border);
 }
 
+/* Purple (misto) */
 .adminRoot :global(.bg-purple-50),
 .adminRoot :global(.bg-purple-100),
 .adminRoot :global(.bg-purple-950) {
-  background-color: color-mix(in srgb, var(--admin-info-soft) 55%, var(--admin-danger-soft)) !important;
+  background-color: color-mix(in srgb, var(--admin-info-soft) 55%, var(--admin-danger-soft));
 }
 
 .adminRoot :global(.text-purple-600),
 .adminRoot :global(.text-purple-700),
 .adminRoot :global(.text-purple-400) {
-  color: color-mix(in srgb, var(--admin-info) 60%, var(--admin-danger) 40%) !important;
+  color: color-mix(in srgb, var(--admin-info) 60%, var(--admin-danger) 40%);
 }
 
 .adminRoot :global(.border-purple-200) {
-  border-color: color-mix(in srgb, var(--admin-info-border) 60%, var(--admin-danger-border) 40%) !important;
+  border-color: color-mix(in srgb, var(--admin-info-border) 60%, var(--admin-danger-border) 40%);
 }
 
+/* Hover */
 .adminRoot :global(.hover\:bg-gray-50:hover),
 .adminRoot :global(.hover\:bg-slate-50:hover),
 .adminRoot :global(.hover\:bg-zinc-50:hover),
@@ -362,15 +378,16 @@
 .adminRoot :global(.hover\:bg-zinc-700:hover),
 .adminRoot :global(.hover\:bg-black:hover),
 .adminRoot :global(.hover\:bg-slate-900:hover) {
-  background-color: var(--admin-hover) !important;
+  background-color: var(--admin-hover);
 }
 
 .adminRoot :global(.hover\:text-white:hover),
 .adminRoot :global(.group:hover .group-hover\:text-indigo-600),
 .adminRoot :global(.hover\:text-black:hover) {
-  color: var(--admin-text) !important;
+  color: var(--admin-text);
 }
 
+/* Sombras */
 .adminRoot :global(.shadow-sm),
 .adminRoot :global(.shadow),
 .adminRoot :global(.shadow-lg),
@@ -378,37 +395,40 @@
 .adminRoot :global(.shadow-2xl) {
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
-    0 12px 24px rgba(15, 23, 42, 0.07) !important;
+    0 12px 24px rgba(15, 23, 42, 0.07);
 }
 
+/* Border-radius */
 .adminRoot :global(.rounded-xl),
 .adminRoot :global(.rounded-2xl),
 .adminRoot :global(.rounded-\[24px\]),
 .adminRoot :global(.rounded-\[32px\]) {
-  border-radius: 20px !important;
+  border-radius: 20px;
 }
 
 .adminRoot :global(.rounded-lg) {
-  border-radius: 14px !important;
+  border-radius: 14px;
 }
 
 .adminRoot :global(.rounded-md) {
-  border-radius: 12px !important;
+  border-radius: 12px;
 }
 
+/* Focus ring */
 .adminRoot :global(.focus\:ring-indigo-500:focus),
 .adminRoot :global(.focus\:ring-blue-100:focus),
 .adminRoot :global(.focus\:ring-slate-200:focus),
 .adminRoot :global(.focus\:ring-emerald-500:focus),
 .adminRoot :global(.focus\:ring-emerald-500\/20:focus) {
-  --tw-ring-color: color-mix(in srgb, var(--ui-focus-ring) 26%, transparent) !important;
+  --tw-ring-color: color-mix(in srgb, var(--ui-focus-ring) 26%, transparent);
 }
 
+/* Overlay */
 .adminRoot :global(.bg-black\/50),
 .adminRoot :global(.bg-slate-900\/80) {
-  background-color: var(--app-overlay-strong) !important;
+  background-color: var(--app-overlay-strong);
 }
 
 .adminRoot :global(.border-2) {
-  border-width: 1px !important;
+  border-width: 1px;
 }

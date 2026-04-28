@@ -45,26 +45,26 @@ const ProductCard = ({ produto, onQuickAdd }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/produto/${createSlug(produto.nome_produto)}`} className={styles.cardLink}>
-        <div className={styles.imageContainer}>
+        <div className={styles.containerImagem}>
           {imagemAtual ? (
             <img
               src={imagemAtual}
               alt={produto.nome_produto}
-              className={styles.produtoImage}
-              style={{ transition: 'opacity 0.2s ease-in-out' }} 
+              className={styles.imagemProduto}
+              style={{ transition: 'opacity 0.2s ease-in-out' }}
             />
           ) : (
-            <div className={styles.produtoPlaceholder}>
+            <div className={styles.placeholderProduto}>
               Sem imagem
             </div>
           )}
-          
-          <button 
-            className={styles.cartIconButton}
+
+          <button
+            className={styles.botaoIconeCarrinho}
             onClick={(e) => {
-              e.preventDefault(); 
+              e.preventDefault();
               e.stopPropagation();
-              onQuickAdd(produto); 
+              onQuickAdd(produto);
             }}
             title="Adicionar ao Carrinho"
           >
@@ -72,12 +72,12 @@ const ProductCard = ({ produto, onQuickAdd }) => {
           </button>
         </div>
 
-        <div className={styles.produtoInfo}>
-          <span className={styles.produtoTag}>
+        <div className={styles.infoProduto}>
+          <span className={styles.tagProduto}>
             {categoryMap[produto.id_categoria] || "Geral"}
           </span>
-          <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
-          <p className={styles.produtoPreco}>
+          <h3 className={styles.nomeProduto}>{produto.nome_produto}</h3>
+          <p className={styles.precoProduto}>
             R$ {parseFloat(produto.preco || 0).toFixed(2)}
           </p>
         </div>
@@ -195,10 +195,10 @@ export default function Shop() {
   }
 
   return (
-    <section className={styles.shop_section}>
-      <div className={styles.shop_body}>
-        <div className={styles.shop_container}>
-          <div className={styles.shop_headerWrapper}>
+    <section className={styles.secaoShop}>
+      <div className={styles.corpoShop}>
+        <div className={styles.containerShop}>
+          <div className={styles.cabecalhoShop}>
             <ShopHeader
               categories={categories}
               selectedCategory={selectedCategory}
@@ -211,16 +211,16 @@ export default function Shop() {
             />
           </div>
 
-          <div className={styles.produtos_grid}>
+          <div className={styles.gridProdutos}>
             {produtos.length === 0 ? (
               <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
                 {produtos.map((produto) => (
-                  <ProductCard 
-                    key={produto.id_produto} 
-                    produto={produto} 
-                    onQuickAdd={handleOpenModal} 
+                  <ProductCard
+                    key={produto.id_produto}
+                    produto={produto}
+                    onQuickAdd={handleOpenModal}
                   />
                 ))}
               </div>

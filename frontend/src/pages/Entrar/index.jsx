@@ -26,7 +26,6 @@ export default function Login() {
     const modeParam = searchParams.get("modo");
     const token = searchParams.get("token");
     if (modeParam === "reset" && token) return MODES.RESET;
-    if (modeParam === "first-access") return MODES.FIRST_ACCESS;
     if (modeParam === "forgot") return MODES.FORGOT;
     return MODES.LOGIN;
   }, [searchParams]);
@@ -267,47 +266,40 @@ export default function Login() {
     (firstAccessStatus && !firstAccessStatus.hasConta && firstAccessStatus.temPedidosPorEmail);
 
   const renderModeTabs = () => (
-    <div className={styles.modeTabs}>
+    <div className={styles.abasModo}>
       <button
         type="button"
-        className={`${styles.modeTab} ${mode === MODES.LOGIN ? styles.modeTabActive : ""}`}
+        className={`${styles.abaModo} ${mode === MODES.LOGIN ? styles.abaModoAtiva : ""}`}
         onClick={() => setPageMode(MODES.LOGIN)}
       >
         Login
       </button>
       <button
         type="button"
-        className={`${styles.modeTab} ${mode === MODES.FORGOT ? styles.modeTabActive : ""}`}
+        className={`${styles.abaModo} ${mode === MODES.FORGOT ? styles.abaModoAtiva : ""}`}
         onClick={() => setPageMode(MODES.FORGOT)}
       >
         Recuperar senha
-      </button>
-      <button
-        type="button"
-        className={`${styles.modeTab} ${mode === MODES.FIRST_ACCESS ? styles.modeTabActive : ""}`}
-        onClick={() => setPageMode(MODES.FIRST_ACCESS)}
-      >
-        Primeiro acesso
       </button>
     </div>
   );
 
   return (
     <section>
-      <main className={styles.loginMain}>
-        <div className={styles.loginHeader}>
-          <h1 className={styles.loginTitle}>Conecte-se aqui</h1>
+      <main className={styles.paginaEntrar}>
+        <div className={styles.cabecalho}>
+          <h1 className={styles.titulo}>Conecte-se aqui</h1>
         </div>
 
-        <div className={styles.loginBody}>
-          <div className={styles.box_login}>
-            <h4 className={styles.title_form}>Acesso</h4>
+        <div className={styles.corpo}>
+          <div className={styles.caixaLogin}>
+            <h4 className={styles.tituloFormulario}>Acesso</h4>
 
             {renderModeTabs()}
 
             {mode === MODES.LOGIN && (
-              <form onSubmit={handleLogin} className={styles.form}>
-                <div className={styles.field}>
+              <form onSubmit={handleLogin} className={styles.formulario}>
+                <div className={styles.campo}>
                   <label htmlFor="login-email">Email</label>
                   <input
                     type="email"
@@ -318,9 +310,9 @@ export default function Login() {
                   />
                 </div>
 
-                <div className={styles.field}>
+                <div className={styles.campo}>
                   <label htmlFor="login-senha">Senha</label>
-                  <div className={styles.passwordField}>
+                  <div className={styles.campoSenha}>
                     <input
                       type={showPassword ? "text" : "password"}
                       id="login-senha"
@@ -328,32 +320,29 @@ export default function Login() {
                       value={loginData.senha}
                       onChange={(e) => setLoginData({ ...loginData, senha: e.target.value })}
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className={styles.eyeButton}>
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className={styles.botaoOlho}>
                       {showPassword ? <FaEye /> : <FaEyeSlash />}
                     </button>
                   </div>
                 </div>
 
-                {loginMsg && <div className={styles.msg_retorno}>{loginMsg}</div>}
+                {loginMsg && <div className={styles.mensagemRetorno}>{loginMsg}</div>}
 
-                <div className={styles.inlineActions}>
-                  <button type="button" className={styles.textAction} onClick={() => setPageMode(MODES.FORGOT)}>
+                <div className={styles.acoesInline}>
+                  <button type="button" className={styles.acaoTexto} onClick={() => setPageMode(MODES.FORGOT)}>
                     Esqueci minha senha
-                  </button>
-                  <button type="button" className={styles.textAction} onClick={() => setPageMode(MODES.FIRST_ACCESS)}>
-                    Primeiro acesso apos compra
                   </button>
                 </div>
 
-                <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                  <button className={styles.btn_submit} type="submit">Entrar</button>
+                <div className={`${styles.campo} ${styles.campoEnviar}`}>
+                  <button className={styles.botaoEnviar} type="submit">Entrar</button>
                 </div>
               </form>
             )}
 
             {mode === MODES.FORGOT && (
-              <form onSubmit={handleForgotPassword} className={styles.form}>
-                <div className={styles.field}>
+              <form onSubmit={handleForgotPassword} className={styles.formulario}>
+                <div className={styles.campo}>
                   <label htmlFor="forgot-email">Email da conta</label>
                   <input
                     type="email"
@@ -364,21 +353,21 @@ export default function Login() {
                   />
                 </div>
 
-                {forgotMsg && <div className={styles.msg_retorno}>{forgotMsg}</div>}
+                {forgotMsg && <div className={styles.mensagemRetorno}>{forgotMsg}</div>}
 
-                <div className={styles.infoBox}>
+                <div className={styles.caixaInfo}>
                   Use este fluxo apenas para redefinir a senha de uma conta que ja existe.
                 </div>
 
-                <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                  <button className={styles.btn_submit} type="submit">Enviar link</button>
+                <div className={`${styles.campo} ${styles.campoEnviar}`}>
+                  <button className={styles.botaoEnviar} type="submit">Enviar link</button>
                 </div>
               </form>
             )}
 
             {mode === MODES.RESET && (
-              <form onSubmit={handleResetPassword} className={styles.form}>
-                <div className={styles.field}>
+              <form onSubmit={handleResetPassword} className={styles.formulario}>
+                <div className={styles.campo}>
                   <label htmlFor="reset-password">Nova senha</label>
                   <input
                     type="password"
@@ -389,7 +378,7 @@ export default function Login() {
                   />
                 </div>
 
-                <div className={styles.field}>
+                <div className={styles.campo}>
                   <label htmlFor="reset-password-confirm">Confirmar nova senha</label>
                   <input
                     type="password"
@@ -400,22 +389,22 @@ export default function Login() {
                   />
                 </div>
 
-                {resetMsg && <div className={styles.msg_retorno}>{resetMsg}</div>}
+                {resetMsg && <div className={styles.mensagemRetorno}>{resetMsg}</div>}
 
-                <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                  <button className={styles.btn_submit} type="submit">Redefinir senha</button>
+                <div className={`${styles.campo} ${styles.campoEnviar}`}>
+                  <button className={styles.botaoEnviar} type="submit">Redefinir senha</button>
                 </div>
               </form>
             )}
           </div>
 
-          <div className={styles.box_register}>
-            <h4 className={styles.title_form}>
+          <div className={styles.caixaCadastro}>
+            <h4 className={styles.tituloFormulario}>
               {mode === MODES.FIRST_ACCESS ? "Primeiro acesso apos compra" : "Criar Conta"}
             </h4>
 
-            <form onSubmit={handleRegister} className={styles.form}>
-              <div className={styles.field}>
+            <form onSubmit={handleRegister} className={styles.formulario}>
+              <div className={styles.campo}>
                 <label htmlFor="register-email">Email</label>
                 <input
                   type="email"
@@ -433,26 +422,26 @@ export default function Login() {
 
               {mode === MODES.FIRST_ACCESS && (
                 <>
-                  <div className={styles.infoBox}>
+                  <div className={styles.caixaInfo}>
                     Primeiro acesso e exclusivo para quem comprou antes de criar conta. Verifique o email usado no pedido.
                   </div>
 
-                  <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                    <button className={styles.btn_submit} type="button" onClick={handleCheckFirstAccess}>
+                  <div className={`${styles.campo} ${styles.campoEnviar}`}>
+                    <button className={styles.botaoEnviar} type="button" onClick={handleCheckFirstAccess}>
                       Verificar email do pedido
                     </button>
                   </div>
                 </>
               )}
 
-              {registerMsg && <div className={styles.msg_retorno}>{registerMsg}</div>}
+              {registerMsg && <div className={styles.mensagemRetorno}>{registerMsg}</div>}
 
               {mode === MODES.FIRST_ACCESS && firstAccessStatus?.hasConta && (
-                <div className={styles.modeActionGroup}>
-                  <button className={styles.btn_submit} type="button" onClick={() => setPageMode(MODES.LOGIN)}>
+                <div className={styles.grupoAcaoModo}>
+                  <button className={styles.botaoEnviar} type="button" onClick={() => setPageMode(MODES.LOGIN)}>
                     Ir para login
                   </button>
-                  <button className={styles.btn_submit} type="button" onClick={() => setPageMode(MODES.FORGOT)}>
+                  <button className={styles.botaoEnviar} type="button" onClick={() => setPageMode(MODES.FORGOT)}>
                     Recuperar senha
                   </button>
                 </div>
@@ -460,7 +449,7 @@ export default function Login() {
 
               {(mode !== MODES.FIRST_ACCESS || canSubmitFirstAccessRegister) && (
                 <>
-                  <div className={`${styles.field} ${styles.field_half}`}>
+                  <div className={`${styles.campo} ${styles.campoMetade}`}>
                     <label htmlFor="register-first-name">Nome</label>
                     <input
                       type="text"
@@ -471,7 +460,7 @@ export default function Login() {
                     />
                   </div>
 
-                  <div className={`${styles.field} ${styles.field_half}`}>
+                  <div className={`${styles.campo} ${styles.campoMetade}`}>
                     <label htmlFor="register-last-name">Sobrenome</label>
                     <input
                       type="text"
@@ -482,7 +471,7 @@ export default function Login() {
                     />
                   </div>
 
-                  <div className={styles.field}>
+                  <div className={styles.campo}>
                     <label htmlFor="register-phone">Telefone</label>
                     <input
                       type="tel"
@@ -493,9 +482,9 @@ export default function Login() {
                     />
                   </div>
 
-                  <div className={`${styles.field} ${styles.field_half}`}>
+                  <div className={`${styles.campo} ${styles.campoMetade}`}>
                     <label htmlFor="register-password">Senha</label>
-                    <div className={styles.passwordField}>
+                    <div className={styles.campoSenha}>
                       <input
                         type={showRegisterPassword ? "text" : "password"}
                         id="register-password"
@@ -510,14 +499,14 @@ export default function Login() {
                       <button
                         type="button"
                         onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                        className={styles.eyeButton}
+                        className={styles.botaoOlho}
                       >
                         {showRegisterPassword ? <FaEye /> : <FaEyeSlash />}
                       </button>
                     </div>
                   </div>
 
-                  <div className={`${styles.field} ${styles.field_half}`}>
+                  <div className={`${styles.campo} ${styles.campoMetade}`}>
                     <label htmlFor="register-password-confirm">Confirmar Senha</label>
                     <input
                       type={showRegisterPassword ? "text" : "password"}
@@ -532,16 +521,16 @@ export default function Login() {
                     />
                   </div>
 
-                  {!senhaConfere && <p className={styles.msg_retorno}>As senhas nao conferem.</p>}
+                  {!senhaConfere && <p className={styles.mensagemRetorno}>As senhas nao conferem.</p>}
 
                   {mode === MODES.FIRST_ACCESS && firstAccessStatus && (
-                    <div className={styles.infoBox}>
+                    <div className={styles.caixaInfo}>
                       Pedidos desse email serao vinculados automaticamente quando a conta for criada e nos proximos logins.
                     </div>
                   )}
 
-                  <div className={`${styles.field} ${styles.fieldsubmit}`}>
-                    <button className={styles.btn_submit} type="submit">
+                  <div className={`${styles.campo} ${styles.campoEnviar}`}>
+                    <button className={styles.botaoEnviar} type="submit">
                       {mode === MODES.FIRST_ACCESS ? "Concluir primeiro acesso" : "Cadastrar"}
                     </button>
                   </div>

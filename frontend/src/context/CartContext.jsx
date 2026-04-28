@@ -95,6 +95,7 @@ export function CartProvider({ children }) {
   // ADD TO CART
   const addToCart = (product, options = {}) => {
     const { openDrawer = true } = options;
+    const quantityToAdd = Math.max(1, Number(product?.quantity) || 1);
     const productStatus = String(product?.status || "").toLowerCase();
     const variations = Array.isArray(product?.variacoes_estoque)
       ? product.variacoes_estoque
@@ -152,7 +153,10 @@ export function CartProvider({ children }) {
 
       if (index !== -1) {
         const updated = [...prevItems];
-        updated[index].quantity += 1;
+        updated[index] = {
+          ...updated[index],
+          quantity: updated[index].quantity + quantityToAdd,
+        };
         return updated;
       }
 
@@ -160,7 +164,7 @@ export function CartProvider({ children }) {
         ...prevItems,
         {
           ...product,
-          quantity: 1,
+          quantity: quantityToAdd,
         },
       ];
     });

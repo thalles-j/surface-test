@@ -525,3 +525,87 @@ select:focus-visible {
 .admin-table-row:hover {
   background: color-mix(in srgb, var(--app-surface-alt) 72%, transparent);
 }
+
+/* ============================================================
+   ADMIN UTILITARIOS — substituem classes Tailwind com cores fixas
+   ============================================================
+   Uso: aplicar diretamente nos elementos JSX do Admin.
+   Elimina a necessidade de :global() + !important em CSS Modules.
+   ============================================================ */
+
+/* Superficie */
+.admin-surface { background-color: var(--app-surface); }
+.admin-surface-muted { background-color: var(--app-surface-alt); }
+.admin-surface-strong { background-color: color-mix(in srgb, var(--app-text) 10%, var(--app-surface)); }
+
+/* Texto */
+.admin-text { color: var(--app-text); }
+.admin-text-secondary { color: var(--app-text-secondary); }
+.admin-muted { color: var(--app-muted-text); }
+
+/* Borda */
+.admin-border { border-color: var(--app-border); }
+.admin-border-strong { border-color: var(--app-border-strong); }
+
+/* Hover */
+.admin-hover:hover { background-color: var(--ui-hover); }
+
+/* Info */
+.admin-info-soft { background-color: var(--app-info-soft); }
+.admin-info-text { color: var(--app-info); }
+.admin-info-border { border-color: var(--app-info-border); }
+
+/* Success */
+.admin-success-soft { background-color: var(--app-success-soft); }
+.admin-success-text { color: var(--app-success); }
+.admin-success-border { border-color: var(--app-success-border); }
+
+/* Warning */
+.admin-warning-soft { background-color: var(--app-warning-soft); }
+.admin-warning-text { color: var(--app-warning); }
+.admin-warning-border { border-color: var(--app-warning-border); }
+
+/* Danger */
+.admin-danger-soft { background-color: var(--app-danger-soft); }
+.admin-danger-text { color: var(--app-danger); }
+.admin-danger-border { border-color: var(--app-danger-border); }
+
+/* Purple (misto info + danger) */
+.admin-purple-soft { background-color: color-mix(in srgb, var(--app-info-soft) 55%, var(--app-danger-soft)); }
+.admin-purple-text { color: color-mix(in srgb, var(--app-info) 60%, var(--app-danger) 40%); }
+.admin-purple-border { border-color: color-mix(in srgb, var(--app-info-border) 60%, var(--app-danger-border) 40%); }
+
+/* Sombra */
+.admin-shadow {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.07);
+}
+.admin-shadow-sm { box-shadow: var(--ui-shadow-sm); }
+.admin-shadow-md { box-shadow: var(--ui-shadow-md); }
+
+/* Border-radius */
+.admin-rounded-xl { border-radius: 20px; }
+.admin-rounded-lg { border-radius: 14px; }
+.admin-rounded-md { border-radius: 12px; }
+
+/* Focus ring (para compatibilidade com componentes que usam ring Tailwind) */
+.admin-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-focus-ring) 26%, transparent);
+}
+
+/* Overlay */
+.admin-overlay { background-color: var(--app-overlay); }
+.admin-overlay-strong { background-color: var(--app-overlay-strong); }
+.admin-modal-overlay { background-color: var(--app-modal-overlay); }
+
+/* Animacao */
+.admin-animate-in {
+  animation: adminFadeIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes adminFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
