@@ -1,6 +1,6 @@
 import { pgQuery } from '../database/pg.js';
 
-const SHIRT_KEYWORDS = ['camisa', 'camiseta', 'blusa'];
+export const SHIRT_KEYWORDS = ['camisa', 'camiseta', 'blusa'];
 
 function normalizePgJson(value) {
   if (!value) return [];
@@ -15,7 +15,7 @@ function normalizePgJson(value) {
   return [];
 }
 
-function normalizeProductSuggestion(produto) {
+export function normalizeProductSuggestion(produto) {
   const variations = Array.isArray(produto.variacoes_estoque) ? produto.variacoes_estoque : [];
   const inStockVariations = variations.filter((v) => Number(v?.estoque || 0) > 0);
 
@@ -34,7 +34,7 @@ function normalizeProductSuggestion(produto) {
   };
 }
 
-function attachDerivedItemFields(order) {
+export function attachDerivedItemFields(order) {
   function extractItemSize(item) {
     if (!item) return '';
     if (item.tamanho) return String(item.tamanho);
