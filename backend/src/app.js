@@ -14,16 +14,7 @@ const __dirname = path.dirname(__filename);
 export function createApp() {
   const app = express();
 
-  app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  }));
-  app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-  }));
-
+  // CORS primeiro — garante headers em todas as respostas (incluindo erros)
   const allowedFromEnv = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
   app.use(cors({
     origin: (origin, callback) => {
@@ -34,6 +25,19 @@ export function createApp() {
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
+  }));
+
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
+
+  // Rate limit global mas pula preflight OPTIONS para nao quebrar CORS
+  app.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS',
   }));
 
   app.use(express.json());
