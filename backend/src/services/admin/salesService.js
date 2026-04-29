@@ -2,7 +2,7 @@ import prisma from '../../database/prisma.js';
 import { sucesso, erro } from '../../helpers/apiResponse.js';
 import { getAllStatuses, isValidTransition } from '../../helpers/orderStatus.js';
 import { sendOrderStatusUpdate } from '../emailService.js';
-import { getSalesDataViaPg, searchProductsForOrderEditViaPg } from '../../repositories/salesRepository.js';
+import { getSalesDataViaPg, searchProductsForOrderEditViaPg, attachDerivedItemFields, SHIRT_KEYWORDS, normalizeProductSuggestion } from '../../repositories/salesRepository.js';
 
 function isPrismaTlsError(error) {
   const message = String(error?.message || '');
