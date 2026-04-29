@@ -73,10 +73,17 @@ export default function Dashboard({ onCreateCollection }) {
 
   useEffect(() => {
     let cancelled = false;
+    let hitSent = false;
+
     const fetchData = async () => {
       try {
         setLoading(true);
-        api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' }).catch(() => {});
+
+        // Analytics hit — fire-and-forget, garante uma única vez por montagem real
+        if (!hitSent) {
+          hitSent = true;
+          api.post('/admin/analytics/visits/hit', { path: '/admin/dashboard' }).catch(() => {});
+        }
 
         const [statsRes, topRes, ordersRes, settingsRes, visitsRes, catRes] = await Promise.all([
           api.get('/admin/dashboard/stats'),
@@ -122,8 +129,13 @@ export default function Dashboard({ onCreateCollection }) {
         });
       } catch (err) {
         if (!cancelled) {
-          console.error('Erro ao carregar dashboard:', err);
-          toast.error('Erro ao carregar dados do dashboard');
+          const status = err.response?.status;
+          if (status === 429) {
+            toast.error('Muitas requisicoes. Aguarde um momento e recarregue.');
+          } else {
+            console.error('Erro ao carregar dashboard:', err);
+            toast.error('Erro ao carregar dados do dashboard');
+          }
           setDashboardData(EMPTY_DASHBOARD_DATA);
           setRecentOrders([]);
           setCategorySales([]);

@@ -11,6 +11,34 @@ import { erroMiddleware } from "./middlewares/erroMiddleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Rate limiters por contexto
+const skipOptions = (req) => req.method === 'OPTIONS';
+
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipOptions,
+  message: { sucesso: false, mensagem: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+});
+
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipOptions,
+});
+
+export const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipOptions,
+});
+
 export function createApp() {
   const app = express();
 
@@ -29,15 +57,6 @@ export function createApp() {
 
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-  }));
-
-  // Rate limit global mas pula preflight OPTIONS para nao quebrar CORS
-  app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => req.method === 'OPTIONS',
   }));
 
   app.use(express.json());

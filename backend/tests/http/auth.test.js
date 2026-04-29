@@ -60,3 +60,32 @@ describe('HTTP — Auth', () => {
     expect(res.text).toContain('API Funcionando');
   });
 });
+
+describe('HTTP — Rate Limits', () => {
+  it('login retorna 429 após muitas tentativas', async () => {
+    const agent = request.agent(app);
+    // 11 requisições (limite é 10)
+    for (let i = 0; i < 11; i++) {
+      await agent.post('/api/auth/login').send({ email: 'test@test.com', senha: 'wrong' });
+    }
+    const res = await agent.post('/api/auth/login').send({ email: 'test@test.com', senha: 'wrong' });
+    expect(res.status).toBe(429);
+    expect(res.body.mensagem).toContain('Muitas tentativas');
+  });
+
+  it('rotas admin nao retornam 429 em uso normal (6 reqs paralelas)', async () => {
+    const reqs = [
+      request(app).get('/api/admin/dashboard/stats'),
+      request(app).get('/api/admin/dashboard/top-products'),
+      request(app).get('/api/admin/analytics/recent-orders'),
+      request(app).get('/api/admin/settings'),
+      request(app).get('/api/admin/analytics/visits'),
+      request(app).get('/api/admin/analytics/category-sales'),
+    ];
+    const results = await Promise.all(reqs);
+    // Podem retornar 401 (sem auth) ou 200, mas NUNCA 429
+    for (const res of results) {
+      expect(res.status).not.toBe(429);
+    }
+  });
+});
