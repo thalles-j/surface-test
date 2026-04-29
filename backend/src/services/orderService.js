@@ -21,6 +21,14 @@ function normalizeCustomerInfo(customerInfo = {}) {
     nome: nome || null,
     email: email || null,
     telefone: telefone || null,
+    logradouro: String(customerInfo.logradouro || customerInfo.rua || '').trim() || null,
+    numero: String(customerInfo.numero || '').trim() || null,
+    complemento: String(customerInfo.complemento || '').trim() || null,
+    bairro: String(customerInfo.bairro || '').trim() || null,
+    cidade: String(customerInfo.cidade || '').trim() || null,
+    estado: String(customerInfo.estado || '').trim().toUpperCase() || null,
+    cep: String(customerInfo.cep || '').replace(/\D/g, '') || null,
+    endereco: String(customerInfo.endereco || '').trim() || null,
   };
 }
 
@@ -143,7 +151,7 @@ export async function validateStock(items) {
   return productData;
 }
 
-export async function calculateOrderPricing(items, codigoCupom = null) {
+export async function calculateOrderPricing(items, codigoCupom = null, cepDestino = null) {
   const productData = await validateStock(items);
 
   const subtotal = productData.reduce(
@@ -164,7 +172,8 @@ export async function calculateOrderPricing(items, codigoCupom = null) {
   }
 
   const subtotalComDesconto = subtotal - desconto;
-  const frete = await calculateShipping(subtotalComDesconto);
+  const shippingResult = await calculateShipping(cepDestino, subtotalComDesconto);
+  const frete = shippingResult?.frete ?? 0;
   const total = subtotalComDesconto + frete;
 
   return {
@@ -206,7 +215,7 @@ async function reduceStock(tx, productData) {
  * - Reduces stock atomically
  * - Increments coupon usage
  */
-export async function createOrder(userId, items, codigoCupom = null, customerInfo = {}) {
+export async function createOrder(userId, items, codigoCupom = null, customerInfo = {}, cepDestino = null) {
   let customer = normalizeCustomerInfo(customerInfo);
 
   if (
@@ -256,7 +265,7 @@ export async function createOrder(userId, items, codigoCupom = null, customerInf
     frete,
     total,
     cupomValidado,
-  } = await calculateOrderPricing(items, codigoCupom);
+  } = await calculateOrderPricing(items, codigoCupom, cepDestino);
 
   // 6. Create order + items + reduce stock + increment coupon in a single transaction
   const order = await prisma.$transaction(async (tx) => {
@@ -278,6 +287,14 @@ export async function createOrder(userId, items, codigoCupom = null, customerInf
           },
           email: customer.email,
           telefone: customer.telefone,
+          logradouro: customer.logradouro,
+          numero: customer.numero,
+          complemento: customer.complemento,
+          bairro: customer.bairro,
+          cidade: customer.cidade,
+          estado: customer.estado,
+          cep: customer.cep,
+          endereco: customer.endereco,
         },
         pedidoProdutos: {
           create: productData.map(({ product, variation, quantity }) => ({

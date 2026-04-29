@@ -1,10 +1,11 @@
 import { calculateOrderPricing } from './orderService.js';
 import { ErroValidation } from '../errors/index.js';
 import { buildWhatsAppMessage } from '../helpers/whatsapp.js';
+import prisma from '../database/prisma.js';
 
-export async function getCheckoutPreview(items, codigoCupom) {
+export async function getCheckoutPreview(items, codigoCupom, cepDestino = null) {
   const { productData, subtotal, desconto, frete, total, cupomValidado } =
-    await calculateOrderPricing(items, codigoCupom);
+    await calculateOrderPricing(items, codigoCupom, cepDestino);
 
   return {
     itens: productData.map(({ product, variation, quantity }) => ({
@@ -46,14 +47,30 @@ function validatePreCheckoutPayload(payload = {}) {
   const nome = sanitizeText(payload.nome);
   const email = sanitizeText(payload.email);
   const telefone = String(payload.telefone || '').replace(/\D/g, '');
-  const endereco = sanitizeText(payload.endereco);
   const tipo_pagamento = sanitizeText(payload.tipo_pagamento).toUpperCase();
+
+  // Campos de endereço separados (preferência)
+  const logradouro = sanitizeText(payload.logradouro || payload.rua);
+  const numero = sanitizeText(payload.numero);
+  const complemento = sanitizeText(payload.complemento);
+  const bairro = sanitizeText(payload.bairro);
+  const cidade = sanitizeText(payload.cidade);
+  const estado = sanitizeText(payload.estado).toUpperCase();
+  const cep = String(payload.cep || '').replace(/\D/g, '');
+
+  // Fallback para endereco como string única
+  const endereco = sanitizeText(payload.endereco);
+
+  const hasAddressFields = logradouro && numero && cidade && estado && cep.length === 8;
+  const hasLegacyAddress = !!endereco;
 
   if (!nome) throw new ErroValidation('Nome e obrigatorio.');
   if (!email || !validateEmail(email)) throw new ErroValidation('Email invalido.');
   if (!telefone) throw new ErroValidation('Telefone e obrigatorio.');
   if (telefone.length < 10) throw new ErroValidation('Telefone invalido.');
-  if (!endereco) throw new ErroValidation('Endereco e obrigatorio.');
+  if (!hasAddressFields && !hasLegacyAddress) {
+    throw new ErroValidation('Endereco e obrigatorio.');
+  }
   if (!tipo_pagamento) throw new ErroValidation('Tipo de pagamento e obrigatorio.');
   if (!ALLOWED_PAYMENT_TYPES.includes(tipo_pagamento)) {
     throw new ErroValidation('Tipo de pagamento invalido.');
@@ -63,8 +80,17 @@ function validatePreCheckoutPayload(payload = {}) {
     nome,
     email,
     telefone,
-    endereco,
     tipo_pagamento,
+    // Endereço separado
+    logradouro,
+    numero,
+    complemento,
+    bairro,
+    cidade,
+    estado,
+    cep,
+    // Fallback
+    endereco,
   };
 }
 
@@ -88,6 +114,7 @@ export async function createPreCheckoutWhatsApp(payload = {}) {
   const customer = validatePreCheckoutPayload(payload);
   const items = Array.isArray(payload.items) ? payload.items : [];
   const codigoCupom = payload?.codigo ?? payload?.codigo_cupom ?? null;
+  const cepDestino = payload?.cep ?? null;
 
   if (items.length === 0) {
     const message = buildPreCheckoutWhatsAppMessage(customer);
@@ -95,7 +122,7 @@ export async function createPreCheckoutWhatsApp(payload = {}) {
     return { message, whatsappUrl, preview: null };
   }
 
-  const preview = await getCheckoutPreview(items, codigoCupom);
+  const preview = await getCheckoutPreview(items, codigoCupom, cepDestino);
 
   const message = buildWhatsAppMessage({
     nome_cliente: customer.nome,
@@ -117,4 +144,64 @@ export async function createPreCheckoutWhatsApp(payload = {}) {
   const whatsappUrl = generatePreCheckoutWhatsAppUrl(message);
 
   return { message, whatsappUrl, preview };
+}
+
+/**
+ * Cria um pedido real no banco de dados a partir do checkout.
+ */
+export async function createOrderFromCheckout(payload = {}, user = null) {
+  const customer = validatePreCheckoutPayload(payload);
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  const codigoCupom = payload?.codigo ?? payload?.codigo_cupom ?? null;
+  const cepDestino = payload?.cep ?? null;
+
+  if (items.length === 0) {
+    throw new ErroValidation('Carrinho vazio.');
+  }
+
+  const { productData, subtotal, desconto, frete, total, cupomValidado } =
+    await calculateOrderPricing(items, codigoCupom, cepDestino);
+
+  const pedido = await prisma.pedidos.create({
+    data: {
+      id_usuario: user?.id_usuario || user?.id || null,
+      subtotal,
+      desconto,
+      frete,
+      total,
+      codigo_cupom: cupomValidado?.codigo || null,
+      metodo_pagamento: customer.tipo_pagamento,
+      status_pagamento: 'pendente',
+      status: 'pendente',
+      nome_cliente: customer.nome,
+      endereco_entrega: {
+        nome: customer.nome,
+        email: customer.email,
+        telefone: customer.telefone,
+        logradouro: customer.logradouro || null,
+        numero: customer.numero || null,
+        complemento: customer.complemento || null,
+        bairro: customer.bairro || null,
+        cidade: customer.cidade || null,
+        estado: customer.estado || null,
+        cep: customer.cep || null,
+        endereco: customer.endereco || null,
+      },
+      pedidoProdutos: {
+        create: productData.map(({ product, variation, quantity }) => ({
+          id_produto: product.id_produto,
+          sku_variacao: variation.sku,
+          quantidade: quantity,
+          preco_unitario: Number(product.preco),
+        })),
+      },
+    },
+    include: {
+      pedidoProdutos: {
+        include: { produto: true },
+      },
+    },
+  });
+
+  return pedido;
 }

@@ -1,4 +1,4 @@
-const WHATSAPP_NUMBER = '5524992709668';
+const WHATSAPP_NUMBER = '5524988582885';
 
 function formatCurrency(value) {
   return Number(value).toLocaleString('pt-BR', {

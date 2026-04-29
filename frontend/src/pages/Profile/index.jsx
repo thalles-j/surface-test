@@ -48,6 +48,23 @@ export default function Profile() {
     if (!loading && !user) navigate("/entrar");
   }, [user, loading, navigate]);
 
+  // Busca dados completos do perfil (com enderecos) ao carregar
+  useEffect(() => {
+    if (user) {
+      api.get("/conta")
+        .then((res) => {
+          const fullUser = res.data.usuario || res.data;
+          setUserData(fullUser);
+          setEditedData(fullUser);
+        })
+        .catch((err) => {
+          console.error("Erro ao carregar perfil:", err);
+          setUserData(user);
+          setEditedData(user);
+        });
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       setUserData(user);
@@ -99,10 +116,15 @@ export default function Profile() {
       const response = await api.put("/conta", {
         nome: editedData.nome,
         telefone: editedData.telefone,
+        enderecos: editedData.enderecos || [],
       });
 
       const updatedUser = response.data.usuario || response.data;
       setUserData(updatedUser);
+      setEditedData((prev) => ({
+        ...prev,
+        enderecos: updatedUser.enderecos || [],
+      }));
       setEditName(false);
       showMessage("Perfil atualizado com sucesso!", "success");
     } catch (err) {

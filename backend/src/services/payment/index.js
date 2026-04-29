@@ -1,7 +1,6 @@
 /**
  * Payment Provider Interface
  * All payment providers must implement these methods.
- * This is the architecture preparation - no real implementation yet.
  */
 export class PaymentProvider {
   constructor(name) {
@@ -44,4 +43,18 @@ export function getProvider(name) {
 
 export function getAvailableProviders() {
   return Object.keys(providers);
+}
+
+/**
+ * Initialize all built-in payment providers.
+ * Call once during app startup.
+ */
+export async function initPaymentProviders() {
+  const { MercadoPagoProvider } = await import('./providers/mercadoPago.js');
+  try {
+    registerProvider('mercado_pago', new MercadoPagoProvider());
+    console.log('[Payment] MercadoPago provider registered');
+  } catch (e) {
+    console.warn('[Payment] Falha ao registrar MercadoPago:', e.message);
+  }
 }

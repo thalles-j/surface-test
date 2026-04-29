@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { applyCoupon } from '../../src/services/couponService.js';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  applyCoupon,
+  normalizeCouponCode,
+  normalizeCouponData,
+  incrementCouponUsage,
+} from '../../src/services/couponService.js';
+import { createPrismaMock } from '../helpers/prismaMock.js';
 
 describe('couponService — applyCoupon (pure)', () => {
   // ─── Cupom porcentagem ──────────────────────────────
@@ -92,6 +98,87 @@ describe('couponService — applyCoupon (pure)', () => {
       const coupon = { tipo: 'porcentagem', desconto: '20' };
       const result = applyCoupon(coupon, '100');
       expect(result).toBe(20);
+    });
+  });
+});
+
+// ─── normalizeCouponCode ──────────────────────────────
+
+describe('couponService — normalizeCouponCode', () => {
+  it('converte para uppercase e trim', () => {
+    expect(normalizeCouponCode('  promo10  ')).toBe('PROMO10');
+  });
+
+  it('retorna string vazia para null', () => {
+    expect(normalizeCouponCode(null)).toBe('');
+  });
+
+  it('retorna string vazia para undefined', () => {
+    expect(normalizeCouponCode(undefined)).toBe('');
+  });
+});
+
+// ─── normalizeCouponData ──────────────────────────────
+
+describe('couponService — normalizeCouponData', () => {
+  it('normaliza dados válidos de cupom porcentagem', () => {
+    const result = normalizeCouponData({
+      codigo: '  promo10  ',
+      tipo: 'porcentagem',
+      desconto: 10,
+    });
+    expect(result.codigo).toBe('PROMO10');
+    expect(result.tipo).toBe('porcentagem');
+    expect(result.desconto).toBe(10);
+    expect(result.ativo).toBe(true);
+  });
+
+  it('normaliza dados válidos de cupom fixo', () => {
+    const result = normalizeCouponData({
+      codigo: 'OFF50',
+      tipo: 'fixo',
+      desconto: 50,
+    });
+    expect(result.tipo).toBe('fixo');
+  });
+
+  it('rejeita código vazio', () => {
+    expect(() => normalizeCouponData({ codigo: '', tipo: 'fixo', desconto: 10 })).toThrow('Codigo do cupom e obrigatorio');
+  });
+
+  it('rejeita desconto <= 0', () => {
+    expect(() => normalizeCouponData({ codigo: 'X', tipo: 'fixo', desconto: 0 })).toThrow('Desconto do cupom deve ser maior que zero');
+  });
+
+  it('rejeita porcentagem > 100', () => {
+    expect(() => normalizeCouponData({ codigo: 'X', tipo: 'porcentagem', desconto: 101 })).toThrow('maior que 100%');
+  });
+
+  it('rejeita limite de usos inválido', () => {
+    expect(() => normalizeCouponData({ codigo: 'X', tipo: 'fixo', desconto: 10, limite_usos: 0 })).toThrow('Limite de usos invalido');
+  });
+
+  it('aceita limite_usos null', () => {
+    const result = normalizeCouponData({ codigo: 'X', tipo: 'fixo', desconto: 10, limite_usos: null });
+    expect(result.limite_usos).toBeNull();
+  });
+
+  it('aceita limite_usos vazio (string)', () => {
+    const result = normalizeCouponData({ codigo: 'X', tipo: 'fixo', desconto: 10, limite_usos: '' });
+    expect(result.limite_usos).toBeNull();
+  });
+});
+
+// ─── incrementCouponUsage ─────────────────────────────
+
+describe('couponService — incrementCouponUsage', () => {
+  it('incrementa usos do cupom via tx', async () => {
+    const txMock = createPrismaMock();
+    await incrementCouponUsage(txMock, 'PROMO10');
+
+    expect(txMock.cupons.update).toHaveBeenCalledWith({
+      where: { codigo: 'PROMO10' },
+      data: { usos: { increment: 1 } },
     });
   });
 });

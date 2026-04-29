@@ -24,6 +24,8 @@ import {
   bulkUpdateOrderStatus,
   updateOrderItems,
   updateOrderAddress,
+  getSalesByPeriod,
+  getOrderHistory,
 } from '../../src/services/admin/salesService.js';
 
 // ─── Helpers para req/res mock ────────────────────────
@@ -366,12 +368,58 @@ describe('salesService — updateOrderAddress', () => {
     const { req, res } = mockReqRes({ id: '1' }, { endereco_entrega: 'Rua Nova, 123' });
 
     prismaMock.pedidos.findUnique.mockResolvedValue(pedidoPendente);
-    prismaMock.pedidos.update.mockResolvedValue({ ...pedidoPendente, endereco_entrega: 'Rua Nova, 123' });
+    prismaMock.$transaction = vi.fn(async (fn) => {
+      const txMock = createPrismaMock();
+      txMock.pedidos.update.mockResolvedValue({ ...pedidoPendente, endereco_entrega: 'Rua Nova, 123' });
+      return fn(txMock);
+    });
 
     await updateOrderAddress(req, res);
 
     const body = getJsonBody(res);
     expect(body.sucesso).toBe(true);
     expect(body.pedido.endereco_entrega).toBe('Rua Nova, 123');
+  });
+});
+
+// ─── getSalesByPeriod ─────────────────────────────────
+
+describe('salesService — getSalesByPeriod', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('retorna pedidos no período', async () => {
+    const { req, res } = mockReqRes({}, {}, { startDate: '2024-01-01', endDate: '2024-12-31' });
+    prismaMock.pedidos.findMany.mockResolvedValue([{ id_pedido: 1 }, { id_pedido: 2 }]);
+
+    await getSalesByPeriod(req, res);
+    expect(res.json).toHaveBeenCalledWith([{ id_pedido: 1 }, { id_pedido: 2 }]);
+  });
+
+  it('retorna todos os pedidos sem filtros', async () => {
+    const { req, res } = mockReqRes({}, {}, {});
+    prismaMock.pedidos.findMany.mockResolvedValue([]);
+
+    await getSalesByPeriod(req, res);
+    expect(prismaMock.pedidos.findMany).toHaveBeenCalledWith({ where: {} });
+  });
+});
+
+// ─── getOrderHistory ──────────────────────────────────
+
+describe('salesService — getOrderHistory', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('retorna histórico do pedido', async () => {
+    const { req, res } = mockReqRes({ id: '1' });
+    prismaMock.historico_pedidos.findMany.mockResolvedValue([
+      { id_historico: 1, tipo: 'status_change' },
+    ]);
+
+    await getOrderHistory(req, res);
+    expect(res.json).toHaveBeenCalledWith([{ id_historico: 1, tipo: 'status_change' }]);
   });
 });

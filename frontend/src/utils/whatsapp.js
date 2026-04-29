@@ -1,57 +1,90 @@
-const WHATSAPP_NUMBER = '5524992709668';
+const WHATSAPP_NUMBER = '5524988582885';
+
+function formatBRL(value) {
+  return `R$ ${(Number(value) || 0).toFixed(2).replace('.', ',')}`;
+}
 
 /**
- * Generates a WhatsApp checkout URL with the order message.
- * @param {Object} params
- * @param {string} params.customerName
- * @param {Array} params.items - Cart items with nome_produto, selectedSize, quantity, preco
- * @param {number} params.total
- * @param {number|null} params.orderId - If order was created in DB
- * @param {number|null} params.subtotal
- * @param {number|null} params.desconto
- * @param {number|null} params.frete
- * @param {string|null} params.codigoCupom
- * @returns {string} wa.me URL
+ * Generates a WhatsApp checkout URL with a rich formatted order message.
  */
-export function buildWhatsAppCheckoutUrl({ customerName, items, total, orderId, subtotal, desconto, frete, codigoCupom }) {
+function buildAddressLine(addr = {}) {
+  const parts = [
+    addr.logradouro,
+    addr.numero,
+    addr.complemento,
+    addr.bairro,
+    addr.cidade,
+    addr.estado,
+    addr.cep,
+    addr.endereco,
+  ].filter(Boolean);
+  return parts.join(', ');
+}
+
+export function buildWhatsAppCheckoutUrl({
+  customerName,
+  items,
+  total,
+  orderId,
+  subtotal,
+  desconto,
+  frete,
+  codigoCupom,
+  endereco,
+  telefone,
+  logradouro,
+  numero,
+  complemento,
+  bairro,
+  cidade,
+  estado,
+  cep,
+}) {
   const lines = [
-    `🛒 *Novo Pedido - Surface*`,
+    `🛍️ *NOVO PEDIDO - SURFACE*`,
     ``,
-    `*Cliente:* ${customerName}`,
+    `👤 *Cliente:* ${customerName || 'Não informado'}`,
   ];
 
   if (orderId) {
-    lines.push(`*Pedido #:* ${orderId}`);
+    lines.push(`📋 *Pedido:* #${orderId}`);
   }
 
-  lines.push(``, `*Itens:*`);
+  if (telefone) {
+    lines.push(`📞 *Telefone:* ${telefone}`);
+  }
+
+  const addressLine = buildAddressLine({ logradouro, numero, complemento, bairro, cidade, estado, cep, endereco });
+  if (addressLine) {
+    lines.push(`📍 *Endereço:* ${addressLine}`);
+  }
+
+  lines.push(``, `━━━━━━━━━━━━━━━━━━━━`, ``, `🛒 *ITENS:*`);
 
   items.forEach((item, i) => {
-    const size = item.selectedSize ? ` (${item.selectedSize})` : '';
-    const itemSubtotal = (Number(item.preco) * item.quantity).toFixed(2);
-    lines.push(`${i + 1}. ${item.nome_produto}${size} — ${item.quantity}x R$ ${Number(item.preco).toFixed(2)} = R$ ${itemSubtotal}`);
+    const size = item.selectedSize ? ` [Tamanho: ${item.selectedSize}]` : '';
+    lines.push(`${i + 1}. ${item.nome_produto}${size}`);
+    lines.push(`   ${item.quantity}x ${formatBRL(item.preco)} = *${formatBRL(Number(item.preco) * item.quantity)}*`);
   });
 
-  lines.push(``);
+  lines.push(``, `━━━━━━━━━━━━━━━━━━━━`, ``, `💰 *RESUMO:*`);
 
   if (subtotal != null) {
-    lines.push(`*Subtotal: R$ ${Number(subtotal).toFixed(2)}*`);
+    lines.push(`   Subtotal: ${formatBRL(subtotal)}`);
   }
 
   if (codigoCupom && desconto > 0) {
-    lines.push(`*Cupom (${codigoCupom}): -R$ ${Number(desconto).toFixed(2)}*`);
+    lines.push(`   🏷️ Cupom *${codigoCupom}*: -${formatBRL(desconto)}`);
   }
 
   if (frete != null) {
-    if (Number(frete) > 0) {
-      lines.push(`*Frete: R$ ${Number(frete).toFixed(2)}*`);
-    } else {
-      lines.push(`*Frete: Grátis ✨*`);
-    }
+    lines.push(`   🚚 Frete: ${Number(frete) > 0 ? formatBRL(frete) : 'Grátis ✨'}`);
   }
 
-  lines.push(`*Total: R$ ${Number(total).toFixed(2)}*`);
-  lines.push(``, `Aguardo confirmação para finalizar a compra! 🙏`);
+  lines.push(``, `💳 *TOTAL: ${formatBRL(total)}*`);
+  lines.push(``, `━━━━━━━━━━━━━━━━━━━━`, ``);
+  lines.push(`Aguardo confirmação do pagamento para separar o pedido! 🙌`);
+  lines.push(`Obrigado por escolher a Surface. 🔥`);
 
   const message = lines.join('\n');
   const encoded = encodeURIComponent(message);

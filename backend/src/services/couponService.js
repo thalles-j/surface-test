@@ -126,7 +126,13 @@ export async function validateCoupon(codigo) {
 }
 
 export function applyCoupon(coupon, subtotal) {
-  const normalizedType = normalizeCouponType(coupon?.tipo);
+  let normalizedType;
+  try {
+    normalizedType = normalizeCouponType(coupon?.tipo);
+  } catch {
+    return 0;
+  }
+
   const subtotalValue = Number(subtotal) || 0;
   const discountValue = Number(coupon?.desconto) || 0;
   let desconto = 0;

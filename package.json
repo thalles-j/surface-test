@@ -5,10 +5,13 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-  "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-  "dev:back": "npm run dev --prefix backend",
-  "dev:front": "npm run dev --prefix frontend"
-},
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently --kill-others-on-fail --names \"BACK,FRONT\" --prefix-colors \"blue,green\" \"npm run dev:back\" \"npm run dev:front\"",
+    "dev:back": "cd backend && npm run dev",
+    "dev:front": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "lint": "cd frontend && npm run lint"
+  },
   "devDependencies": {
     "concurrently": "^9.2.1"
   },

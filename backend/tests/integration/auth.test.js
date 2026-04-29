@@ -24,7 +24,14 @@ vi.mock('../../src/services/emailService.js', () => ({
 // Precisa setar JWT_SECRET antes de importar o authMiddleware
 process.env.JWT_SECRET = 'test-secret-key-for-vitest';
 
-import { loginService, registerService } from '../../src/services/authService.js';
+import {
+  loginService,
+  registerService,
+  requestPasswordResetService,
+  resetPasswordService,
+  getFirstAccessStatusService,
+  logoutService,
+} from '../../src/services/authService.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -258,5 +265,132 @@ describe('isOwnerOrAdmin', () => {
 
     isOwnerOrAdmin(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
+  });
+});
+
+// ─── requestPasswordResetService ──────────────────────
+
+describe('authService — requestPasswordResetService', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('rejeita email vazio', async () => {
+    await expect(requestPasswordResetService('')).rejects.toThrow('Email é obrigatório');
+  });
+
+  it('retorna ok mesmo se usuário não existe (não revela)', async () => {
+    prismaMock.usuarios.findUnique.mockResolvedValue(null);
+
+    const result = await requestPasswordResetService('nao@existe.com');
+    expect(result.ok).toBe(true);
+  });
+
+  it('gera token e retorna ok para usuário existente', async () => {
+    prismaMock.usuarios.findUnique.mockResolvedValue({
+      id_usuario: 1,
+      nome: 'Test',
+      email: 'test@t.com',
+    });
+
+    const result = await requestPasswordResetService('test@t.com');
+    expect(result.ok).toBe(true);
+  });
+});
+
+// ─── resetPasswordService ─────────────────────────────
+
+describe('authService — resetPasswordService', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('rejeita token ausente', async () => {
+    await expect(resetPasswordService('', 'novasenha123')).rejects.toThrow('Token de recuperação é obrigatório');
+  });
+
+  it('rejeita senha muito curta', async () => {
+    await expect(resetPasswordService('token', '123')).rejects.toThrow('mínimo 7 caracteres');
+  });
+
+  it('rejeita token inválido', async () => {
+    await expect(resetPasswordService('token.invalido', 'novasenha123')).rejects.toThrow('Token inválido ou expirado');
+  });
+
+  it('rejeita token com ação errada', async () => {
+    const token = jwt.sign(
+      { action: 'other', id: 1, email: 'test@t.com' },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Token inválido');
+  });
+
+  it('rejeita usuário não encontrado', async () => {
+    const token = jwt.sign(
+      { action: 'reset_password', id: 1, email: 'test@t.com' },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+    prismaMock.usuarios.findUnique.mockResolvedValue(null);
+
+    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Usuário não encontrado');
+  });
+
+  it('reseta senha com sucesso', async () => {
+    const token = jwt.sign(
+      { action: 'reset_password', id: 1, email: 'test@t.com' },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+    prismaMock.usuarios.findUnique.mockResolvedValue({ id_usuario: 1 });
+    prismaMock.usuarios.update.mockResolvedValue({});
+
+    const result = await resetPasswordService(token, 'novasenha123');
+    expect(result.ok).toBe(true);
+
+    const updateCall = prismaMock.usuarios.update.mock.calls[0][0];
+    expect(updateCall.data.senha).not.toBe('novasenha123'); // deve estar hasheada
+  });
+});
+
+// ─── getFirstAccessStatusService ──────────────────────
+
+describe('authService — getFirstAccessStatusService', () => {
+  beforeEach(() => {
+    prismaMock = createPrismaMock();
+  });
+
+  it('rejeita email vazio', async () => {
+    await expect(getFirstAccessStatusService('')).rejects.toThrow('Email é obrigatório');
+  });
+
+  it('retorna podePrimeiroAcesso quando não tem conta mas tem pedidos', async () => {
+    prismaMock.usuarios.findUnique.mockResolvedValue(null);
+    prismaMock.pedidos.findMany.mockResolvedValue([
+      { id_pedido: 1, endereco_entrega: { email: 'cliente@test.com' } },
+    ]);
+
+    const result = await getFirstAccessStatusService('cliente@test.com');
+    expect(result.hasConta).toBe(false);
+    expect(result.temPedidosPorEmail).toBe(true);
+    expect(result.podePrimeiroAcesso).toBe(true);
+  });
+
+  it('retorna hasConta quando usuário existe', async () => {
+    prismaMock.usuarios.findUnique.mockResolvedValue({ id_usuario: 1, email: 'cliente@test.com' });
+    prismaMock.pedidos.findMany.mockResolvedValue([]);
+
+    const result = await getFirstAccessStatusService('cliente@test.com');
+    expect(result.hasConta).toBe(true);
+    expect(result.podePrimeiroAcesso).toBe(false);
+  });
+});
+
+// ─── logoutService ────────────────────────────────────
+
+describe('authService — logoutService', () => {
+  it('resolve sem erro', async () => {
+    await expect(logoutService()).resolves.toBeUndefined();
   });
 });

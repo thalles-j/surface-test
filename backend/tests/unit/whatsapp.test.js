@@ -29,7 +29,7 @@ describe('whatsapp helpers', () => {
   describe('buildWhatsAppMessage()', () => {
     it('contém header "Novo Pedido - Surface"', () => {
       const msg = buildWhatsAppMessage(orderFixture);
-      expect(msg).toContain('🛒 Novo Pedido - Surface');
+      expect(msg).toContain('Novo Pedido - Surface');
     });
 
     it('contém nome do cliente', () => {
@@ -61,16 +61,16 @@ describe('whatsapp helpers', () => {
       expect(msg).not.toContain('Grátis');
     });
 
-    it('mostra "Grátis 🚚" quando frete é 0', () => {
+    it('mostra "Grátis" quando frete é 0', () => {
       const orderFreteGratis = { ...orderFixture, frete: 0 };
       const msg = buildWhatsAppMessage(orderFreteGratis);
-      expect(msg).toContain('Grátis 🚚');
+      expect(msg).toContain('Frete: Gratis');
     });
 
     it('mostra desconto quando > 0', () => {
       const orderComDesconto = { ...orderFixture, desconto: 20 };
       const msg = buildWhatsAppMessage(orderComDesconto);
-      expect(msg).toContain('Desconto:');
+      expect(msg).toContain('Desconto total:');
     });
 
     it('omite desconto quando 0', () => {
@@ -85,7 +85,7 @@ describe('whatsapp helpers', () => {
 
     it('termina com mensagem de confirmação', () => {
       const msg = buildWhatsAppMessage(orderFixture);
-      expect(msg).toContain('Aguardo confirmação para finalizar a compra! 🚀');
+      expect(msg).toContain('Aguardo confirmacao para finalizar a compra!');
     });
 
     it('usa nome_cliente quando disponível (venda presencial)', () => {
@@ -104,7 +104,7 @@ describe('whatsapp helpers', () => {
   describe('generateWhatsAppLink()', () => {
     it('gera URL wa.me com número correto', () => {
       const link = generateWhatsAppLink('Teste');
-      expect(link).toContain('https://wa.me/5524992709668');
+      expect(link).toContain('https://wa.me/5524988582885');
     });
 
     it('encoda a mensagem no parâmetro text', () => {

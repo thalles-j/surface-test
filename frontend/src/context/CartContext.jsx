@@ -10,6 +10,13 @@ const PRE_CHECKOUT_DEFAULTS = {
   telefone: "",
   endereco: "",
   tipo_pagamento: "PIX",
+  logradouro: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "",
+  cep: "",
 };
 
 export function CartProvider({ children }) {
