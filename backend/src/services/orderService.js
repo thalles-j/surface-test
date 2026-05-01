@@ -24,7 +24,7 @@ function normalizeCustomerInfo(customerInfo = {}) {
     logradouro: String(customerInfo.logradouro || customerInfo.rua || '').trim() || null,
     numero: String(customerInfo.numero || '').trim() || null,
     complemento: String(customerInfo.complemento || '').trim() || null,
-    bairro: String(customerInfo.bairro || '').trim() || null,
+    bairro: String(customerInfo.bairro || '').trim() || 'Não informado',
     cidade: String(customerInfo.cidade || '').trim() || null,
     estado: String(customerInfo.estado || '').trim().toUpperCase() || null,
     cep: String(customerInfo.cep || '').replace(/\D/g, '') || null,

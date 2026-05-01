@@ -1,22 +1,50 @@
-const REQUIRED_PAYMENT_TYPES = ["PIX", "CARTAO", "DINHEIRO"];
+const isFilled = (v) => typeof v === "string" && v.trim().length > 0;
+
+export function normalizeAddress(source) {
+  const profile = source?.usuario ?? source?.user ?? source ?? {};
+  const rawAddr =
+    profile?.endereco ??
+    (Array.isArray(profile?.enderecos) && profile.enderecos.length > 0
+      ? profile.enderecos.find(e => e?.principal) || profile.enderecos[0]
+      : null) ??
+    null;
+
+  return {
+    logradouro: String(rawAddr?.logradouro ?? rawAddr?.rua ?? "").trim(),
+    numero: String(rawAddr?.numero ?? "").trim(),
+    complemento: String(rawAddr?.complemento ?? "").trim(),
+    bairro: String(rawAddr?.bairro ?? "").trim(),
+    cidade: String(rawAddr?.cidade ?? "").trim(),
+    estado: String(rawAddr?.estado ?? rawAddr?.uf ?? "").trim().toUpperCase(),
+    cep: String(rawAddr?.cep ?? "").replace(/\D/g, ""),
+  };
+}
+
+export function hasCompleteAddress(data = {}) {
+  const addr = data || {};
+  return !!(
+    isFilled(addr.logradouro) &&
+    isFilled(addr.numero) &&
+    isFilled(addr.bairro) &&
+    isFilled(addr.cidade) &&
+    isFilled(addr.estado) &&
+    isFilled(addr.cep)
+  );
+}
 
 export function sanitizePreCheckoutData(data = {}) {
-  const cep = String(data?.cep || "").replace(/\D/g, "");
-
   return {
     nome: String(data?.nome || "").trim(),
     email: String(data?.email || "").trim().toLowerCase(),
     telefone: String(data?.telefone || "").replace(/\D/g, ""),
-    tipo_pagamento: String(data?.tipo_pagamento || "").trim().toUpperCase(),
-    // Endereço separado
-    logradouro: String(data?.logradouro || data?.rua || "").trim(),
+    tipo_pagamento: "DINHEIRO",
+    logradouro: String(data?.logradouro || "").trim(),
     numero: String(data?.numero || "").trim(),
     complemento: String(data?.complemento || "").trim(),
     bairro: String(data?.bairro || "").trim(),
     cidade: String(data?.cidade || "").trim(),
     estado: String(data?.estado || "").trim().toUpperCase(),
-    cep: cep.length === 8 ? cep : "",
-    // Fallback
+    cep: String(data?.cep || "").replace(/\D/g, ""),
     endereco: String(data?.endereco || "").trim(),
   };
 }
@@ -37,27 +65,6 @@ export function validatePreCheckoutData(data = {}) {
     errors.telefone = "Telefone invalido.";
   }
 
-  // Validação de endereço separado
-  const hasAddressFields =
-    sanitized.logradouro &&
-    sanitized.numero &&
-    sanitized.cidade &&
-    sanitized.estado &&
-    sanitized.cep;
-
-  if (!hasAddressFields && !sanitized.endereco) {
-    errors.endereco = "Endereco obrigatorio.";
-    if (!sanitized.logradouro) errors.logradouro = "Rua obrigatoria.";
-    if (!sanitized.numero) errors.numero = "Numero obrigatorio.";
-    if (!sanitized.cidade) errors.cidade = "Cidade obrigatoria.";
-    if (!sanitized.estado) errors.estado = "Estado obrigatorio.";
-    if (!sanitized.cep) errors.cep = "CEP obrigatorio.";
-  }
-
-  if (!REQUIRED_PAYMENT_TYPES.includes(sanitized.tipo_pagamento)) {
-    errors.tipo_pagamento = "Selecione um tipo de pagamento valido.";
-  }
-
   return {
     sanitized,
     errors,
@@ -67,8 +74,4 @@ export function validatePreCheckoutData(data = {}) {
 
 export function isPreCheckoutComplete(data = {}) {
   return validatePreCheckoutData(data).isValid;
-}
-
-export function getPreCheckoutPaymentTypes() {
-  return REQUIRED_PAYMENT_TYPES;
 }

@@ -140,19 +140,19 @@ export default function Catalog() {
     if (product) {
       setEditingId(product.id_produto);
       setFormData({
-        nome_produto: product.nome_produto,
-        descricao: product.descricao || "",
-        preco: product.preco,
-        id_categoria: product.id_categoria,
-        status: product.status,
-        oculto: product.oculto || false,
-        destaque: product.destaque || false,
-        tags: product.tags || "",
-        peso: product.peso || "",
-        dimensoes: product.dimensoes || "",
-        ficha_tecnica: product.ficha_tecnica || "",
-        seo_titulo: product.seo_titulo || "",
-        seo_descricao: product.seo_descricao || "",
+        nome_produto: product.nome_produto ?? "",
+        descricao: product.descricao ?? "",
+        preco: product.preco ?? "",
+        id_categoria: product.id_categoria ?? "",
+        status: product.status ?? "ativo",
+        oculto: product.oculto ?? false,
+        destaque: product.destaque ?? false,
+        tags: product.tags ?? "",
+        peso: product.peso ?? "",
+        dimensoes: product.dimensoes ?? "",
+        ficha_tecnica: product.ficha_tecnica ?? "",
+        seo_titulo: product.seo_titulo ?? "",
+        seo_descricao: product.seo_descricao ?? "",
         sku: Array.isArray(product.variacoes_estoque) && product.variacoes_estoque[0] ? product.variacoes_estoque[0].sku : ''
       });
       

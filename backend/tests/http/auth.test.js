@@ -22,9 +22,7 @@ vi.mock('@/services/emailService.js', () => ({
   sendPasswordResetEmail: vi.fn().mockResolvedValue({ status: 'preview' }),
 }));
 
-vi.mock('@/services/payment/index.js', () => ({
-  initPaymentProviders: vi.fn(),
-}));
+
 
 import { createApp } from '@/app.js';
 

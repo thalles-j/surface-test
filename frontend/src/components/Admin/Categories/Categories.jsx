@@ -169,7 +169,7 @@ export default function Categories() {
                 <td className="px-6 py-4">{c.featured ? '⭐ Sim' : '-'}</td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <button
-                    onClick={() => { setFormData(c); setEditingId(c.id); setShowForm(true); }}
+                    onClick={() => { setFormData({ name: c.name ?? '', description: c.description ?? '', featured: c.featured ?? false }); setEditingId(c.id); setShowForm(true); }}
                     className="p-2 text-zinc-500 hover:text-white transition-colors"
                   >
                     <Edit size={16} />

@@ -26,7 +26,7 @@ async function main() {
       status: "pendente",
       subtotal: 159.99,
       total: 179.99,
-      metodo: "BOLETO",
+      metodo: "DINHEIRO",
       pagamento: "aguardando_pagamento",
       itens: [{ produto: p3, sku: "TSHIRT-DROP-0-SURFACE-P" }]
     },
@@ -34,7 +34,7 @@ async function main() {
       status: "enviado",
       subtotal: 379.89,
       total: 379.89, // Frete grátis simulado
-      metodo: "CARTAO_CREDITO",
+      metodo: "DINHEIRO",
       pagamento: "pago",
       obs: "Enviar em embalagem de presente",
       itens: [
@@ -46,7 +46,7 @@ async function main() {
       status: "cancelado",
       subtotal: 149.90,
       total: 149.90,
-      metodo: "PIX",
+      metodo: "DINHEIRO",
       pagamento: "estornado",
       itens: [{ produto: p1, sku: "FAVELA-UZI-UNICO" }]
     },
@@ -54,7 +54,7 @@ async function main() {
       status: "processando",
       subtotal: 319.98,
       total: 334.98,
-      metodo: "PIX",
+      metodo: "DINHEIRO",
       pagamento: "pago",
       itens: [
         { produto: p3, sku: "TSHIRT-DROP-0-SURFACE-M" },

@@ -248,36 +248,36 @@ export default function AdminSettings() {
             <div className="space-y-4 admin-panel-muted p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Nome da Loja *" error={errors.storeName}>
-                  <input type="text" value={settings.storeName} onChange={e => handleChange('storeName', e.target.value)} className={inputCls} />
+                  <input type="text" value={settings.storeName || ""} onChange={e => handleChange('storeName', e.target.value)} className={inputCls} />
                 </Field>
                 <Field label="Email Principal *" error={errors.storeEmail}>
-                  <input type="email" value={settings.storeEmail} onChange={e => handleChange('storeEmail', e.target.value)} className={inputCls} />
+                  <input type="email" value={settings.storeEmail || ""} onChange={e => handleChange('storeEmail', e.target.value)} className={inputCls} />
                 </Field>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Telefone">
-                  <input type="tel" value={settings.phone} onChange={e => handleChange('phone', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
+                  <input type="tel" value={settings.phone || ""} onChange={e => handleChange('phone', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
                 </Field>
                 <Field label="CNPJ">
-                  <input type="text" value={settings.cnpj} onChange={e => handleChange('cnpj', e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" />
+                  <input type="text" value={settings.cnpj || ""} onChange={e => handleChange('cnpj', e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" />
                 </Field>
               </div>
               <Field label="Endereço">
-                <input type="text" value={settings.address} onChange={e => handleChange('address', e.target.value)} className={inputCls} />
+                <input type="text" value={settings.address || ""} onChange={e => handleChange('address', e.target.value)} className={inputCls} />
               </Field>
               <Field label="Descrição Curta da Marca">
-                <textarea value={settings.descricaoMarca} onChange={e => handleChange('descricaoMarca', e.target.value)} rows={2} className={`${inputCls} resize-none`} placeholder="Ex: Streetwear autoral de São Paulo" />
+                <textarea value={settings.descricaoMarca || ""} onChange={e => handleChange('descricaoMarca', e.target.value)} rows={2} className={`${inputCls} resize-none`} placeholder="Ex: Streetwear autoral de São Paulo" />
               </Field>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="WhatsApp">
-                  <input type="tel" value={settings.whatsapp} onChange={e => handleChange('whatsapp', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
+                  <input type="tel" value={settings.whatsapp || ""} onChange={e => handleChange('whatsapp', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
                 </Field>
                 <Field label="Instagram">
-                  <input type="text" value={settings.instagram} onChange={e => handleChange('instagram', e.target.value)} className={inputCls} placeholder="@surface" />
+                  <input type="text" value={settings.instagram || ""} onChange={e => handleChange('instagram', e.target.value)} className={inputCls} placeholder="@surface" />
                 </Field>
               </div>
               <Field label="Política de Atendimento">
-                <textarea value={settings.politicaAtendimento} onChange={e => handleChange('politicaAtendimento', e.target.value)} rows={3} className={`${inputCls} resize-none`} placeholder="Horário de atendimento, prazos de resposta..." />
+                <textarea value={settings.politicaAtendimento || ""} onChange={e => handleChange('politicaAtendimento', e.target.value)} rows={3} className={`${inputCls} resize-none`} placeholder="Horário de atendimento, prazos de resposta..." />
               </Field>
             </div>
           </section>
@@ -321,11 +321,11 @@ export default function AdminSettings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Prazo Estimado de Envio">
-                  <input type="text" value={settings.prazoEnvio} onChange={e => handleChange('prazoEnvio', e.target.value)} className={inputCls} placeholder="Ex: 3 a 7 dias úteis" />
+                  <input type="text" value={settings.prazoEnvio || ""} onChange={e => handleChange('prazoEnvio', e.target.value)} className={inputCls} placeholder="Ex: 3 a 7 dias úteis" />
                 </Field>
                 <Field label="Métodos de Pagamento">
                   <div className="flex flex-wrap gap-3 mt-1">
-                    {['Cartão de Crédito', 'PIX', 'Boleto', 'Transferência'].map(m => (
+                    {['WhatsApp'].map(m => (
                       <label key={m} className="flex items-center gap-1.5 cursor-pointer text-sm">
                         <input type="checkbox" checked={settings.paymentMethods.includes(m)}
                           onChange={e => {
@@ -341,7 +341,7 @@ export default function AdminSettings() {
               </div>
 
               <Field label="Mensagem Padrão do Checkout WhatsApp">
-                <textarea value={settings.msgCheckoutWhatsapp} onChange={e => handleChange('msgCheckoutWhatsapp', e.target.value)} rows={3} className={`${inputCls} resize-none`}
+                <textarea value={settings.msgCheckoutWhatsapp || ""} onChange={e => handleChange('msgCheckoutWhatsapp', e.target.value)} rows={3} className={`${inputCls} resize-none`}
                   placeholder="Olá! Gostaria de finalizar meu pedido: {itens}" />
               </Field>
             </div>
@@ -353,17 +353,17 @@ export default function AdminSettings() {
             <div className="space-y-4 admin-panel-muted p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Field label="Email Comercial" error={errors.emailComercial}>
-                  <input type="email" value={settings.emailComercial} onChange={e => handleChange('emailComercial', e.target.value)} className={inputCls} placeholder="comercial@surface.com" />
+                  <input type="email" value={settings.emailComercial || ""} onChange={e => handleChange('emailComercial', e.target.value)} className={inputCls} placeholder="comercial@surface.com" />
                 </Field>
                 <Field label="Telefone Comercial">
-                  <input type="tel" value={settings.telefoneComercial} onChange={e => handleChange('telefoneComercial', e.target.value)} className={inputCls} />
+                  <input type="tel" value={settings.telefoneComercial || ""} onChange={e => handleChange('telefoneComercial', e.target.value)} className={inputCls} />
                 </Field>
                 <Field label="WhatsApp de Vendas">
-                  <input type="tel" value={settings.whatsappVendas} onChange={e => handleChange('whatsappVendas', e.target.value)} className={inputCls} />
+                  <input type="tel" value={settings.whatsappVendas || ""} onChange={e => handleChange('whatsappVendas', e.target.value)} className={inputCls} />
                 </Field>
               </div>
               <Field label="Texto Institucional">
-                <textarea value={settings.textoInstitucional} onChange={e => handleChange('textoInstitucional', e.target.value)} rows={3} className={`${inputCls} resize-none`}
+                <textarea value={settings.textoInstitucional || ""} onChange={e => handleChange('textoInstitucional', e.target.value)} rows={3} className={`${inputCls} resize-none`}
                   placeholder="Texto curto para usar em automações, emails, rodapé..." />
               </Field>
             </div>

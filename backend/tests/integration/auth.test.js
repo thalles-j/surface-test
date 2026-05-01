@@ -34,6 +34,15 @@ import {
 } from '../../src/services/authService.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+
+function buildSecretVersion(senhaHash) {
+  return crypto
+    .createHmac('sha256', process.env.JWT_SECRET)
+    .update(String(senhaHash))
+    .digest('base64url')
+    .slice(0, 16);
+}
 
 // ─── Fixtures ─────────────────────────────────────────
 
@@ -76,7 +85,7 @@ describe('authService — loginService', () => {
 
     await expect(
       loginService('nao@existe.com', 'senha')
-    ).rejects.toThrow('não encontrado');
+    ).rejects.toThrow('Credenciais inválidas');
   });
 
   it('rejeita senha incorreta', async () => {
@@ -84,7 +93,7 @@ describe('authService — loginService', () => {
 
     await expect(
       loginService('thalles@example.com', 'senhaErrada')
-    ).rejects.toThrow('Senha incorreta');
+    ).rejects.toThrow('Credenciais inválidas');
   });
 });
 
@@ -286,11 +295,12 @@ describe('authService — requestPasswordResetService', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('gera token e retorna ok para usuário existente', async () => {
+  it('gera token e retorna ok para usuario existente', async () => {
     prismaMock.usuarios.findUnique.mockResolvedValue({
       id_usuario: 1,
       nome: 'Test',
       email: 'test@t.com',
+      senha: senhaHash,
     });
 
     const result = await requestPasswordResetService('test@t.com');
@@ -306,44 +316,44 @@ describe('authService — resetPasswordService', () => {
   });
 
   it('rejeita token ausente', async () => {
-    await expect(resetPasswordService('', 'novasenha123')).rejects.toThrow('Token de recuperação é obrigatório');
+    await expect(resetPasswordService('', 'novasenha123')).rejects.toThrow('Token de recuperacao e obrigatorio');
   });
 
   it('rejeita senha muito curta', async () => {
-    await expect(resetPasswordService('token', '123')).rejects.toThrow('mínimo 7 caracteres');
+    await expect(resetPasswordService('token', '123')).rejects.toThrow('minimo 7 caracteres');
   });
 
-  it('rejeita token inválido', async () => {
-    await expect(resetPasswordService('token.invalido', 'novasenha123')).rejects.toThrow('Token inválido ou expirado');
+  it('rejeita token invalido', async () => {
+    await expect(resetPasswordService('token.invalido', 'novasenha123')).rejects.toThrow('Token invalido ou expirado');
   });
 
-  it('rejeita token com ação errada', async () => {
+  it('rejeita token com acao errada', async () => {
     const token = jwt.sign(
-      { action: 'other', id: 1, email: 'test@t.com' },
+      { action: 'other', id: 1, email: 'test@t.com', secretVersion: 'abc' },
       process.env.JWT_SECRET,
       { expiresIn: '30m' }
     );
-    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Token inválido');
+    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Token invalido');
   });
 
-  it('rejeita usuário não encontrado', async () => {
+  it('rejeita usuario nao encontrado', async () => {
     const token = jwt.sign(
-      { action: 'reset_password', id: 1, email: 'test@t.com' },
+      { action: 'reset_password', id: 1, email: 'test@t.com', secretVersion: 'abc' },
       process.env.JWT_SECRET,
       { expiresIn: '30m' }
     );
     prismaMock.usuarios.findUnique.mockResolvedValue(null);
 
-    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Usuário não encontrado');
+    await expect(resetPasswordService(token, 'novasenha123')).rejects.toThrow('Usuario nao encontrado');
   });
 
   it('reseta senha com sucesso', async () => {
     const token = jwt.sign(
-      { action: 'reset_password', id: 1, email: 'test@t.com' },
+      { action: 'reset_password', id: 1, email: 'test@t.com', secretVersion: buildSecretVersion(senhaHash) },
       process.env.JWT_SECRET,
       { expiresIn: '30m' }
     );
-    prismaMock.usuarios.findUnique.mockResolvedValue({ id_usuario: 1 });
+    prismaMock.usuarios.findUnique.mockResolvedValue({ id_usuario: 1, senha: senhaHash });
     prismaMock.usuarios.update.mockResolvedValue({});
 
     const result = await resetPasswordService(token, 'novasenha123');

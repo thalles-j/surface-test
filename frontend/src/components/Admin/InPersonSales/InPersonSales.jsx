@@ -6,11 +6,7 @@ import { useToast } from '../../../context/ToastContext';
 const inputCls = 'w-full p-2 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:border-zinc-500 transition-colors text-white placeholder-zinc-500';
 
 const PAYMENT_METHODS = [
-  { value: 'dinheiro', label: 'Dinheiro' },
-  { value: 'pix', label: 'PIX' },
-  { value: 'cartao_credito', label: 'Cartao de Credito' },
-  { value: 'cartao_debito', label: 'Cartao de Debito' },
-  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'dinheiro', label: 'WhatsApp / Dinheiro' },
 ];
 
 export default function InPersonSales() {
@@ -24,7 +20,7 @@ export default function InPersonSales() {
   const [form, setForm] = useState({
     nome_cliente: '',
     email_cliente: '',
-    metodo_pagamento: 'pix',
+    metodo_pagamento: 'dinheiro',
     data_pedido: new Date().toISOString().slice(0, 16),
     observacoes_internas: '',
   });
@@ -132,7 +128,7 @@ export default function InPersonSales() {
         setForm({
           nome_cliente: '',
           email_cliente: '',
-          metodo_pagamento: 'pix',
+    metodo_pagamento: 'dinheiro',
           data_pedido: new Date().toISOString().slice(0, 16),
           observacoes_internas: '',
         });

@@ -10,7 +10,7 @@ const payload = {
   email: 'joao@email.com',
   telefone: '+55 24 99999-9999',
   endereco: 'Rua A, 100 - Centro',
-  tipo_pagamento: 'PIX',
+  tipo_pagamento: 'DINHEIRO',
 };
 
 describe('pre-checkout whatsapp service', () => {
@@ -21,7 +21,7 @@ describe('pre-checkout whatsapp service', () => {
     expect(message).toContain('Email: joao@email.com');
     expect(message).toContain('Telefone: 5524999999999');
     expect(message).toContain('Endereco: Rua A, 100 - Centro');
-    expect(message).toContain('Pagamento: PIX');
+    expect(message).toContain('Pagamento: DINHEIRO');
   });
 
   it('gera URL com encodeURIComponent correto', () => {

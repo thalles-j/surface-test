@@ -194,7 +194,7 @@ export function passwordReset({ name, resetUrl }) {
     
     ${button('Redefinir Minha Senha', resetUrl)}
     
-    ${subtext('Se você não solicitou esta alteração, ignore este e-mail. O link expira em 1 hora.')}
+    ${subtext('Se voce nao solicitou esta alteracao, ignore este e-mail. O link expira em 30 minutos.')}
     
     <p style="margin:0;font-size:11px;color:#52525b;word-break:break-all;">${resetUrl}</p>
   `;

@@ -32,7 +32,7 @@ export async function getCheckoutPreview(items, codigoCupom, cepDestino = null) 
   };
 }
 
-const ALLOWED_PAYMENT_TYPES = ['PIX', 'CARTAO', 'DINHEIRO'];
+const ALLOWED_PAYMENT_TYPES = ['DINHEIRO'];
 const PRE_CHECKOUT_WHATSAPP_NUMBER = '5524988582885';
 
 function validateEmail(email) {
@@ -61,7 +61,7 @@ function validatePreCheckoutPayload(payload = {}) {
   // Fallback para endereco como string única
   const endereco = sanitizeText(payload.endereco);
 
-  const hasAddressFields = logradouro && numero && cidade && estado && cep.length === 8;
+  const hasAddressFields = logradouro && numero && bairro && cidade && estado && cep.length === 8;
   const hasLegacyAddress = !!endereco;
 
   if (!nome) throw new ErroValidation('Nome e obrigatorio.');
@@ -181,7 +181,7 @@ export async function createOrderFromCheckout(payload = {}, user = null) {
         logradouro: customer.logradouro || null,
         numero: customer.numero || null,
         complemento: customer.complemento || null,
-        bairro: customer.bairro || null,
+        bairro: customer.bairro || 'Não informado',
         cidade: customer.cidade || null,
         estado: customer.estado || null,
         cep: customer.cep || null,

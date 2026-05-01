@@ -1,0 +1,240 @@
+﻿C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:152:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:154:                 value={formData.name}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:159:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:161:                 value={formData.email}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:168:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:170:                 value={formData.password}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:175:               <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminPanel\AdminPanel.jsx:176:                 value={formData.role}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:251:                   <input type="text" value={settings.storeName || ""} onChange={e => handleChange('storeName', e.target.value)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:254:                   <input type="email" value={settings.storeEmail || ""} onChange={e => handleChange('storeEmail', e.target.value)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:259:                   <input type="tel" value={settings.phone || ""} onChange={e => handleChange('phone', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:262:                   <input type="text" value={settings.cnpj || ""} onChange={e => handleChange('cnpj', e.target.value)} className={inputCls} placeholder="00.000.000/0000-00" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:266:                 <input type="text" value={settings.address || ""} onChange={e => handleChange('address', e.target.value)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:269:                 <textarea value={settings.descricaoMarca || ""} onChange={e => handleChange('descricaoMarca', e.target.value)} rows={2} className={`${inputCls} resize-none`} placeholder="Ex: Streetwear autoral de SÃ£o Paulo" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:273:                   <input type="tel" value={settings.whatsapp || ""} onChange={e => handleChange('whatsapp', e.target.value)} className={inputCls} placeholder="+55 11 99999-9999" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:276:                   <input type="text" value={settings.instagram || ""} onChange={e => handleChange('instagram', e.target.value)} className={inputCls} placeholder="@surface" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:280:                 <textarea value={settings.politicaAtendimento || ""} onChange={e => handleChange('politicaAtendimento', e.target.value)} rows={3} className={`${inputCls} resize-none`} placeholder="HorÃ¡rio de atendimento, prazos de resposta..." />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:308:                   <input type="number" min="0" step="0.01" value={settings.shippingFee} onChange={e => handleChange('shippingFee', parseFloat(e.target.value) || 0)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:311:                   <input type="number" min="0" step="0.01" value={settings.freeShippingAbove} onChange={e => handleChange('freeShippingAbove', parseFloat(e.target.value) || 0)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:314:                   <select value={settings.currency} onChange={e => handleChange('currency', e.target.value)} className={inputCls}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:324:                   <input type="text" value={settings.prazoEnvio || ""} onChange={e => handleChange('prazoEnvio', e.target.value)} className={inputCls} placeholder="Ex: 3 a 7 dias Ãºteis" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:330:                         <input type="checkbox" checked={settings.paymentMethods.includes(m)}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:344:                 <textarea value={settings.msgCheckoutWhatsapp || ""} onChange={e => handleChange('msgCheckoutWhatsapp', e.target.value)} rows={3} className={`${inputCls} resize-none`}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:356:                   <input type="email" value={settings.emailComercial || ""} onChange={e => handleChange('emailComercial', e.target.value)} className={inputCls} placeholder="comercial@surface.com" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:359:                   <input type="tel" value={settings.telefoneComercial || ""} onChange={e => handleChange('telefoneComercial', e.target.value)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:362:                   <input type="tel" value={settings.whatsappVendas || ""} onChange={e => handleChange('whatsappVendas', e.target.value)} className={inputCls} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:366:                 <textarea value={settings.textoInstitucional || ""} onChange={e => handleChange('textoInstitucional', e.target.value)} rows={3} className={`${inputCls} resize-none`}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:377:                   <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:378:                     value={exclusionForm.tipo}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:388:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:390:                     value={exclusionForm.valor}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:399:                     <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:400:                       value={exclusionForm.algoritmo_hash}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:413:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:415:                     value={exclusionForm.descricao}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:435:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\AdminSettings\AdminSettings.jsx:437:                     checked={exclusionForm.escopo_ml}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:84:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:86:               value={formData.name}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:95:             <textarea
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:96:               value={formData.description}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:105:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:107:               checked={formData.featured}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:137:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Categories\Categories.jsx:140:               value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:200:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:203:               value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:208:           <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:209:             value={statusFilter}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:219:           <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:220:             value={lockedFilter}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:234:             <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:235:               value={bulkAction}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:240:               {BULK_ACTIONS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:346:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:348:               value={formData.name}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:357:             <textarea
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:358:               value={formData.description}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:369:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:371:                 value={formData.launchDate}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:378:               <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:379:                 value={formData.status}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:392:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:394:               checked={formData.locked}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Collections\Collections.jsx:407:                   <input type="checkbox" checked={selectedProducts.includes(prod.id)} onChange={(e) => {
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:211:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:215:                 value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:447:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:451:               value={newCoupon.code}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:458:               <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:460:                 value={newCoupon.type}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:469:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:474:                 value={newCoupon.discount}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:481:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customers\Customers.jsx:484:               value={newCoupon.expiry}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:56:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:58:                 value={settings.bannerTitle}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:66:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:68:                 value={settings.bannerSubtitle}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:76:               <textarea
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:77:                 value={settings.homeText}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:88:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:90:                     value={settings.primaryColor}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:94:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:96:                     value={settings.primaryColor}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:106:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:108:                     value={settings.secondaryColor}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:112:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:114:                     value={settings.secondaryColor}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Customization\Customization.jsx:126:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Dashboard\Dashboard.jsx:170:           value={`R$ ${dashboardData.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Dashboard\Dashboard.jsx:176:           value={dashboardData.orders}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Dashboard\Dashboard.jsx:182:           value={`R$ ${dashboardData.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Dashboard\Dashboard.jsx:188:           value={`${dashboardData.conversionRate}%`}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:163:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:165:                   value={form.nome_cliente}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:173:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:175:                   value={form.email_cliente}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:185:                 <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:186:                   value={form.metodo_pagamento}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:191:                     <option key={m.value} value={m.value}>{m.label}</option>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:197:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:199:                   value={form.data_pedido}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:206:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:208:                   value={form.observacoes_internas}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:225:                     <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:226:                       value={item.id_produto}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:232:                         <option key={p.id_produto} value={p.id_produto}>{p.nome_produto} - R$ {Number(p.preco).toFixed(2)}</option>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:238:                     <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:239:                       value={item.tamanho}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:245:                         <option key={v.tamanho} value={v.tamanho} disabled={v.estoque === 0}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:253:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:256:                       value={item.quantidade}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:263:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\InPersonSales\InPersonSales.jsx:267:                       value={item.preco_unitario}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:245:         <StatCard title="Total em Estoque" value={stats.totalUnits} subtitle="UNIDADES" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:246:         <StatCard title="Valor Estimado" value={`R$ ${stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} subtitle="ESTOQUE BRUTO" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:247:         <StatCard title="Estoque Baixo" value={stats.lowStockItems.length} variant="warning" subtitle="SKUs em alerta" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:248:         <StatCard title="Esgotados" value={stats.outOfStockItems.length} variant="danger" subtitle="SKUs sem estoque" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:329:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:332:                   value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:338:                 <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:339:                   value={healthFilter}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:459:           <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Inventory\Inventory.jsx:462:             value={repoModal.qty}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:101:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:104:                   value={couponData.code}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:112:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:115:                   value={couponData.discount}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:122:                 <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:124:                   value={couponData.type}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:134:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Marketing\Marketing.jsx:137:                   value={couponData.expiry}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:317:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:321:               value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:374:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:377:                       checked={products.length > 0 && selectedIds.length === products.length}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:409:                       <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:411:                         checked={isSelected}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:492:                 <select className={styles.input} value={filterCategory} onChange={(e)=>setFilterCategory(e.target.value)}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:494:                   {categories.map(c => <option key={c.id_categoria} value={c.id_categoria}>{c.nome_categoria}</option>)}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:560:                       <input required type="text" className={styles.input}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:561:                         value={formData.nome_produto}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:573:                         <input required type="number" step="0.01" className={`${styles.input} ${styles.inputLarge}`} value={formData.preco} onChange={(e)=>setFormData({...formData, preco: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:577:                          <select required className={styles.input} value={formData.id_categoria} onChange={(e)=>setFormData({...formData, id_categoria: e.target.value})}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:579:                           {categories.map(c => <option key={c.id_categoria} value={c.id_categoria}>{c.nome_categoria}</option>)}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:586:                       <textarea rows="2" className={`${styles.input} ${styles.textarea}`} value={formData.descricao} onChange={(e)=>setFormData({...formData, descricao: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:603:                             <select className={styles.varSelect}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:604:                               value={v.tamanho} onChange={(e) => {
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:612:                               {AVAILABLE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:614:                             <input type="text" placeholder="SKU" className={styles.varInput}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:615:                               value={v.sku} onChange={(e) => {
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:684:                         <input type="file" multiple accept="image/*" className="hidden" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:691:                         <select className={styles.input} value={formData.status} onChange={(e)=>setFormData({...formData, status: e.target.value})}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:708:                           <input type="checkbox" style={{ display: 'none' }} checked={formData.destaque} onChange={(e)=>setFormData({...formData, destaque: e.target.checked})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:719:                           <input type="checkbox" style={{ display: 'none' }} checked={formData.oculto} onChange={(e)=>setFormData({...formData, oculto: e.target.checked})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:733:                       <input type="number" step="0.001" placeholder="Ex: 0.250" className={`${styles.input} ${styles.inputLarge}`} value={formData.peso} onChange={(e)=>setFormData({...formData, peso: e.target.value})}/>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:737:                       <input type="text" placeholder="Ex: 30x20x10" className={`${styles.input} ${styles.inputLarge}`} style={{ textTransform: 'uppercase' }} value={formData.dimensoes} onChange={(e)=>setFormData({...formData, dimensoes: e.target.value})}/>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:742:                     <textarea rows="8" className={`${styles.input} ${styles.textarea} ${styles.inputMono}`} placeholder="Ex: 100% AlgodÃ£o, fio 30.1 penteado. Gola canelada..." value={formData.ficha_tecnica} onChange={(e)=>setFormData({...formData, ficha_tecnica: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:756:                     <input type="text" placeholder="Recomendado: 50-60 caracteres" className={styles.input} value={formData.seo_titulo} onChange={(e)=>setFormData({...formData, seo_titulo: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:760:                     <textarea rows="3" placeholder="Recomendado: 150-160 caracteres" className={`${styles.input} ${styles.textarea}`} value={formData.seo_descricao} onChange={(e)=>setFormData({...formData, seo_descricao: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Products\Products.jsx:764:                     <input type="text" placeholder="ex: camiseta, hype, drop1, preta" className={styles.input} style={{ textTransform: 'lowercase' }} value={formData.tags} onChange={(e)=>setFormData({...formData, tags: e.target.value})} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:333:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:336:                 value={searchTerm}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:340:             <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:342:               value={selectedStatus}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:347:                 <option key={key} value={key}>{label}</option>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:361:                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:365:                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none" />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:401:                         <select
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:402:                           value={o.status}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:408:                             <option key={key} value={key} className="bg-white text-slate-800">{label}</option>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:437:             <select className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold shadow-sm outline-none cursor-pointer" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:520:                     <textarea className="w-full h-full bg-slate-50 border border-blue-200 rounded-2xl p-4 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-slate-200 resize-none" value={editedAddress} onChange={e => setEditedAddress(e.target.value)} placeholder="Editar endereÃ§o completo..."/>
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:547:                       <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:550:                         value={searchTermProduct}
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:588:                               <input type="number" className="w-12 border border-slate-300 rounded-lg p-1.5 text-center font-bold text-xs outline-none" value={item.qtd} onChange={(e) => updateItemField(i, 'qtd', e.target.value)} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Admin\Sales\Sales.jsx:597:                               <input className="w-12 border border-slate-300 rounded-lg p-1.5 text-center font-bold text-xs uppercase outline-none" value={item.size} onChange={(e) => updateItemField(i, 'size', e.target.value)} />
+C:\Users\Gustavo\surface-test\frontend\src\components\Footer\index.jsx:61:               <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Header\index.jsx:187:           <input
+C:\Users\Gustavo\surface-test\frontend\src\components\Header\index.jsx:192:             value={searchValue}
+C:\Users\Gustavo\surface-test\frontend\src\components\StoreClosed\index.jsx:129:             <input
+C:\Users\Gustavo\surface-test\frontend\src\components\StoreClosed\index.jsx:131:               value={email}
+C:\Users\Gustavo\surface-test\frontend\src\context\AuthContext.jsx:72:     <AuthContext.Provider value={{
+C:\Users\Gustavo\surface-test\frontend\src\context\CartContext.jsx:272:       value={{
+C:\Users\Gustavo\surface-test\frontend\src\context\ThemeContext.jsx:56:   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+C:\Users\Gustavo\surface-test\frontend\src\context\ToastContext.jsx:54:     <ToastContext.Provider value={contextValue}>
+C:\Users\Gustavo\surface-test\frontend\src\pages\Atendimento\index.jsx:74:                 <input type="text" className={styles.surfaceInput} />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Atendimento\index.jsx:78:                 <input type="email" className={styles.surfaceInput} />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Atendimento\index.jsx:82:                 <textarea className={`${styles.surfaceInput} h-32 resize-none`}></textarea>
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:212:           <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:215:             value={(preCheckoutData && preCheckoutData.nome) || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:220:             <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:223:               value={(preCheckoutData && preCheckoutData.email) || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:227:             <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:230:               value={(preCheckoutData && preCheckoutData.telefone) || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:288:             <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Checkout\index.jsx:291:               value={couponCode}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:304:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:308:                     value={loginData.email || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:316:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:320:                       value={loginData.senha || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:347:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:351:                     value={forgotEmail || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:372:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:376:                     value={resetData.novaSenha || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:383:                   <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:387:                     value={resetData.confirmarSenha || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:409:                 <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:413:                   value={registerData.email || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:454:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:458:                       value={registerData.nome || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:465:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:469:                       value={registerData.sobrenome || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:476:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:480:                       value={registerData.telefone || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:488:                       <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:492:                         value={registerData.senha || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:511:                     <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\Entrar\index.jsx:515:                       value={registerData.confirmarSenha || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:110:             <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:113:               value={preCheckoutData.nome || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:124:               <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:127:                 value={preCheckoutData.email || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:136:               <input
+C:\Users\Gustavo\surface-test\frontend\src\pages\PreCheckout\index.jsx:139:                 value={preCheckoutData.telefone || ""}
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:283:                       <input type="text" value={editedData.nome || ""} onChange={(e) => handleChange("nome", e.target.value)} autoFocus />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:290:                   <input type="email" value={editedData.email || ""} disabled style={{ backgroundColor: "var(--app-surface-alt)", color: "var(--app-muted-text)" }} />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:295:                   <input type="text" value={editedData.telefone || ""} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="(11) 99999-9999" />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:307:                         <input value={endereco.logradouro || ""} onChange={(e) => updateEnderecoField(index, "logradouro", e.target.value)} required placeholder="Rua..." />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:311:                         <input value={endereco.numero || ""} onChange={(e) => updateEnderecoField(index, "numero", e.target.value)} required placeholder="123" />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:317:                         <input value={endereco.bairro || ""} onChange={(e) => updateEnderecoField(index, "bairro", e.target.value)} required placeholder="Bairro" />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:321:                         <input value={endereco.complemento || ""} onChange={(e) => updateEnderecoField(index, "complemento", e.target.value)} placeholder="Apto, bloco..." />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:327:                         <input value={endereco.cidade || ""} onChange={(e) => updateEnderecoField(index, "cidade", e.target.value)} required />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:331:                         <input value={endereco.estado || ""} maxLength={2} onChange={(e) => updateEnderecoField(index, "estado", e.target.value.toUpperCase())} required placeholder="SP" />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:335:                         <input value={endereco.cep || ""} onChange={(e) => updateEnderecoField(index, "cep", e.target.value)} required placeholder="00000-000" />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:340:                         <input type="radio" name={`principal-${index}`} checked={endereco.principal} onChange={() => handleSelectPrincipal(index)} />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:432:                   <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:436:                   <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
+C:\Users\Gustavo\surface-test\frontend\src\pages\Profile\index.jsx:440:                   <input type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} required minLength={6} />

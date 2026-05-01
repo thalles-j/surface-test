@@ -32,10 +32,11 @@ model enderecos {
   logradouro  String
   numero      String
   complemento String?
-  bairro      String?
+  bairro      String
   cidade      String
   estado      String
   cep         String
+  principal   Boolean  @default(false)
   usuario     usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 

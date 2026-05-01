@@ -9,7 +9,7 @@ const PRE_CHECKOUT_DEFAULTS = {
   email: "",
   telefone: "",
   endereco: "",
-  tipo_pagamento: "PIX",
+  tipo_pagamento: "DINHEIRO",
   logradouro: "",
   numero: "",
   complemento: "",
@@ -47,7 +47,10 @@ export function CartProvider({ children }) {
         const parsed = JSON.parse(savedPreCheckout);
         setPreCheckoutData({
           ...PRE_CHECKOUT_DEFAULTS,
-          ...(parsed && typeof parsed === "object" ? parsed : {}),
+          nome: parsed?.nome ?? "",
+          email: parsed?.email ?? "",
+          telefone: parsed?.telefone ?? "",
+          tipo_pagamento: parsed?.tipo_pagamento ?? "DINHEIRO",
         });
       } catch {
         localStorage.removeItem("preCheckoutData");

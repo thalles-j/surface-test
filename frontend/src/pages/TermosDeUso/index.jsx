@@ -39,8 +39,7 @@ export default function TermosUso() {
               A <span className="text-black font-black">Surface®</span> oferece opções seguras para o seu pagamento:
             </p>
             <ul className="mt-4 space-y-2">
-              <li className="policy-text">• <span className="text-black font-black">CARTÃO DE CRÉDITO:</span> Parcelamento em até 3x sem juros (parcela mínima de R$ 50,00).</li>
-              <li className="policy-text">• <span className="text-black font-black">PIX:</span> Pagamento à vista com confirmação imediata.</li>
+              <li className="policy-text">• <span className="text-black font-black">WHATSAPP:</span> Pagamento à vista com confirmação via atendimento.</li>
             </ul>
             <p className="policy-text mt-4">
               O envio dos produtos é realizado somente após a confirmação do pagamento. Em casos de suspeita de fraude, a Surface® poderá cancelar o pedido e reembolsar o valor pago.

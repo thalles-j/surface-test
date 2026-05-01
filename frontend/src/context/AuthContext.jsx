@@ -20,7 +20,6 @@ export function AuthProvider({ children }) {
           setUser(data.usuario || data);
 
         } catch (err) {
-          console.error("Token inválido:", err);
           // Se o token expirou, limpa tudo
           localStorage.removeItem("token");
           api.defaults.headers.common['Authorization'] = undefined;
@@ -68,13 +67,18 @@ async function logout() {
     }
   }
 
+  function updateUser(updates) {
+    setUser(prev => (prev ? { ...prev, ...updates } : prev));
+  }
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       signed: !!user, 
       loading, 
       login, 
-      logout 
+      logout,
+      updateUser,
     }}>
       {children}
     </AuthContext.Provider>

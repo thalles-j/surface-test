@@ -305,7 +305,7 @@ export default function Login() {
                     type="email"
                     id="login-email"
                     placeholder="Digite aqui"
-                    value={loginData.email}
+                    value={loginData.email || ""}
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   />
                 </div>
@@ -317,7 +317,7 @@ export default function Login() {
                       type={showPassword ? "text" : "password"}
                       id="login-senha"
                       placeholder="Digite aqui"
-                      value={loginData.senha}
+                      value={loginData.senha || ""}
                       onChange={(e) => setLoginData({ ...loginData, senha: e.target.value })}
                     />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className={styles.botaoOlho}>
@@ -348,7 +348,7 @@ export default function Login() {
                     type="email"
                     id="forgot-email"
                     placeholder="Digite aqui"
-                    value={forgotEmail}
+                    value={forgotEmail || ""}
                     onChange={(e) => setForgotEmail(e.target.value)}
                   />
                 </div>
@@ -373,7 +373,7 @@ export default function Login() {
                     type="password"
                     id="reset-password"
                     placeholder="Digite aqui"
-                    value={resetData.novaSenha}
+                    value={resetData.novaSenha || ""}
                     onChange={(e) => setResetData((prev) => ({ ...prev, novaSenha: e.target.value }))}
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function Login() {
                     type="password"
                     id="reset-password-confirm"
                     placeholder="Digite aqui"
-                    value={resetData.confirmarSenha}
+                    value={resetData.confirmarSenha || ""}
                     onChange={(e) => setResetData((prev) => ({ ...prev, confirmarSenha: e.target.value }))}
                   />
                 </div>
@@ -410,7 +410,7 @@ export default function Login() {
                   type="email"
                   id="register-email"
                   placeholder="Digite aqui"
-                  value={registerData.email}
+                  value={registerData.email || ""}
                   onChange={(e) => {
                     setRegisterData({ ...registerData, email: e.target.value });
                     if (mode === MODES.FIRST_ACCESS) {
@@ -455,7 +455,7 @@ export default function Login() {
                       type="text"
                       id="register-first-name"
                       placeholder="Digite aqui"
-                      value={registerData.nome}
+                      value={registerData.nome || ""}
                       onChange={(e) => setRegisterData({ ...registerData, nome: e.target.value })}
                     />
                   </div>
@@ -466,7 +466,7 @@ export default function Login() {
                       type="text"
                       id="register-last-name"
                       placeholder="Digite aqui"
-                      value={registerData.sobrenome}
+                      value={registerData.sobrenome || ""}
                       onChange={(e) => setRegisterData({ ...registerData, sobrenome: e.target.value })}
                     />
                   </div>
@@ -477,7 +477,7 @@ export default function Login() {
                       type="tel"
                       id="register-phone"
                       placeholder="Digite aqui"
-                      value={registerData.telefone}
+                      value={registerData.telefone || ""}
                       onChange={(e) => setRegisterData({ ...registerData, telefone: e.target.value })}
                     />
                   </div>
@@ -489,7 +489,7 @@ export default function Login() {
                         type={showRegisterPassword ? "text" : "password"}
                         id="register-password"
                         placeholder="Digite aqui"
-                        value={registerData.senha}
+                        value={registerData.senha || ""}
                         onChange={(e) => {
                           const novaSenha = e.target.value;
                           setRegisterData({ ...registerData, senha: novaSenha });
@@ -512,7 +512,7 @@ export default function Login() {
                       type={showRegisterPassword ? "text" : "password"}
                       id="register-password-confirm"
                       placeholder="Digite aqui"
-                      value={registerData.confirmarSenha}
+                      value={registerData.confirmarSenha || ""}
                       onChange={(e) => {
                         const confirmar = e.target.value;
                         setRegisterData({ ...registerData, confirmarSenha: confirmar });

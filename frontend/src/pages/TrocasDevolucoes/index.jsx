@@ -68,7 +68,7 @@ export default function TrocasDevolucoes() {
               O reembolso pode ser solicitado em até 7 (sete) dias corridos após o recebimento. O valor será restituído em até 10 (dez) dias úteis após a aprovação da análise.
             </p>
             <div className="bg-gray-50 p-6 space-y-2">
-              <p className="policy-text text-[10px]"><span className="text-black font-black">PIX:</span> Crédito em até 24 horas.</p>
+              <p className="policy-text text-[10px]"><span className="text-black font-black">WhatsApp:</span> Crédito em até 24 horas.</p>
               <p className="policy-text text-[10px]"><span className="text-black font-black">CARTÃO DE CRÉDITO:</span> Em até 2 faturas, conforme prazos da operadora.</p>
             </div>
           </div>

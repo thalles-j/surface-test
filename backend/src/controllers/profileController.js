@@ -11,10 +11,11 @@ export const getMeController = async (req, res, next) => {
     if (req.query.light === 'true') {
       const usuario = await prisma.usuarios.findUnique({
         where: { id_usuario: req.user.id },
-        include: { enderecos: { orderBy: { id_endereco: 'asc' }, take: 1 } },
+        include: { enderecos: { orderBy: [{ principal: 'desc' }, { id_endereco: 'asc' }] } },
       });
       if (!usuario) throw new ErroBase("Usuário não encontrado", 404);
       const { id_usuario, nome, email, telefone, id_role, enderecos } = usuario;
+      const principalAddr = enderecos?.find(e => e.principal) || enderecos?.[0] || null;
       return res.json({
         usuario: {
           id_usuario,
@@ -22,7 +23,7 @@ export const getMeController = async (req, res, next) => {
           email,
           telefone,
           role: id_role,
-          endereco: enderecos?.[0] || null,
+          endereco: principalAddr,
         },
       });
     }
@@ -67,6 +68,7 @@ export const getMeController = async (req, res, next) => {
       role: usuario.id_role, 
       
       enderecos: usuario.enderecos,
+      endereco: usuario.enderecos?.find(e => e.principal) || usuario.enderecos?.[0] || null,
       pedidos: usuario.pedidos.map((pedido) => ({
         id_pedido: pedido.id_pedido,
         status: pedido.status,
@@ -116,11 +118,12 @@ function validateAddress(address) {
   if (!address || typeof address !== 'object') return null;
   const logradouro = String(address.logradouro || '').trim();
   const numero = String(address.numero || '').trim();
+  const bairro = String(address.bairro || '').trim();
   const cidade = String(address.cidade || '').trim();
   const estado = String(address.estado || '').trim().toUpperCase();
   const cep = String(address.cep || '').replace(/\D/g, '');
 
-  if (!logradouro || !numero || !cidade || !estado || cep.length !== 8) {
+  if (!logradouro || !numero || !bairro || !cidade || !estado || cep.length !== 8) {
     return null;
   }
 
@@ -128,10 +131,11 @@ function validateAddress(address) {
     logradouro,
     numero,
     complemento: String(address.complemento || '').trim() || null,
-    bairro: String(address.bairro || '').trim() || null,
+    bairro,
     cidade,
     estado,
     cep,
+    principal: address.principal === true,
   };
 }
 
@@ -206,6 +210,10 @@ export const updateMeController = async (req, res, next) => {
         const validAddresses = enderecos
           .map(validateAddress)
           .filter(Boolean);
+
+        if (validAddresses.length > 0 && !validAddresses.some(a => a.principal)) {
+          validAddresses[0].principal = true;
+        }
 
         if (validAddresses.length > 0) {
           await tx.enderecos.createMany({
