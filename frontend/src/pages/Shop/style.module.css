@@ -1,27 +1,51 @@
-.secaoShop {
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body{
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s 
+  ease-in;
+  z-index: 900;
+  background-color: #ffffff;
+
+}
+
+div{
+  display: block;
+  unicode-bidi: isolate;
+}
+
+.shop_section {
   display: flex;
   margin-top: 8rem;
   height: auto;
+  display: flex;
   align-items: center;
   margin-bottom: 15rem;
 }
 
-.corpoShop {
+.shop_body {
   display: flex;
   justify-content: center;
   width: 100%;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0 auto; 
 }
 
-.containerShop {
+.shop_Container {
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 0 20px;
 }
 
-.cabecalhoShop {
+.shop_headerWrapper {
   display: flex;
   gap: 1rem;
   align-items: center;
@@ -29,7 +53,35 @@
   padding: 0.5rem 3rem;
 }
 
-.gridProdutos .grid {
+.shop_filters {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter_group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.category_select,
+.sort_select {
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+}
+.shop_container{
+  width: 100%;
+}
+
+.btn_login_active {
+  /* placeholder for header active login button */
+}
+/*PRODUTOS TESTE*/
+.produtos_grid .grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -41,19 +93,14 @@
   font-family: "Oswald", sans-serif;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  background-color: var(--app-surface);
-  color: var(--app-text);
-  border: 1px solid var(--app-border);
+  width: calc(50%,2);
+  background-color: #ffffff;
+  color: white;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: var(--ui-shadow-sm);
-  transition: transform 0.24s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
-}
-
-.card:hover {
-  border-color: var(--app-border-strong);
-  box-shadow: var(--ui-shadow-md);
+  transition: transform 1s ease, box-shadow 0.22s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .cardLink {
@@ -65,68 +112,101 @@
   position: relative;
 }
 
-.containerImagem {
+.imageContainer {
   position: relative;
   width: 100%;
   overflow: hidden;
 }
 
-.botaoIconeCarrinho {
+.cartIconButton {
   position: absolute;
   bottom: 10px;
   right: 10px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--app-surface);
-  color: var(--app-text);
-  border: 1px solid var(--app-border);
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #eee;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--ui-shadow-sm);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
   z-index: 5;
   font-size: 1.2rem;
 }
 
-.botaoIconeCarrinho:hover {
-  background-color: var(--app-text);
-  color: var(--app-bg);
+.cartIconButton:hover {
+  background-color: #000;
+  color: #fff;
   transform: scale(1.1);
 }
 
-.imagemProduto {
+.produtoImage {
   width: 100%;
   height: 350px;
   object-fit: cover;
   display: block;
+  height: fit-content;
 }
 
-.placeholderProduto {
+.produtoPlaceholder {
   width: 100%;
   height: 180px;
-  background-color: var(--app-surface-muted);
+  background-color: #eee;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--app-muted-text);
+  color: #000000;
 }
 
-.infoProduto {
-  padding: 12px 14px 18px 14px;
+.produtoInfo {
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   text-align: center;
 }
 
-.tagProduto {
+.produtoNome {
+  color: #000000;
+  font-size: 1.1rem;
+  margin: 0;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.produtoPreco {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #000000;
+}
+.produtoInfo {
+  padding: 12px 14px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+.produtoTag {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.06);
+  color: #000000;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.produtoTag {
   display: inline-block;
   align-self: center;
-  background: var(--app-surface-muted);
-  color: var(--app-danger);
+  background: rgba(255,255,255,0.06);
+  color: #ff0000;
   padding: 1px 4px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -134,68 +214,75 @@
   text-transform: uppercase;
 }
 
-.nomeProduto {
-  color: var(--app-text);
-  font-size: 1.1rem;
-  margin: 0;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-}
 
-.precoProduto {
-  font-weight: 800;
-  font-size: 1rem;
-  color: var(--app-text);
-}
-
-/* Tablet / Mobile */
 @media (max-width: 1201px) {
-  .secaoShop {
+  .shop_section {
     margin-top: 8rem;
   }
-
-  .corpoShop {
-    width: calc(50%, 2);
+  .shop_body{
+    width: calc(50%,2);
     margin: 0 2rem;
   }
-
-  .gridProdutos .grid {
+  
+  .produtos_grid .grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 900px) {
-  .gridProdutos .grid {
+  .produtos_grid .grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .imagemProduto {
-    height: 260px;
-  }
+  .produtoImage { height: 260px; }
 }
-
-@media (max-width: 600px) {
-  .secaoShop {
+.card{
+  width: 100%;
+}
+.produtoImage {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+  height: fit-content;
+}
+@media (max-width: 600px){
+  .shop_section{
     margin-top: 6rem;
   }
 }
 
+
 @media (max-width: 500px) {
-  .cabecalhoShop {
+  .shop_headerWrapper{
     padding: 0 10px;
   }
-
-  .gridProdutos .grid {
+  .produtos_grid .grid {
     grid-template-columns: repeat(1, 1fr);
   }
-
-  .imagemProduto {
-    height: 260px;
-  }
+  .produtoImage { height: 260px; }
+}
+.card{
+  width: 100%;
+}
+.produtoImage {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+  height: fit-content;
 }
 
-@media (max-width: 390px) {
-  .imagemProduto {
-    height: 200px;
-  }
+@media (max-width: 390px){
+  .produtoImage { height: 200px; }
 }
+.card{
+  margin: 1px 1px;
+}
+.produtoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: fit-content;
+}
+/* Removed addToCartButton styles */

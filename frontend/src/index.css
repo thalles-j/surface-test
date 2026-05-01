@@ -1,24 +1,24 @@
 /* Global semantic tokens (light by default) */
 :root {
   color-scheme: light;
-  --ui-bg: #f7f8fa;
+  --ui-bg: #ffffff;
   --ui-bg-layer-1: #ffffff;
-  --ui-bg-layer-2: #f1f3f6;
-  --ui-bg-layer-3: #e9edf2;
+  --ui-bg-layer-2: #ffffff;
+  --ui-bg-layer-3: #ffffff;
   --ui-surface: #ffffff;
   --ui-surface-soft: #f1f3f6;
   --ui-surface-raised: #ffffff;
   --ui-border: #d8dde5;
   --ui-border-strong: #c7ced9;
-  --ui-text-primary: #111827;
-  --ui-text-secondary: #374151;
-  --ui-text-muted: #606a7b;
+  --ui-text-primary: #1b1b1b;
+  --ui-text-secondary: #292929;
+  --ui-text-muted: #6e6e6e;
   --ui-text: var(--ui-text-primary);
   --ui-hover: #eceff4;
-  --ui-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --ui-shadow-md: 0 8px 20px rgba(15, 23, 42, 0.12);
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --ui-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.12);
   --ui-focus-ring: #737b8a;
-  --ui-primary-bg: #111827;
+  --ui-primary-bg: #000000;
   --ui-primary-text: #ffffff;
   --ui-danger: #dc2626;
   --ui-success: #15803d;
@@ -32,13 +32,13 @@
   --ui-warning-border: #fed7aa;
   --ui-success-border: #bbf7d0;
   --ui-danger-border: #fecaca;
-  --ui-overlay: rgba(15, 23, 42, 0.56);
-  --ui-modal-overlay: rgba(15, 23, 42, 0.68);
-  --ui-overlay-strong: rgba(15, 23, 42, 0.72);
-  --ui-inverse-bg: #111827;
+  --ui-overlay: rgba(0, 0, 0, 0.56);
+  --ui-modal-overlay: rgba(0, 0, 0, 0.68);
+  --ui-overlay-strong: rgba(0, 0, 0, 0.72);
+  --ui-inverse-bg: #000000;
   --ui-inverse-text: #ffffff;
-  --ui-scrollbar-thumb: #3f3f46;
-  --ui-scrollbar-thumb-hover: #52525b;
+  --ui-scrollbar-thumb: #313131;
+  --ui-scrollbar-thumb-hover: #474747;
 
   /* Backward-compatible aliases used by existing screens */
   --app-bg: var(--ui-bg);

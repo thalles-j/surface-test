@@ -22,6 +22,15 @@ const categoryMap = {
 // ---------------------------------------------------------
 const ProductCard = ({ produto, onQuickAdd }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const { shouldOpenCart, toggleCart, setShouldOpenCart } = useCart();
+  useEffect(() => {
+    if (shouldOpenCart) {
+      toggleCart();
+      setShouldOpenCart(false);
+    }
+  }, [shouldOpenCart]);
+
   
   const createSlug = (name) => {
     if (!name) return "";
@@ -45,26 +54,26 @@ const ProductCard = ({ produto, onQuickAdd }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/produto/${createSlug(produto.nome_produto)}`} className={styles.cardLink}>
-        <div className={styles.containerImagem}>
+        <div className={styles.imageContainer}>
           {imagemAtual ? (
             <img
               src={imagemAtual}
               alt={produto.nome_produto}
-              className={styles.imagemProduto}
-              style={{ transition: 'opacity 0.2s ease-in-out' }}
+              className={styles.produtoImage}
+              style={{ transition: 'opacity 0.2s ease-in-out' }} 
             />
           ) : (
-            <div className={styles.placeholderProduto}>
+            <div className={styles.produtoPlaceholder}>
               Sem imagem
             </div>
           )}
-
-          <button
-            className={styles.botaoIconeCarrinho}
+          
+          <button 
+            className={styles.cartIconButton}
             onClick={(e) => {
-              e.preventDefault();
+              e.preventDefault(); 
               e.stopPropagation();
-              onQuickAdd(produto);
+              onQuickAdd(produto); 
             }}
             title="Adicionar ao Carrinho"
           >
@@ -72,12 +81,12 @@ const ProductCard = ({ produto, onQuickAdd }) => {
           </button>
         </div>
 
-        <div className={styles.infoProduto}>
-          <span className={styles.tagProduto}>
+        <div className={styles.produtoInfo}>
+          <span className={styles.produtoTag}>
             {categoryMap[produto.id_categoria] || "Geral"}
           </span>
-          <h3 className={styles.nomeProduto}>{produto.nome_produto}</h3>
-          <p className={styles.precoProduto}>
+          <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
+          <p className={styles.produtoPreco}>
             R$ {parseFloat(produto.preco || 0).toFixed(2)}
           </p>
         </div>
@@ -96,7 +105,7 @@ export default function Shop() {
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
-  // Estados para modal e notificacao
+  // Estados para Modal e Notificação
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showNotification, setShowNotification] = useState(false);
@@ -176,10 +185,10 @@ export default function Shop() {
   };
 
   const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
-    // Monta o objeto final para o carrinho.
+    // Monta o objeto final. A chave 'tamanho' é enviada de forma explícita.
     const produtoFinalParaCarrinho = {
       ...produto,
-      selectedSize: tamanhoSelecionado || "Unico" // Fallback seguro
+      tamanho: tamanhoSelecionado || "Único" // Fallback seguro
     };
     
     addToCart(produtoFinalParaCarrinho);
@@ -195,10 +204,10 @@ export default function Shop() {
   }
 
   return (
-    <section className={styles.secaoShop}>
-      <div className={styles.corpoShop}>
-        <div className={styles.containerShop}>
-          <div className={styles.cabecalhoShop}>
+    <section className={styles.shop_section}>
+      <div className={styles.shop_body}>
+        <div className={styles.shop_container}>
+          <div className={styles.shop_headerWrapper}>
             <ShopHeader
               categories={categories}
               selectedCategory={selectedCategory}
@@ -211,16 +220,16 @@ export default function Shop() {
             />
           </div>
 
-          <div className={styles.gridProdutos}>
+          <div className={styles.produtos_grid}>
             {produtos.length === 0 ? (
               <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
                 {produtos.map((produto) => (
-                  <ProductCard
-                    key={produto.id_produto}
-                    produto={produto}
-                    onQuickAdd={handleOpenModal}
+                  <ProductCard 
+                    key={produto.id_produto} 
+                    produto={produto} 
+                    onQuickAdd={handleOpenModal} 
                   />
                 ))}
               </div>
@@ -237,14 +246,8 @@ export default function Shop() {
       />
 
       {showNotification && (
-        <div
-          className="fixed bottom-8 right-8 px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]"
-          style={{ background: "var(--app-primary-bg)", color: "var(--app-primary-text)" }}
-        >
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: "var(--app-surface)", color: "var(--app-text)" }}
-          >
+        <div className="fixed bottom-8 right-8 bg-black text-white px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]">
+          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
             <Check className="w-4 h-4" strokeWidth={3} />
           </div>
           <span className="text-sm font-bold uppercase tracking-wider">Adicionado ao carrinho</span>
@@ -253,4 +256,3 @@ export default function Shop() {
     </section>
   );
 }
-
