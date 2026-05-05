@@ -25,19 +25,24 @@ function ThemeRouteSync() {
   return null;
 }
 
-// Componente que renderiza condicionalmente Header/Footer
+// 🔥 Componente modificado para esconder Header/Footer no Checkout
 function AppLayout() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  
+  // Verifica se a página atual deve esconder o Header e o Footer
+  const hideHeaderFooter = 
+    location.pathname.startsWith('/admin') || 
+    location.pathname === '/checkout' || 
+    location.pathname === '/pre-checkout';
 
   return (
     <>
-      {!isAdmin && <Header />}
+      {!hideHeaderFooter && <Header />}
       <CartDrawer />
       <main>
         <AppRoutes />
       </main>
-      {!isAdmin && <Footer />}
+      {!hideHeaderFooter && <Footer />}
     </>
   );
 }

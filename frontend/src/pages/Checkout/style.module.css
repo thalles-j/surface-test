@@ -1,424 +1,338 @@
-.checkout {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  color: var(--app-text);
+/* style.module.css */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: none; /* Mantendo o fundo limpo */
+  font-family: inherit;
 }
 
-.titulo {
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
+.header {
+  display: flex;
+  flex-direction: column; /* Coloca um embaixo do outro */
+  align-items: flex-start; /* Alinha tudo à esquerda */
+  gap: 12px; /* Espaço exato entre o título e os links */
+  margin-bottom: 32px;
 }
 
-.painel {
-  background: var(--app-surface);
-  border: 1px solid var(--app-border);
-  border-radius: 14px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-}
-
-.painelTitulo {
-  font-size: 1rem;
+.title {
+  font-size: 28px;
   font-weight: 700;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  color: #111;
+  margin: 0; /* Remove a margem padrão para o alinhamento ficar exato */
+  line-height: 1; /* Evita sobras de espaço invisível acima/abaixo do texto */
+  letter-spacing: -0.5px; /* Deixa o logo em texto um pouco mais elegante */
 }
 
-.infoGrid {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.infoGrid p {
+.breadcrumb {
+  display: flex;
+  align-items: center; /* Centraliza perfeitamente os textos com os ícones de seta */
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
   margin: 0;
-  color: var(--app-muted-text);
-  font-size: 0.92rem;
 }
 
-.infoGrid strong {
-  color: var(--app-text);
-  font-weight: 600;
+.breadcrumbItem {
+  cursor: pointer;
+  color: #111;
+  transition: color 0.2s;
 }
 
-.listaItens {
+.breadcrumbItem:hover {
+  color: #2563eb;
+}
+
+/* ============================
+   GRID DE COLUNAS
+============================ */
+.wrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 40px;
 }
 
-.item {
+@media (min-width: 960px) {
+  .wrapper {
+    flex-direction: row;
+    align-items: flex-start; /* Crucial para o sticky funcionar */
+  }
+}
+
+/* COLUNA ESQUERDA (Rolagem natural) */
+.leftColumn {
+  flex: 1;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .leftColumn {
+    padding-right: 40px;
+    border-right: 1px solid #e5e7eb;
+  }
+}
+
+/* COLUNA DIREITA (Fixa/Sticky) */
+.rightColumn {
+  width: 100%;
+  background-color: #fafafa; /* Fundo levemente destacado igual à imagem */
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 960px) {
+  .rightColumn {
+    width: 440px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px; /* Distância do topo ao fixar na tela */
+  }
+}
+
+/* ============================
+   FORMULÁRIOS E INPUTS
+============================ */
+.formSection {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.formGroupTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #111;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #111;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: #000;
+}
+
+.addressBox {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.addressTextValid {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.addressTextError {
+  font-size: 14px;
+  color: #ef4444;
+}
+
+/* ============================
+   BOTÕES DE AÇÃO
+============================ */
+.actionBtn {
+  display: flex;
   align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--app-border);
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  width: 100%;
+  transition: background-color 0.2s;
 }
 
-.item:last-child {
-  border-bottom: none;
+.actionBtn:hover {
+  background-color: #f9fafb;
 }
 
-.imagemItem {
+.submitBtn {
+  width: 100%;
+  padding: 16px;
+  background-color: #000;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ============================
+   PRODUTOS (CARRINHO)
+============================ */
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.itemCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.itemImgContainer {
+  position: relative;
+}
+
+.itemImg {
   width: 64px;
   height: 64px;
   object-fit: cover;
   border-radius: 8px;
-  flex-shrink: 0;
-  background: var(--app-surface-alt);
+  border: 1px solid #e5e7eb;
+  background-color: #fff;
 }
 
-.detalhesItem {
-  flex: 1;
-  min-width: 0;
-}
-
-.nomeItem {
+.itemBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #111;
+  color: #fff;
+  font-size: 11px;
   font-weight: 700;
-  font-size: 0.95rem;
-  margin: 0 0 0.2rem;
-  text-transform: uppercase;
-}
-
-.metaItem {
-  font-size: 0.82rem;
-  color: var(--app-muted-text);
-  margin: 0;
-}
-
-.precoItem {
-  font-weight: 700;
-  font-size: 0.95rem;
-  white-space: nowrap;
-}
-
-/* Frete */
-.freteContainer {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-  margin-bottom: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
-.campoCep {
+.itemInfo {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
 }
 
-.campoCep label {
-  font-size: 0.8rem;
+.itemName {
   font-weight: 600;
-  color: var(--app-muted-text);
-  text-transform: uppercase;
+  font-size: 14px;
+  margin: 0 0 4px 0;
+  color: #111;
 }
 
-.campoCep input {
-  padding: 0.65rem 0.9rem;
-  border: 1px solid var(--app-border);
-  border-radius: 10px;
-  background: var(--app-input-bg);
-  color: var(--app-input-text);
-  font-size: 0.95rem;
-  width: 100%;
+.itemDetails {
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.botaoCalcularFrete {
-  padding: 0.65rem 1.1rem;
-  background: var(--app-primary-bg);
-  color: var(--app-primary-text);
-  border: 1px solid var(--app-primary-bg);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  transition: filter 0.2s ease;
-}
-
-.botaoCalcularFrete:hover {
-  filter: brightness(0.92);
-}
-
-.botaoCalcularFrete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.resultadoFrete {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--app-success-soft);
-  border: 1px solid var(--app-success-border);
-  border-radius: 10px;
-  color: var(--app-success);
-  font-size: 0.9rem;
+.itemPrice {
   font-weight: 600;
+  font-size: 14px;
+  color: #111;
 }
 
-/* Cupom */
-.cupomContainer {
+/* ============================
+   RESUMO E CUPOM
+============================ */
+.couponSection {
   display: flex;
-  gap: 0.6rem;
-  align-items: center;
+  gap: 8px;
+  padding: 20px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 20px;
 }
 
-.inputCupom {
+.couponInput {
   flex: 1;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--app-border);
-  border-radius: 10px;
-  background: var(--app-input-bg);
-  color: var(--app-input-text);
-  font-size: 0.9rem;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
-.botaoAplicarCupom {
-  padding: 0.6rem 1rem;
-  background: var(--app-primary-bg);
-  color: var(--app-primary-text);
-  border: 1px solid var(--app-primary-bg);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.tagCupom {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--app-success-soft);
-  color: var(--app-success);
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.botaoRemoverCupom {
-  background: none;
+.couponBtn {
+  padding: 0 20px;
+  background-color: #e5e7eb;
   border: none;
-  color: var(--app-danger);
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.8rem;
-  text-decoration: underline;
+  font-weight: 600;
+  color: #374151;
 }
 
-/* Resumo */
-.linhaResumo {
+.summaryRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 12px;
 }
 
-.linhaResumo.desconto {
-  color: var(--app-success);
-}
-
-.linhaTotal {
+.totalBox {
   display: flex;
   justify-content: space-between;
-  font-weight: 800;
-  font-size: 1.15rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--app-border);
-  margin-top: 0.75rem;
-}
-
-/* Pagamento */
-.opcoesPagamento {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.opcaoPagamento {
-  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border: 2px solid var(--app-border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-  background: var(--app-surface);
-}
-
-.opcaoPagamento:hover {
-  border-color: var(--app-border-strong);
-}
-
-.opcaoPagamento.ativa {
-  border-color: var(--app-primary-bg);
-  background: color-mix(in srgb, var(--app-primary-bg) 5%, var(--app-surface));
-}
-
-.iconePagamento {
-  font-size: 1.4rem;
-  flex-shrink: 0;
-}
-
-.infoPagamento {
-  flex: 1;
-}
-
-.tituloPagamento {
+  font-size: 18px;
   font-weight: 700;
-  font-size: 0.9rem;
-  margin: 0;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  color: #111;
 }
 
-.descricaoPagamento {
-  font-size: 0.8rem;
-  color: var(--app-muted-text);
-  margin: 0.15rem 0 0;
+.errorBox {
+  padding: 12px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-top: 16px;
 }
 
-/* QR Code PIX */
-.qrCodeContainer {
+.securityText {
+  text-align: center;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: var(--app-surface-alt);
-  border-radius: 12px;
-  margin-top: 1rem;
-}
-
-.pixCopiaCola {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--app-border);
-  border-radius: 8px;
-  background: var(--app-surface);
-  font-family: monospace;
-  font-size: 0.8rem;
-  word-break: break-all;
-  color: var(--app-text);
-}
-
-.botaoCopiar {
-  padding: 0.5rem 1rem;
-  background: var(--app-primary-bg);
-  color: var(--app-primary-text);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-/* Ações */
-.acoes {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.botaoPrimario {
-  flex: 1;
-  padding: 0.9rem;
-  background: var(--app-primary-bg);
-  color: var(--app-primary-text);
-  border: 1px solid var(--app-primary-bg);
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  transition: filter 0.2s ease;
-}
-
-.botaoPrimario:hover {
-  filter: brightness(0.92);
-}
-
-.botaoPrimario:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.botaoSecundario {
-  flex: 1;
-  padding: 0.9rem;
-  background: var(--app-surface);
-  color: var(--app-text);
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-}
-
-.botaoSecundario:hover {
-  background: var(--app-surface-alt);
-}
-
-.botaoWhatsApp {
-  flex: 1;
-  padding: 0.9rem;
-  background: #25D366;
-  color: #ffffff;
-  border: 1px solid #25D366;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  transition: filter 0.2s ease;
-}
-
-.botaoWhatsApp:hover {
-  filter: brightness(0.92);
-}
-
-.botaoWhatsApp:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Estados */
-.carregando {
-  color: var(--app-muted-text);
-  font-size: 0.9rem;
-}
-
-.erro {
-  color: var(--app-danger);
-  font-size: 0.85rem;
-  margin-top: 0.4rem;
-}
-
-@media (max-width: 600px) {
-  .checkout {
-    margin: 1rem auto;
-  }
-
-  .titulo {
-    font-size: 1.4rem;
-  }
-
-  .acoes {
-    flex-direction: column;
-  }
-
-  .freteContainer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .botaoCalcularFrete {
-    width: 100%;
-  }
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 16px;
 }

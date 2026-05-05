@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ExternalLink, LogOut, Menu } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+
 import useAuth from '../../hooks/useAuth';
 import useTheme from '../../hooks/useTheme';
 import styles from './adminTheme.module.css';
@@ -23,6 +25,8 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, logout } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
+
   const [openCollectionsCreate, setOpenCollectionsCreate] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -35,8 +39,12 @@ export default function AdminPage() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    window.location.href = '/entrar';
+    try {
+      await logout();
+      navigate('/entrar'); // sem reload
+    } catch (error) {
+      console.error('Erro ao deslogar:', error);
+    }
   };
 
   const renderContent = () => {
@@ -50,7 +58,12 @@ export default function AdminPage() {
       case 'products':
         return <Products />;
       case 'collections':
-        return <Collections openCreate={openCollectionsCreate} onCloseCreate={() => setOpenCollectionsCreate(false)} />;
+        return (
+          <Collections
+            openCreate={openCollectionsCreate}
+            onCloseCreate={() => setOpenCollectionsCreate(false)}
+          />
+        );
       case 'categories':
         return <Categories />;
       case 'inventory':
@@ -90,10 +103,13 @@ export default function AdminPage() {
 
   return (
     <div data-admin-theme={theme} className={`${styles.adminRoot} flex font-sans overflow-x-hidden`}>
+      
+      {/* Sidebar Desktop */}
       <div className="hidden xl:block">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
+      {/* Sidebar Mobile */}
       {mobileSidebarOpen && (
         <Sidebar
           mobile
@@ -104,22 +120,28 @@ export default function AdminPage() {
       )}
 
       <main className={`${styles.adminMain} w-full xl:ml-64 flex-1 p-3 sm:p-5 lg:p-8 xl:p-10 2xl:p-12 overflow-x-hidden`}>
+        
+        {/* HEADER */}
         <div className={`${styles.hero} mb-6 sm:mb-8`}>
+          
           <div className={styles.topActions}>
+            
+            {/* 🔥 CORREÇÃO AQUI */}
             <a
-              href="/shop"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${styles.shopLink} text-sm font-semibold`}
-            >
-              <ExternalLink size={16} />
-              Voltar para loja
-            </a>
+            href="/shop"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${styles.shopLink} text-sm font-semibold`}
+          >
+            <ExternalLink size={16} />
+            Voltar para loja
+          </a>
 
             <ThemeToggle className={styles.adminTopToggle} />
           </div>
 
           <div className="flex justify-between items-start sm:items-center gap-3 sm:gap-4">
+            
             <div className="flex items-start gap-3 min-w-0">
               <button
                 type="button"
@@ -129,6 +151,7 @@ export default function AdminPage() {
               >
                 <Menu size={18} />
               </button>
+
               <div className="min-w-0">
                 <p className="admin-kpi-label mb-1">Admin Surface</p>
                 <h2 className={`${styles.heroTitle} text-xl sm:text-3xl font-black uppercase tracking-tight break-words`}>
@@ -140,12 +163,19 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* PERFIL */}
             <div className={`${styles.profileCard} gap-2 sm:gap-3 px-2.5 sm:px-3 py-2`}>
               <div className={styles.avatar} />
+
               <div className="min-w-0 hidden sm:block">
-                <p className={`${styles.userName} text-xs font-bold truncate`}>{displayName}</p>
-                <p className={`${styles.userEmail} text-[11px] truncate`}>{displayEmail}</p>
+                <p className={`${styles.userName} text-xs font-bold truncate`}>
+                  {displayName}
+                </p>
+                <p className={`${styles.userEmail} text-[11px] truncate`}>
+                  {displayEmail}
+                </p>
               </div>
+
               <button
                 onClick={handleLogout}
                 className={`${styles.logoutButton} ml-0.5 sm:ml-1 p-1 transition-colors`}
@@ -157,6 +187,7 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* CONTEÚDO */}
         {renderContent()}
       </main>
     </div>

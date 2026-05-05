@@ -251,10 +251,10 @@ export default function Login() {
             ? "Ja existe conta para este email. Faca login para vincular os pedidos pendentes ou recupere sua senha."
             : "Ja existe conta para este email. Use o login normal ou recupere sua senha."
         );
-      } else if (!status.temPedidosPorEmail) {
-        setRegisterMsg("Nenhum pedido encontrado para este email. Este fluxo e apenas para primeiro acesso apos compra.");
-      } else {
+      } else if (status.temPedidosPorEmail) {
         setRegisterMsg("Pedido encontrado. Finalize seu primeiro acesso criando a conta.");
+      } else {
+        setRegisterMsg("Nenhum pedido encontrado para este email. Este fluxo e apenas para primeiro acesso apos compra.");
       }
     } catch (error) {
       setRegisterMsg(error.response?.data?.mensagem || "Nao foi possivel verificar primeiro acesso.");
@@ -293,9 +293,7 @@ export default function Login() {
 
         <div className={styles.corpo}>
           <div className={styles.caixaLogin}>
-            <h4 className={styles.tituloFormulario}>Acesso</h4>
-
-            {renderModeTabs()}
+            <h4 className={styles.tituloFormulario}>Entrar na conta</h4>
 
             {mode === MODES.LOGIN && (
               <form onSubmit={handleLogin} className={styles.formulario}>
@@ -344,24 +342,26 @@ export default function Login() {
               <form onSubmit={handleForgotPassword} className={styles.formulario}>
                 <div className={styles.campo}>
                   <label htmlFor="forgot-email">Email da conta</label>
-                  <input
+                  <input className={styles.campoClick}
                     type="email"
                     id="forgot-email"
                     placeholder="Digite aqui"
                     value={forgotEmail || ""}
                     onChange={(e) => setForgotEmail(e.target.value)}
                   />
+                    <button type="button" className={`${styles.acaoTexto} ${mode === MODES.LOGIN ? styles.abaModoAtiva : ""}`} onClick={() => setPageMode(MODES.LOGIN)}>
+                    Voltar para o login
+                  </button>
                 </div>
 
                 {forgotMsg && <div className={styles.mensagemRetorno}>{forgotMsg}</div>}
 
-                <div className={styles.caixaInfo}>
-                  Use este fluxo apenas para redefinir a senha de uma conta que ja existe.
-                </div>
+               
 
                 <div className={`${styles.campo} ${styles.campoEnviar}`}>
                   <button className={styles.botaoEnviar} type="submit">Enviar link</button>
                 </div>
+
               </form>
             )}
 

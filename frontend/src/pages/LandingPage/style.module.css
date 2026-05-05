@@ -64,19 +64,16 @@
   border-radius: 8px;
   cursor: pointer;
   transition: 0.3s ease-in-out;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: color-mix(in srgb, var(--app-overlay) 54%, transparent);
-  box-shadow: var(--ui-shadow-sm);
   z-index: 99;
   font-size: 19px;
 }
 
 .botaoShop:hover {
   color: #ffffff;
-  background: color-mix(in srgb, var(--app-overlay-strong) 72%, transparent);
   opacity: 1;
   font-weight: bold;
   transform: rotate(15deg);
+  text-shadow: 1px 1px 10px rgba(180, 180, 180, 0.8);
 }
 
 @media (max-width: 800px) {

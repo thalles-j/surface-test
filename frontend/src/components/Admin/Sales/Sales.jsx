@@ -326,19 +326,23 @@ export default function Sales() {
         </div>
 
         {/* Barra de Filtros */}
-        <div className="admin-panel-muted p-5 rounded-2xl space-y-4 shadow-sm">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <div className="admin-panel-muted p-5 rounded-2xl shadow-sm bg-slate-50 border border-slate-200">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            
+            {/* Caixa de Busca com Lupa */}
+            <div className="relative flex-1 w-full flex items-center">
+              <Search className="absolute left-4 text-slate-400 pointer-events-none" size={18} />
               <input
-                className="admin-input pl-12 pr-4 font-medium"
+                className="w-full h-12 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-slate-900 transition-all shadow-sm"
                 placeholder="Buscar por cliente..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
+
+            {/* Select de Status */}
             <select
-              className="admin-select w-full md:w-auto px-4 py-3 font-bold text-sm"
+              className="w-full md:w-auto h-12 px-4 pr-8 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer shadow-sm"
               value={selectedStatus}
               onChange={e => setSelectedStatus(e.target.value)}
             >
@@ -347,22 +351,41 @@ export default function Sales() {
                 <option key={key} value={key}>{label}</option>
               ))}
             </select>
+
+            {/* Botão de Filtros */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`w-full md:w-auto ${showFilters ? 'admin-btn-primary' : 'admin-btn-secondary'} px-6 py-3 text-sm`}
+              className={`w-full md:w-auto h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                showFilters 
+                  ? 'bg-slate-900 text-white border border-slate-900' 
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
             >
               <Filter size={18} /> Filtros Avançados
             </button>
+            
           </div>
+
+          {/* Filtros Expansíveis (Data) */}
           {showFilters && (
-            <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-200 animate-in slide-in-from-top-2">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase">Data Início</label>
-                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none" />
+            <div className="flex flex-wrap gap-5 pt-5 mt-5 border-t border-slate-200 animate-in slide-in-from-top-2">
+              <div className="space-y-1.5 w-full sm:w-auto">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Início</label>
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={e => setStartDate(e.target.value)} 
+                  className="w-full sm:w-auto h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-slate-900 shadow-sm" 
+                />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase">Data Fim</label>
-                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-white border border-slate-200 rounded-lg p-2 text-sm outline-none" />
+              <div className="space-y-1.5 w-full sm:w-auto">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Fim</label>
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={e => setEndDate(e.target.value)} 
+                  className="w-full sm:w-auto h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-slate-900 shadow-sm" 
+                />
               </div>
             </div>
           )}

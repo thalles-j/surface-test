@@ -42,39 +42,6 @@ export default function About() {
         </div>
       </div>
 
-      {/* SEÇÃO LIFESTYLE / BASTIDORES */}
-      <div className="px-6 md:px-16 py-24 max-w-7xl mx-auto">
-        <div className="bg-black text-white p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12">
-          <div className="space-y-6 text-center md:text-left md:w-1/2">
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <Instagram size={28} />
-              <h3 className="text-2xl font-black uppercase tracking-tighter italic">@createbysurface</h3>
-            </div>
-            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
-              O lado cru da marca. Acompanhe nosso lifestyle, o dia a dia nos bastidores da produção e spoilers exclusivos dos próximos drops. Tudo aquilo que não tem filtro vai direto pra lá.
-            </p>
-            <a 
-              href="[https://instagram.com/createbysurface](https://instagram.com/createbysurface)" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] border-b border-white pb-1 hover:text-gray-300 transition-colors w-fit mx-auto md:mx-0"
-            >
-              Acessar os Bastidores <ExternalLink size={14} />
-            </a>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 w-full md:w-1/2">
-            <div className="aspect-square bg-zinc-900 flex items-center justify-center border border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
-              <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest hover:text-white transition-colors duration-300">Lifestyle</span>
-            </div>
-            <div className="aspect-square bg-zinc-900 flex items-center justify-center border border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
-              <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest hover:text-white transition-colors duration-300">Spoiler</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* FIM SEÇÃO LIFESTYLE */}
-
       <div className={`${styles.valuesSection} px-6 md:px-16 py-32 border-t border-gray-100 max-w-7xl mx-auto`}>
         <h3 className={`${styles.valuesHeading} text-center text-gray-400 mb-16`}>Nossos Valores</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -96,6 +63,38 @@ export default function About() {
           </p>
         </div>
       </div>
+       {/* SEÇÃO LIFESTYLE / BASTIDORES */}
+      <div className="px-6 md:px-16 py-24 max-w-7xl mx-auto">
+        <div className="bg-black text-white p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="space-y-6 text-center md:text-left md:w-1/2">
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <Instagram size={28} />
+              <h3 className="text-2xl font-black uppercase tracking-tighter italic">@createbysurface</h3>
+            </div>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+              O lado cru da marca. Acompanhe nosso lifestyle, o dia a dia nos bastidores da produção e spoilers exclusivos dos próximos drops. Tudo aquilo que não tem filtro vai direto pra lá.
+            </p>
+            <a 
+            href="https://instagram.com/createbysurface" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] border-b border-white pb-1 hover:text-gray-300 transition-colors w-fit mx-auto md:mx-0"
+          >
+            Acessar os Bastidores
+          </a>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 w-full md:w-1/2">
+            <div className="aspect-square bg-zinc-900 flex items-center justify-center border border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
+              <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest hover:text-white transition-colors duration-300">Lifestyle</span>
+            </div>
+            <div className="aspect-square bg-zinc-900 flex items-center justify-center border border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
+              <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest hover:text-white transition-colors duration-300">Spoiler</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* FIM SEÇÃO LIFESTYLE */}
     </main>
   );
 }

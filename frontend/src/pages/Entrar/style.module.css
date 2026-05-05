@@ -103,6 +103,10 @@
   margin-bottom: 11px;
 }
 
+.campoClick {
+  margin: 15px 0;
+}
+
 .botaoEnviar {
   align-items: center;
   background: var(--app-primary-bg);
