@@ -36,7 +36,7 @@ async function appendActivityLog(action, user, details) {
 
 export const getAdminUsers = async (req, res) => {
   try {
-    const admins = await prisma.usuarios.findMany({ where: { id_role: 1 } });
+    const admins = await prisma.usuarios.findMany({ where: { id_role: { in: [1, 2, 3, 4] } } });
     return res.json(admins);
   } catch (error) {
     return erro(res, error.message, 500);
@@ -45,11 +45,26 @@ export const getAdminUsers = async (req, res) => {
 
 export const createAdminUser = async (req, res) => {
   try {
-    const { nome, email, senha, id_role, performedBy } = req.body;
-    const hash = await bcrypt.hash(senha || 'changeme', 10);
-    const user = await prisma.usuarios.create({ data: { nome, email, senha: hash, id_role: id_role || 1 } });
-    try { await appendActivityLog('Admin criado', performedBy || (req.user && req.user.nome), `Criado: ${user.nome} (${user.email})`); } catch(e){}
-    return res.status(201).json(user);
+    const { email, id_role, performedBy } = req.body;
+    const targetRole = Number(id_role) || 1;
+
+    // Apenas super_admin pode atribuir super_admin
+    if (targetRole === 1 && req.user?.id_role !== 1) {
+      return res.status(403).json({ mensagem: 'Acesso negado. Apenas super_admin pode atribuir este cargo.' });
+    }
+
+    const existingUser = await prisma.usuarios.findUnique({ where: { email } });
+    if (!existingUser) {
+      return res.status(404).json({ mensagem: 'Usuario nao encontrado.' });
+    }
+
+    const user = await prisma.usuarios.update({
+      where: { id_usuario: existingUser.id_usuario },
+      data: { id_role: targetRole },
+    });
+
+    try { await appendActivityLog('Cargo atribuido', performedBy || (req.user && req.user.nome), `Usuario: ${user.nome} (${user.email}) -> role ${targetRole}`); } catch(e){}
+    return res.status(200).json(user);
   } catch (error) {
     return erro(res, error.message, 500);
   }
@@ -60,6 +75,14 @@ export const updateAdminUser = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const performedBy = updates.performedBy || (req.user && req.user.nome);
+
+    if (updates.id_role !== undefined) {
+      const targetRole = Number(updates.id_role);
+      if (targetRole === 1 && req.user?.id_role !== 1) {
+        return res.status(403).json({ mensagem: 'Acesso negado. Apenas super_admin pode atribuir este cargo.' });
+      }
+    }
+
     if (updates.senha) updates.senha = await bcrypt.hash(updates.senha, 10);
     if (updates.performedBy) delete updates.performedBy;
     const user = await prisma.usuarios.update({ where: { id_usuario: parseInt(id) }, data: updates });

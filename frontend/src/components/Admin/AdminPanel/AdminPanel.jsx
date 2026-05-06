@@ -21,7 +21,9 @@ export default function AdminPanel() {
     email: '',
     role: 'Editor',
     password: '',
+    selectedUserId: '',
   });
+  const [allUsers, setAllUsers] = useState([]);
 
   const permissions = {
     'Super Admin': ['Visualizar', 'Criar', 'Editar', 'Deletar', 'Gerenciar Admins'],
@@ -30,9 +32,18 @@ export default function AdminPanel() {
     'Viewer': ['Visualizar'],
   };
 
-  const handleAddAdmin = () => {
-    // handled by submitAdmin
+  const handleAddAdmin = async () => {
+    setEditingId(null);
+    setFormData({ name: '', email: '', role: 'Editor', password: '', selectedUserId: '' });
     setShowForm(true);
+    try {
+      const res = await api.get('/admin/customers?limit=1000');
+      const list = res.data?.data || res.data || [];
+      setAllUsers(list.filter(u => u.id_role !== 1));
+    } catch (err) {
+      console.error('Erro carregando usuarios', err);
+      setAllUsers([]);
+    }
   };
 
   const handleDeleteAdmin = (id) => {
@@ -74,7 +85,7 @@ export default function AdminPanel() {
 
   const openEditAdmin = (admin) => {
     setEditingId(admin.id);
-    setFormData({ name: admin.name, email: admin.email, role: admin.role, password: '' });
+    setFormData({ name: admin.name, email: admin.email, role: admin.role, password: '', selectedUserId: '' });
     setShowForm(true);
   };
 
@@ -88,13 +99,15 @@ export default function AdminPanel() {
         const res = await api.patch(`/admin/admins/${editingId}`, payload);
         setAdmins(prev => prev.map(a => a.id === editingId ? { ...a, name: res.data.nome || formData.name, email: res.data.email || formData.email, role: formData.role } : a));
       } else {
-        const payload = { nome: formData.name, email: formData.email, senha: formData.password || 'changeme', id_role: roleMap[formData.role] || 1, performedBy: user?.nome };
+        const selected = allUsers.find(u => String(u.id_usuario) === String(formData.selectedUserId));
+        if (!selected) return;
+        const payload = { email: selected.email, id_role: roleMap[formData.role] || 1, performedBy: user?.nome };
         const res = await api.post('/admin/admins', payload);
         const u = res.data;
         const mapped = { id: u.id_usuario, name: u.nome, email: u.email, role: roleLabel[u.id_role] || formData.role, status: 'Ativo', lastLogin: u.data_cadastro ? new Date(u.data_cadastro).toLocaleString() : 'Nunca' };
         setAdmins(prev => [mapped, ...prev]);
       }
-      setFormData({ name: '', email: '', role: 'Editor', password: '' });
+      setFormData({ name: '', email: '', role: 'Editor', password: '', selectedUserId: '' });
       setEditingId(null);
       setShowForm(false);
       // refresh logs
@@ -146,32 +159,49 @@ export default function AdminPanel() {
           </button>
         </div>
 
-        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingId ? 'Editar Admin' : 'Criar Novo Admin'}>
+        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingId ? 'Editar Admin' : 'Atribuir Cargo'}>
           <div className="space-y-4">
+            {editingId ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nome completo"
+                  className="admin-input p-2 rounded-lg"
+                />
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Email"
+                  className="admin-input p-2 rounded-lg"
+                />
+              </div>
+            ) : (
+              <div>
+                <select
+                  value={formData.selectedUserId}
+                  onChange={(e) => setFormData({ ...formData, selectedUserId: e.target.value })}
+                  className="admin-select p-2 rounded-lg w-full"
+                >
+                  <option value="">Selecione um usuário...</option>
+                  {allUsers.map(u => (
+                    <option key={u.id_usuario} value={u.id_usuario}>{u.nome} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nome completo"
-                className="admin-input p-2 rounded-lg"
-              />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Email"
-                className="admin-input p-2 rounded-lg"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Senha temporária"
-                className="admin-input p-2 rounded-lg"
-              />
+              {editingId && (
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Nova senha (opcional)"
+                  className="admin-input p-2 rounded-lg"
+                />
+              )}
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -188,7 +218,7 @@ export default function AdminPanel() {
                 onClick={submitAdmin}
                 className="admin-btn-primary flex-1 py-2 font-bold rounded-lg"
               >
-                {editingId ? 'Salvar' : 'Criar Admin'}
+                {editingId ? 'Salvar' : 'Atribuir Cargo'}
               </button>
               <button
                 onClick={() => setShowForm(false)}
