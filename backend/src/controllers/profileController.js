@@ -7,11 +7,34 @@ import ErroBase from "../errors/ErroBase.js";
 ============================================ */
 export const getMeController = async (req, res, next) => {
   try {
+    // Se ?light=true, retorna apenas dados básicos (usado pelo AuthContext)
+    if (req.query.light === 'true') {
+      const usuario = await prisma.usuarios.findUnique({
+        where: { id_usuario: req.user.id },
+        include: { enderecos: { orderBy: [{ principal: 'desc' }, { id_endereco: 'asc' }] } },
+      });
+      if (!usuario) throw new ErroBase("Usuário não encontrado", 404);
+      const { id_usuario, nome, email, telefone, id_role, enderecos } = usuario;
+      const principalAddr = enderecos?.find(e => e.principal) || enderecos?.[0] || null;
+      return res.json({
+        usuario: {
+          id_usuario,
+          nome,
+          email,
+          telefone,
+          role: id_role,
+          endereco: principalAddr,
+        },
+      });
+    }
+
     const usuario = await prisma.usuarios.findUnique({
       where: { id_usuario: req.user.id },
       include: {
         enderecos: true,
         pedidos: {
+          orderBy: { data_pedido: 'desc' },
+          take: 20,
           include: {
             pedidoProdutos: {
               include: {
@@ -22,6 +45,7 @@ export const getMeController = async (req, res, next) => {
                     preco: true,
                     fotos: {
                       select: { url: true },
+                      take: 1,
                     },
                   },
                 },
@@ -44,6 +68,7 @@ export const getMeController = async (req, res, next) => {
       role: usuario.id_role, 
       
       enderecos: usuario.enderecos,
+      endereco: usuario.enderecos?.find(e => e.principal) || usuario.enderecos?.[0] || null,
       pedidos: usuario.pedidos.map((pedido) => ({
         id_pedido: pedido.id_pedido,
         status: pedido.status,
@@ -89,9 +114,34 @@ const validateAndCleanPhone = (telefone) => {
   return null;
 };
 
+function validateAddress(address) {
+  if (!address || typeof address !== 'object') return null;
+  const logradouro = String(address.logradouro || '').trim();
+  const numero = String(address.numero || '').trim();
+  const bairro = String(address.bairro || '').trim();
+  const cidade = String(address.cidade || '').trim();
+  const estado = String(address.estado || '').trim().toUpperCase();
+  const cep = String(address.cep || '').replace(/\D/g, '');
+
+  if (!logradouro || !numero || !bairro || !cidade || !estado || cep.length !== 8) {
+    return null;
+  }
+
+  return {
+    logradouro,
+    numero,
+    complemento: String(address.complemento || '').trim() || null,
+    bairro,
+    cidade,
+    estado,
+    cep,
+    principal: address.principal === true,
+  };
+}
+
 export const updateMeController = async (req, res, next) => {
   try {
-    const { nome, telefone, senhaAtual, novaSenha } = req.body;
+    const { nome, telefone, senhaAtual, novaSenha, enderecos } = req.body;
 
     const dataToUpdate = {};
 
@@ -141,16 +191,54 @@ export const updateMeController = async (req, res, next) => {
       dataToUpdate.senha = hashed;
     }
 
-    const updatedUser = await prisma.usuarios.update({
-      where: { id_usuario: req.user.id },
-      data: dataToUpdate,
+    // Processa endereços dentro de uma transação
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      // 1. Atualiza dados básicos do usuário
+      const user = await tx.usuarios.update({
+        where: { id_usuario: req.user.id },
+        data: dataToUpdate,
+      });
+
+      // 2. Se endereços foram enviados, substitui todos
+      if (Array.isArray(enderecos)) {
+        // Deleta endereços antigos
+        await tx.enderecos.deleteMany({
+          where: { id_usuario: req.user.id },
+        });
+
+        // Cria novos endereços válidos
+        const validAddresses = enderecos
+          .map(validateAddress)
+          .filter(Boolean);
+
+        if (validAddresses.length > 0 && !validAddresses.some(a => a.principal)) {
+          validAddresses[0].principal = true;
+        }
+
+        if (validAddresses.length > 0) {
+          await tx.enderecos.createMany({
+            data: validAddresses.map((addr) => ({
+              ...addr,
+              id_usuario: req.user.id,
+            })),
+          });
+        }
+      }
+
+      return user;
     });
 
-    delete updatedUser.senha;
+    // Busca usuário atualizado com endereços para retornar
+    const userWithAddresses = await prisma.usuarios.findUnique({
+      where: { id_usuario: req.user.id },
+      include: { enderecos: true },
+    });
+
+    delete userWithAddresses.senha;
 
     res.json({
       mensagem: "Perfil atualizado com sucesso",
-      usuario: updatedUser,
+      usuario: userWithAddresses,
     });
   } catch (error) {
     next(error);

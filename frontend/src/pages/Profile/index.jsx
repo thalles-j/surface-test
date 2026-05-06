@@ -8,12 +8,12 @@ import PageLoader from "../../components/PageLoader";
 
 export default function Profile() {
   const [activeSection, setActiveSection] = useState("dados");
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   // Estados locais
-  const [userData, setUserData] = useState(user);
-  const [editedData, setEditedData] = useState(user);
+  const [userData, setUserData] = useState(user ?? {});
+  const [editedData, setEditedData] = useState(user ?? {});
   const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState(false);
 
@@ -48,11 +48,34 @@ export default function Profile() {
     if (!loading && !user) navigate("/entrar");
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      setUserData(user);
-      setEditedData(user);
+  function normalizeEnderecos(enderecos) {
+    const list = Array.isArray(enderecos) ? enderecos : [];
+    const withPrincipal = list.map((e, i) => ({
+      ...e,
+      principal: typeof e.principal === 'boolean' ? e.principal : i === 0,
+    }));
+    if (withPrincipal.length > 0 && !withPrincipal.some(e => e.principal)) {
+      withPrincipal[0].principal = true;
     }
+    return withPrincipal;
+  }
+
+  // Busca dados completos do perfil (com enderecos) ao carregar
+  useEffect(() => {
+    if (!user) return;
+    api.get("/conta")
+      .then((res) => {
+        const fullUser = res.data.usuario || res.data;
+        const normalized = { ...fullUser, enderecos: normalizeEnderecos(fullUser.enderecos) };
+        setUserData(normalized);
+        setEditedData(normalized);
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar perfil:", err);
+        const normalized = { ...user, enderecos: normalizeEnderecos(user.enderecos) };
+        setUserData(normalized);
+        setEditedData(normalized);
+      });
   }, [user]);
 
   // Busca de Pedidos via API
@@ -88,8 +111,9 @@ export default function Profile() {
     setSaving(true);
     showMessage(null);
 
-    const hasPrincipal = editedData.enderecos?.some((e) => e.principal);
-    if (!hasPrincipal && editedData.enderecos?.length > 0) {
+    const currentEnderecos = Array.isArray(editedData.enderecos) ? editedData.enderecos : [];
+    const hasPrincipal = currentEnderecos.some((e) => e.principal);
+    if (!hasPrincipal && currentEnderecos.length > 0) {
       showMessage("Selecione um endereço como principal.", "error");
       setSaving(false);
       return;
@@ -99,11 +123,16 @@ export default function Profile() {
       const response = await api.put("/conta", {
         nome: editedData.nome,
         telefone: editedData.telefone,
+        enderecos: currentEnderecos,
       });
 
       const updatedUser = response.data.usuario || response.data;
-      setUserData(updatedUser);
+      const normalized = { ...updatedUser, enderecos: normalizeEnderecos(updatedUser.enderecos) };
+      setUserData(normalized);
+      setEditedData(normalized);
       setEditName(false);
+      const principalAddress = normalized.enderecos?.find(e => e.principal) || normalized.enderecos?.[0] || null;
+      updateUser({ endereco: principalAddress });
       showMessage("Perfil atualizado com sucesso!", "success");
     } catch (err) {
       console.error(err);
@@ -160,20 +189,22 @@ export default function Profile() {
 
   // Gerenciamento de Endereços
   const handleAddEndereco = () => {
-    if (editedData.enderecos?.length >= 5) {
+    const current = Array.isArray(editedData.enderecos) ? editedData.enderecos : [];
+    if (current.length >= 5) {
       showMessage("Você atingiu o limite de 5 endereços.", "error");
       return;
     }
-    const isFirst = !editedData.enderecos || editedData.enderecos.length === 0;
-    const novo = { logradouro: "", numero: "", cidade: "", estado: "", cep: "", principal: isFirst };
-    const currentEnderecos = (editedData.enderecos || []).map((e) => ({ ...e, principal: isFirst ? true : e.principal }));
+    const isFirst = current.length === 0;
+    const novo = { logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "", principal: isFirst };
+    const currentEnderecos = current.map((e) => ({ ...e, principal: isFirst ? true : e.principal }));
 
     setEditedData((prev) => ({ ...prev, enderecos: [...currentEnderecos, novo] }));
   };
 
   const handleRemoveEndereco = (index) => {
-    const remaining = editedData.enderecos.filter((_, i) => i !== index);
-    if (editedData.enderecos[index].principal && remaining.length > 0) {
+    const current = Array.isArray(editedData.enderecos) ? editedData.enderecos : [];
+    const remaining = current.filter((_, i) => i !== index);
+    if (current[index]?.principal && remaining.length > 0) {
       remaining[0].principal = true;
     }
     setEditedData((prev) => ({ ...prev, enderecos: remaining }));
@@ -182,7 +213,7 @@ export default function Profile() {
   const handleSelectPrincipal = (index) => {
     setEditedData((prev) => ({
       ...prev,
-      enderecos: prev.enderecos.map((end, i) => ({ ...end, principal: i === index })),
+      enderecos: (Array.isArray(prev.enderecos) ? prev.enderecos : []).map((end, i) => ({ ...end, principal: i === index })),
     }));
   };
 
@@ -206,14 +237,17 @@ export default function Profile() {
       confirmado: "#1976d2",
       em_separacao: "#7b1fa2",
       enviado: "#0288d1",
-      finalizado: "#2e7d32",
-      cancelado: "#d32f2f",
+      finalizado: "var(--app-success)",
+      cancelado: "var(--app-danger)",
     };
-    return colors[status] || "#666";
+    return colors[status] || "var(--app-muted-text)";
   };
 
   if (loading) return <PageLoader />;
-  if (!userData) return null;
+  if (!userData || !editedData) return null;
+
+  // Garante que enderecos seja sempre um array valido
+  const safeEnderecos = Array.isArray(editedData.enderecos) ? editedData.enderecos : [];
 
   return (
     <section>
@@ -258,7 +292,7 @@ export default function Profile() {
 
                 <div className={styles.field}>
                   <label>Email</label>
-                  <input type="email" value={editedData.email || ""} disabled style={{ backgroundColor: "#f0f0f0" }} />
+                  <input type="email" value={editedData.email || ""} disabled style={{ backgroundColor: "var(--app-surface-alt)", color: "var(--app-muted-text)" }} />
                 </div>
 
                 <div className={styles.field}>
@@ -266,11 +300,11 @@ export default function Profile() {
                   <input type="text" value={editedData.telefone || ""} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="(11) 99999-9999" />
                 </div>
 
-                <h4 className={styles.subtitle}>Endereços ({editedData.enderecos?.length || 0}/5)</h4>
+                <h4 className={styles.subtitle}>Endereços ({safeEnderecos.length || 0}/5)</h4>
                 
-                {editedData.enderecos?.length === 0 && <p style={{marginBottom: '1rem', color:'#666'}}>Nenhum endereço cadastrado.</p>}
+                {safeEnderecos.length === 0 && <p style={{marginBottom: '1rem', color:'var(--app-muted-text)'}}>Nenhum endereço cadastrado.</p>}
 
-                {editedData.enderecos?.map((endereco, index) => (
+                {safeEnderecos.map((endereco, index) => (
                   <div key={index} className={`${styles.enderecoCard} ${endereco.principal ? styles.enderecoPrincipal : ""}`}>
                     <div className={styles.fieldRow}>
                       <div className={`${styles.field} ${styles.field_70}`}>
@@ -280,6 +314,16 @@ export default function Profile() {
                       <div className={`${styles.field} ${styles.field_30}`}>
                         <label>Número</label>
                         <input value={endereco.numero || ""} onChange={(e) => updateEnderecoField(index, "numero", e.target.value)} required placeholder="123" />
+                      </div>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <div className={`${styles.field} ${styles.field_half}`}>
+                        <label>Bairro</label>
+                        <input value={endereco.bairro || ""} onChange={(e) => updateEnderecoField(index, "bairro", e.target.value)} required placeholder="Bairro" />
+                      </div>
+                      <div className={`${styles.field} ${styles.field_half}`}>
+                        <label>Complemento</label>
+                        <input value={endereco.complemento || ""} onChange={(e) => updateEnderecoField(index, "complemento", e.target.value)} placeholder="Apto, bloco..." />
                       </div>
                     </div>
                     <div className={styles.fieldRow}>
@@ -306,7 +350,7 @@ export default function Profile() {
                   </div>
                 ))}
 
-                <button type="button" className={styles.btn_addEndereco} onClick={handleAddEndereco} disabled={editedData.enderecos?.length >= 5}>
+                <button type="button" className={styles.btn_addEndereco} onClick={handleAddEndereco} disabled={safeEnderecos.length >= 5}>
                   + Adicionar novo endereço
                 </button>
 
@@ -339,7 +383,7 @@ export default function Profile() {
                         <p>Data: {new Date(pedido.data_pedido || pedido.createdAt).toLocaleDateString("pt-BR")}</p>
                         <p>Status: <strong style={{ color: statusColor(pedido.status) }}>{statusLabel(pedido.status)}</strong></p>
                         {pedido.codigo_cupom && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Cupom: {pedido.codigo_cupom}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>Cupom: {pedido.codigo_cupom}</p>
                         )}
                       </div>
 
@@ -365,13 +409,13 @@ export default function Profile() {
 
                       <div className={styles.pedidoTotalContainer}>
                         {pedido.subtotal != null && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>Subtotal: {formatCurrency(pedido.subtotal)}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>Subtotal: {formatCurrency(pedido.subtotal)}</p>
                         )}
                         {pedido.desconto != null && Number(pedido.desconto) > 0 && (
-                          <p style={{ fontSize: "0.85rem", color: "#2e7d32" }}>Desconto: -{formatCurrency(pedido.desconto)}</p>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-success)" }}>Desconto: -{formatCurrency(pedido.desconto)}</p>
                         )}
                         {pedido.frete != null && (
-                          <p style={{ fontSize: "0.85rem", color: "#666" }}>
+                          <p style={{ fontSize: "0.85rem", color: "var(--app-muted-text)" }}>
                             Frete: {Number(pedido.frete) > 0 ? formatCurrency(pedido.frete) : "Grátis"}
                           </p>
                         )}
@@ -379,7 +423,7 @@ export default function Profile() {
                       </div>
                     </div>
                   </div>
-                )) : <p style={{color: '#666'}}>Você ainda não fez pedidos.</p>
+                )) : <p style={{color: 'var(--app-muted-text)'}}>Você ainda não fez pedidos.</p>
               )}
             </div>
 
@@ -422,3 +466,4 @@ export default function Profile() {
     </section>
   );
 }
+

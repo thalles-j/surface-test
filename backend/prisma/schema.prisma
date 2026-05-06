@@ -1,30 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// --- MODELOS DE USUÁRIO E AUTENTICAÇÃO ---
 model roles {
-  id_role   Int      @id @default(autoincrement())
+  id_role   Int        @id @default(autoincrement())
   nome_role String
   usuarios  usuarios[]
 }
 
 model usuarios {
-  id_usuario    Int      @id @default(autoincrement())
+  id_usuario    Int         @id @default(autoincrement())
   nome          String
-  email         String   @unique
+  email         String      @unique
   senha         String
   telefone      String?
-  data_cadastro DateTime @default(now())
+  data_cadastro DateTime    @default(now())
   id_role       Int
-  role          roles    @relation(fields: [id_role], references: [id_role])
   enderecos     enderecos[]
   pedidos       pedidos[]
+  role          roles       @relation(fields: [id_role], references: [id_role])
 }
 
 model enderecos {
@@ -33,208 +32,222 @@ model enderecos {
   logradouro  String
   numero      String
   complemento String?
+  bairro      String
   cidade      String
   estado      String
   cep         String
+  principal   Boolean  @default(false)
   usuario     usuarios @relation(fields: [id_usuario], references: [id_usuario])
 }
 
-// --- MODELOS DE PRODUTO E CATÁLOGO ---
 model categorias {
-  id_categoria    Int      @id @default(autoincrement())
+  id_categoria   Int        @id @default(autoincrement())
   nome_categoria String
   descricao      String?
-  produtos        produtos[]
+  produtos       produtos[]
 }
 
 model produtos {
-  id_produto        Int            @id @default(autoincrement())
-  nome_produto      String         @unique
+  id_produto        Int                     @id @default(autoincrement())
+  nome_produto      String                  @unique
   descricao         String?
-  preco             Decimal        @db.Decimal(10, 2)
+  preco             Decimal                 @db.Decimal(10, 2)
   id_categoria      Int
   tipo              String?
-  status            String         @default("ativo")
-  destaque          Boolean        @default(false)
-  oculto            Boolean        @default(false)
+  status            String                  @default("ativo")
+  destaque          Boolean                 @default(false)
+  oculto            Boolean                 @default(false)
   tags              String?
-  peso              Decimal?       @db.Decimal(8, 3)
+  peso              Decimal?                @db.Decimal(8, 3)
   dimensoes         String?
   ficha_tecnica     String?
   seo_titulo        String?
   seo_descricao     String?
   variacoes_estoque Json?
-  criado_em         DateTime       @default(now())
-  atualizado_em     DateTime       @default(now()) @updatedAt
-  categoria         categorias     @relation(fields: [id_categoria], references: [id_categoria])
-  fotos             fotos_produtos[]
-  pedidos           pedido_produtos[]
+  criado_em         DateTime                @default(now())
+  atualizado_em     DateTime                @default(now()) @updatedAt
   colecoes          colecao_produtos[]
+  fotos             fotos_produtos[]
   movimentacoes     movimentacoes_estoque[]
+  pedidos           pedido_produtos[]
+  categoria         categorias              @relation(fields: [id_categoria], references: [id_categoria])
 }
 
 model fotos_produtos {
-  id_foto    Int     @id @default(autoincrement())
+  id_foto    Int      @id @default(autoincrement())
   id_produto Int
-  url        String  @db.VarChar(255)
-  descricao  String? @db.VarChar(255)
-  principal  Boolean @default(false)
-
-  produto produtos @relation(fields: [id_produto], references: [id_produto])
+  url        String   @db.VarChar(255)
+  descricao  String?  @db.VarChar(255)
+  principal  Boolean  @default(false)
+  produto    produtos @relation(fields: [id_produto], references: [id_produto])
 
   @@index([id_produto])
 }
 
-// --- MODELOS DE PEDIDO E CARRINHO ---
 model pedidos {
-  id_pedido           Int      @id @default(autoincrement())
-  id_usuario          Int
-  data_pedido         DateTime @default(now())
-  status              String   @default("pendente")
-  subtotal            Decimal? @db.Decimal(10, 2)
-  desconto            Decimal? @db.Decimal(10, 2)
-  frete               Decimal? @db.Decimal(10, 2)
-  total               Decimal  @db.Decimal(10, 2)
-  codigo_cupom        String?
-  status_pagamento    String?
-  metodo_pagamento    String?
+  id_pedido            Int                 @id @default(autoincrement())
+  id_usuario           Int?
+  data_pedido          DateTime            @default(now())
+  status               String              @default("pendente")
+  subtotal             Decimal?            @db.Decimal(10, 2)
+  desconto             Decimal?            @db.Decimal(10, 2)
+  frete                Decimal?            @db.Decimal(10, 2)
+  total                Decimal             @db.Decimal(10, 2)
+  codigo_cupom         String?
+  status_pagamento     String?
+  metodo_pagamento     String?
   observacoes_internas String?
-
-  usuario        usuarios          @relation(fields: [id_usuario], references: [id_usuario])
-  pedidoProdutos pedido_produtos[]
-  historico      historico_pedidos[]
+  endereco_entrega     Json?
+  nome_cliente         String?
+  origem               String              @default("online")
+  historico            historico_pedidos[]
+  pedidoProdutos       pedido_produtos[]
+  usuario              usuarios?           @relation(fields: [id_usuario], references: [id_usuario])
 }
 
 model pedido_produtos {
-  id_item        Int     @id @default(autoincrement())
+  id_item        Int      @id @default(autoincrement())
   id_pedido      Int
   id_produto     Int
   sku_variacao   String
   quantidade     Int
-  preco_unitario Decimal @db.Decimal(10, 2)
-
-  pedido  pedidos  @relation(fields: [id_pedido], references: [id_pedido])
-  produto produtos @relation(fields: [id_produto], references: [id_produto])
+  preco_unitario Decimal  @db.Decimal(10, 2)
+  pedido         pedidos  @relation(fields: [id_pedido], references: [id_pedido])
+  produto        produtos @relation(fields: [id_produto], references: [id_produto])
 
   @@index([id_pedido])
   @@index([id_produto])
 }
 
-// --- MODELOS ADICIONAIS PARA MARKETING, CAMPANHAS E CONFIGURAÇÕES ---
-
 model cupons {
-  id_cupom    Int    @id @default(autoincrement())
-  codigo      String @unique
-  desconto    Decimal @db.Decimal(5,2)
+  id_cupom    Int       @id @default(autoincrement())
+  codigo      String    @unique
+  desconto    Decimal   @db.Decimal(5, 2)
   tipo        String
   validade    DateTime?
-  usos        Int     @default(0)
+  usos        Int       @default(0)
   limite_usos Int?
-  ativo       Boolean @default(true)
+  ativo       Boolean   @default(true)
 }
 
 model campanhas {
-  id_campanha Int     @id @default(autoincrement())
+  id_campanha Int       @id @default(autoincrement())
   nome        String
   status      String
   data_inicio DateTime?
   data_fim    DateTime?
-  orcamento   Decimal? @db.Decimal(12,2)
-  alcance     Int      @default(0)
+  orcamento   Decimal?  @db.Decimal(12, 2)
+  alcance     Int       @default(0)
 }
 
 model configuracoes_loja {
-  id_config          Int      @id @default(autoincrement())
-  nome_loja          String
-  email              String
-  telefone           String?
-  endereco           String?
-  cnpj               String?
-  descricao_marca    String?
-  whatsapp           String?
-  instagram          String?
-  politica_atendimento String?
-  metodo_pagamento   String?
-  frete              Decimal? @db.Decimal(10,2)
-  frete_gratis_acima Decimal? @db.Decimal(10,2)
-  moeda              String   @default("BRL")
-  timezone           String?
-  idioma             String?  @default("pt-BR")
-  prazo_envio        String?
+  id_config             Int       @id @default(autoincrement())
+  nome_loja             String
+  email                 String
+  telefone              String?
+  endereco              String?
+  cnpj                  String?
+  descricao_marca       String?
+  whatsapp              String?
+  instagram             String?
+  politica_atendimento  String?
+  metodo_pagamento      String?
+  frete                 Decimal?  @db.Decimal(10, 2)
+  frete_gratis_acima    Decimal?  @db.Decimal(10, 2)
+  moeda                 String    @default("BRL")
+  timezone              String?
+  idioma                String?   @default("pt-BR")
+  prazo_envio           String?
   msg_checkout_whatsapp String?
-  email_comercial    String?
-  telefone_comercial String?
-  whatsapp_vendas    String?
-  texto_institucional String?
-  fundo_landing      String?
-  banner_url         String?
-  loja_ativa         Boolean  @default(true)
-  criado_em          DateTime @default(now())
-  atualizado_em      DateTime @updatedAt
+  email_comercial       String?
+  telefone_comercial    String?
+  whatsapp_vendas       String?
+  texto_institucional   String?
+  fundo_landing         String?
+  banner_url            String?
+  loja_ativa            Boolean   @default(true)
+  criado_em             DateTime  @default(now())
+  atualizado_em         DateTime  @updatedAt
+  data_abertura         DateTime?
+  early_access_ativo    Boolean   @default(false)
 }
 
-// --- COLEÇÕES E ASSOCIAÇÕES ---
-model colecoes {
-  id_colecao Int @id @default(autoincrement())
-  nome       String @unique
-  descricao  String?
-  status     String?
-  locked     Boolean @default(false)
-  criado_em  DateTime @default(now())
-  atualizado_em DateTime @updatedAt
+model early_access_emails {
+  id_email  Int      @id @default(autoincrement())
+  email     String   @unique
+  liberado  Boolean  @default(false)
+  criado_em DateTime @default(now())
+}
 
-  produtos   colecao_produtos[]
+model colecoes {
+  id_colecao    Int                @id @default(autoincrement())
+  nome          String             @unique
+  descricao     String?
+  status        String?
+  locked        Boolean            @default(false)
+  criado_em     DateTime           @default(now())
+  atualizado_em DateTime           @updatedAt
+  produtos      colecao_produtos[]
 }
 
 model colecao_produtos {
   id_colecao Int
   id_produto Int
-
-  colecao colecoes @relation(fields: [id_colecao], references: [id_colecao])
-  produto produtos @relation(fields: [id_produto], references: [id_produto])
+  colecao    colecoes @relation(fields: [id_colecao], references: [id_colecao])
+  produto    produtos @relation(fields: [id_produto], references: [id_produto])
 
   @@id([id_colecao, id_produto])
   @@index([id_produto])
 }
 
-// --- CONTADOR DE ACESSOS ---
 model acessos {
-  id_acesso Int @id @default(autoincrement())
-  path      String @unique
-  count     Int    @default(0)
+  id_acesso     Int       @id @default(autoincrement())
+  path          String    @unique
+  count         Int       @default(0)
   ultimo_acesso DateTime?
-  criado_em DateTime @default(now())
-  atualizado_em DateTime @updatedAt
+  criado_em     DateTime  @default(now())
+  atualizado_em DateTime  @updatedAt
 }
 
-// --- MOVIMENTAÇÃO DE ESTOQUE ---
 model movimentacoes_estoque {
   id_movimentacao Int      @id @default(autoincrement())
   id_produto      Int
   sku_variacao    String
-  tipo            String   // venda, reposicao, ajuste, devolucao
+  tipo            String
   quantidade      Int
   observacao      String?
   criado_em       DateTime @default(now())
-
-  produto produtos @relation(fields: [id_produto], references: [id_produto])
+  produto         produtos @relation(fields: [id_produto], references: [id_produto])
 
   @@index([id_produto])
   @@index([tipo])
 }
 
-// --- HISTÓRICO / TIMELINE DE PEDIDOS ---
 model historico_pedidos {
   id_historico Int      @id @default(autoincrement())
   id_pedido    Int
-  tipo         String   // status_change, note, payment, shipping
+  tipo         String
   descricao    String
   status_de    String?
   status_para  String?
-  autor        String?  // nome do admin ou "sistema"
+  autor        String?
   criado_em    DateTime @default(now())
-
-  pedido pedidos @relation(fields: [id_pedido], references: [id_pedido])
+  pedido       pedidos  @relation(fields: [id_pedido], references: [id_pedido])
 
   @@index([id_pedido])
+}
+
+model exclusoes_seguranca {
+  id_exclusao Int      @id @default(autoincrement())
+  tipo        String
+  valor       String
+  algoritmo_hash String?
+  escopo_ml   Boolean  @default(false)
+  descricao   String?
+  ativo       Boolean  @default(true)
+  criado_em   DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@unique([tipo, valor])
+  @@index([tipo, ativo])
 }

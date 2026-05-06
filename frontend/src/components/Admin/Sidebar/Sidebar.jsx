@@ -1,0 +1,154 @@
+import React from 'react';
+import { LayoutDashboard, ShoppingCart, Package, Layers, Tag, Zap, Users, BarChart3, Palette, Settings, Shield, X, ShoppingBag } from 'lucide-react';
+
+const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg mb-1 ${active ? '' : 'hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'}`}
+    style={
+      active
+        ? {
+            background: 'var(--app-surface-raised)',
+            color: 'var(--app-text)',
+            border: '1px solid var(--app-border)',
+          }
+        : {
+            background: 'transparent',
+            color: 'var(--app-muted-text)',
+          }
+    }
+  >
+    <Icon size={18} />
+    {label}
+  </button>
+);
+
+export default function Sidebar({ activeTab, setActiveTab, mobile = false, onClose = () => {} }) {
+  const menuGroups = [
+    {
+      title: 'PRINCIPAL',
+      items: [
+        { id: 'dashboard', icon: LayoutDashboard, label: 'Visão Geral' },
+        { id: 'sales', icon: ShoppingCart, label: 'Vendas' },
+        { id: 'in-person-sales', icon: ShoppingBag, label: 'Venda Presencial' },
+      ]
+    },
+    {
+      title: 'CATÁLOGO',
+      items: [
+        { id: 'products', icon: Package, label: 'Produtos' },
+        { id: 'collections', icon: Layers, label: 'Drops & Coleções' },
+        { id: 'categories', icon: Tag, label: 'Categorias' },
+        { id: 'inventory', icon: Zap, label: 'Estoque' },
+      ]
+    },
+    {
+      title: 'NEGÓCIO',
+      items: [
+        { id: 'customers', icon: Users, label: 'Clientes' },
+        { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+      ]
+    },
+    {
+      title: 'GERENCIAL',
+      items: [
+        { id: 'customization', icon: Palette, label: 'Customização' },
+        { id: 'settings', icon: Settings, label: 'Configurações' },
+        { id: 'admin', icon: Shield, label: 'Admin' },
+      ]
+    }
+  ];
+
+  if (mobile) {
+    return (
+      <div className="fixed inset-0 z-50 md:hidden">
+        <div className="absolute inset-0" style={{ background: 'var(--app-overlay-strong)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+        <aside className="w-64 flex flex-col h-screen overflow-y-auto" style={{ background: 'var(--app-surface)', borderRight: '1px solid var(--app-border)', color: 'var(--app-text)' }}>
+          <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--app-primary-bg)', color: 'var(--app-primary-text)' }}>
+                <span className="font-bold text-xs">S</span>
+              </div>
+              <h1 className="text-lg font-black tracking-tighter uppercase" style={{ color: 'var(--app-text)' }}>Surface</h1>
+            </div>
+            <button onClick={onClose} className="p-2" style={{ color: 'var(--app-muted-text)' }}>
+              <X />
+            </button>
+          </div>
+
+          <div className="p-6">
+            <nav className="space-y-6">
+              {menuGroups.map((group) => (
+                <div key={group.title}>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--app-muted-text)' }}>{group.title}</h3>
+                  <div className="space-y-1">
+                    {group.items.map((item) => (
+                      <SidebarItem key={item.id} icon={item.icon} label={item.label} active={activeTab === item.id} onClick={() => { setActiveTab(item.id); onClose(); }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-auto p-6" style={{ borderTop: '1px solid var(--app-border)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full" style={{ background: 'linear-gradient(135deg, var(--app-surface-muted), var(--app-surface-raised))', border: '1px solid var(--app-border)' }} />
+              <div className="flex-1">
+                <p className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>Admin Surface</p>
+                <p className="text-[10px]" style={{ color: 'var(--app-muted-text)' }}>admin@surface.co</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <aside className="w-64 flex flex-col fixed h-screen z-10 overflow-y-auto" style={{ background: 'var(--app-surface)', borderRight: '1px solid var(--app-border)', color: 'var(--app-text)' }}>
+      {/* LOGO */}
+      <div className="p-8">
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--app-primary-bg)', color: 'var(--app-primary-text)' }}>
+            <span className="font-bold text-xs">S</span>
+          </div>
+          <h1 className="text-lg font-black tracking-tighter uppercase" style={{ color: 'var(--app-text)' }}>Surface Admin</h1>
+        </div>
+
+        {/* MENU */}
+        <nav className="space-y-6">
+          {menuGroups.map((group) => (
+            <div key={group.title}>
+              <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--app-muted-text)' }}>
+                {group.title}
+              </h3>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <SidebarItem
+                    key={item.id}
+                    icon={item.icon}
+                    label={item.label}
+                    active={activeTab === item.id}
+                    onClick={() => setActiveTab(item.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </div>
+
+      {/* FOOTER */}
+      <div className="mt-auto p-8" style={{ borderTop: '1px solid var(--app-border)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full" style={{ background: 'linear-gradient(135deg, var(--app-surface-muted), var(--app-surface-raised))', border: '1px solid var(--app-border)' }}></div>
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: 'var(--app-text)' }}>Admin Surface</p>
+            <p className="text-[10px]" style={{ color: 'var(--app-muted-text)' }}>admin@surface.co</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

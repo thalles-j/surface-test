@@ -5,12 +5,10 @@ import PageLoader from "../../components/PageLoader";
 import ImageGallery from "./components/ImageGallery";
 import ProductInfo from "./components/ProductInfo";
 import RelatedProducts from "./components/RelatedProducts";
-import { useCart } from "../../context/CartContext";
 import { api } from "../../services/api";
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const { addToCart } = useCart();
   const [produto, setProduto] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [error, setError] = useState("");
@@ -18,45 +16,42 @@ export default function ProductDetail() {
   
   const [selectedSize, setSelectedSize] = useState(null);
 
-  // Função para criar slug a partir do nome
-  const createSlug = (name) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-
-
   useEffect(() => {
+    setSelectedSize(null);
+
     const fetchProduto = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/products');
-        const data = res.data;
-        
-        // Buscar produto pelo slug (nome convertido)
-        const found = data.find(p => createSlug(p.nome_produto) === slug);
-        
+        const res = await api.get(`/products/slug/${slug}`);
+        const { produto: found, related } = res.data;
+
         if (!found) {
           setError("Produto não encontrado");
           return;
         }
-        
+
+        // Defesa: garantir que variacoes_estoque seja sempre um array
+        if (found.variacoes_estoque && typeof found.variacoes_estoque === 'string') {
+          try {
+            found.variacoes_estoque = JSON.parse(found.variacoes_estoque);
+          } catch {
+            found.variacoes_estoque = [];
+          }
+        }
+        if (!Array.isArray(found.variacoes_estoque)) {
+          found.variacoes_estoque = [];
+        }
+
         setProduto(found);
-        
-        // Buscar produtos relacionados (mesma categoria ou destaque)
-        const related = data
-          .filter(p => p.id_produto !== found.id_produto && 
-                      (p.id_categoria === found.id_categoria || p.destaque))
-          .slice(0, 4);
-        setRelatedProducts(related);
-        
+        setRelatedProducts(related || []);
+
       } catch (err) {
         console.error("Erro ao carregar produto:", err);
-        setError(err.message || "Erro ao carregar produto");
+        if (err.response?.status === 404) {
+          setError("Produto não encontrado");
+        } else {
+          setError(err.message || "Erro ao carregar produto");
+        }
       } finally {
         setLoading(false);
       }
@@ -66,25 +61,13 @@ export default function ProductDetail() {
   }, [slug]);
 
   if (loading) return <PageLoader />;
-  if (error) return <div className={styles.error}>{error}</div>;
-  if (!produto) return <div className={styles.error}>Produto não encontrado</div>;
+  if (error) return <div className={styles.erro}>{error}</div>;
+  if (!produto) return <div className={styles.erro}>Produto não encontrado</div>;
 
   const variacoes = produto.variacoes_estoque || [];
 
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      alert("Por favor, selecione um tamanho");
-      return;
-    }
-    
-    const selectedVariacao = variacoes.find(v => v.tamanho === selectedSize);
-    if (selectedVariacao?.estoque === 0) return;
-    
-    addToCart({ ...produto, selectedSize });
-  };
-
   return (
-    <div className={styles.productDetail}>
+    <div className={styles.detalheProduto}>
       <div className={styles.container}>
         <ImageGallery 
           fotos={produto.fotos} 
@@ -96,13 +79,11 @@ export default function ProductDetail() {
           variacoes={variacoes}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
-          handleAddToCart={handleAddToCart}
         />
       </div>
 
       <RelatedProducts 
         products={relatedProducts}
-        createSlug={createSlug}
       />
     </div>
   );

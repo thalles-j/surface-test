@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Stack+Sans+Headline:wght@200..700&display=swap');
 
 .profileMain {
-    background-color: #fff;
+    background-color: var(--app-bg);
+    color: var(--app-text);
     margin-top: 9.5rem;
     margin-bottom: 9.5rem;
     font-family: "Stack Sans Headline", sans-serif;
@@ -24,7 +25,7 @@
     padding: 0 1rem;
     display: flex;
     align-items: flex-end;
-    color: #dc3545;
+    color: var(--app-danger);
     transition: ease 0.3s;
 }
 .logout:hover {
@@ -56,40 +57,42 @@
     transition: 0.3s;
 }
 .profileText:hover {
-    border: 1px solid #d3d3d3;
-    background: #fafafa;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface-alt);
 }
 
 .btn_tab {
-    background: #b4b4b4;
-    border: 1px solid #ccc;
+    background: var(--app-surface-alt);
+    border: 1px solid var(--app-border);
+    color: var(--app-text);
     padding: 0.7rem 1.5rem;
     cursor: pointer;
     font-weight: 600;
     transition: 0.3s;
     text-transform: uppercase;
 }
-.btn_tab:hover { background: #ffffff; }
-.btn_tab.active { background: #000; color: #fff; border-color: #000; }
-.btn_tab.active:hover { background: #ffffff; color: #000000; }
+.btn_tab:hover { filter: brightness(0.96); }
+.btn_tab.active { background: var(--app-primary-bg); color: var(--app-primary-text); border-color: var(--app-primary-bg); }
+.btn_tab.active:hover { filter: brightness(0.92); }
 
 .profileBody {
     padding: 0 2rem;
-    border: 1px solid #e2e2e2;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
 }
 
 .box_section { display: none; }
-.sectionTitle { font-size: 1.5rem; margin: 1.5rem 0; color: #07090d; }
-.subtitle { font-size: 1.1rem; margin: 1.5rem 0 0.8rem; color: #333; }
+.sectionTitle { font-size: 1.5rem; margin: 1.5rem 0; color: var(--app-text); }
+.subtitle { font-size: 1.1rem; margin: 1.5rem 0 0.8rem; color: var(--app-muted-text); }
 
 .form .field { margin-bottom: 1.2rem; }
-.form label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; color: #333; }
-.form input { width: 100%; height: 2.5rem; padding-left: 1rem; border: 1px solid #707070; font-size: 14px; }
+.form label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; color: var(--app-muted-text); }
+.form input { width: 100%; height: 2.5rem; padding-left: 1rem; border: 1px solid var(--app-input-border); font-size: 14px; background: var(--app-input-bg); color: var(--app-input-text); }
 
 .btn_addEndereco {
     background: none;
     border: none;
-    color: #000;
+    color: var(--app-text);
     font-weight: 500;
     cursor: pointer;
     margin-bottom: 2rem;
@@ -101,50 +104,50 @@
     margin: 1rem 0;
     width: 100%;
     height: 45px;
-    background: #000;
-    color: #fff;
-    border: 1px solid #000;
+    background: var(--app-primary-bg);
+    color: var(--app-primary-text);
+    border: 1px solid var(--app-primary-bg);
     text-transform: uppercase;
     font-weight: 500;
     transition: 0.3s;
 }
-.btn_submit:hover { background: #fff; color: #000; }
+.btn_submit:hover { filter: brightness(0.92); }
 .btn_submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .enderecoCard {
-  border: 1px solid #ddd;
+  border: 1px solid var(--app-border);
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
-  background-color: #fff;
+  background-color: var(--app-surface);
 }
-.enderecoPrincipal { border-color: #000; background: #fafafa; border-width: 2px; }
+.enderecoPrincipal { border-color: var(--app-text); background: var(--app-surface-alt); border-width: 2px; }
 .enderecoActions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 10px;
-  border-top: 1px dashed #ccc;
+  border-top: 1px dashed var(--app-border);
   padding-top: 10px;
 }
 .label_principal { display: flex; align-items: center; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
 .label_principal input { width: auto; height: auto; margin-right: 8px; }
-.btn_remove { background: transparent; border: 1px solid #dc3545; color: #dc3545; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
-.btn_remove:hover { background: #dc3545; color: white; }
-.badge { background: #000; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; text-transform: uppercase; }
+.btn_remove { background: transparent; border: 1px solid var(--app-danger); color: var(--app-danger); padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+.btn_remove:hover { background: var(--app-danger); color: white; }
+.badge { background: var(--app-primary-bg); color: var(--app-primary-text); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; text-transform: uppercase; }
 
-.btn_addEndereco { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-.btn_addEndereco:hover { background: #000; }
+.btn_addEndereco { background: var(--app-primary-bg); color: var(--app-primary-text); border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+.btn_addEndereco:hover { filter: brightness(0.92); }
 .btn_addEndereco:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.pedido { border: 1px solid #e2e2e2; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; width: 100%; }
+.pedido { border: 1px solid var(--app-border); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; width: 100%; background: var(--app-surface); }
 .pedidoStatus { margin: 0 1rem; }
 .statusSuccess { color: #28a745; }
 .statusWarning { color: #ffc107; }
 .pedidoProductsContainer { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
 .pedidoProductItem { margin: 0.5rem 1rem; display: flex; gap: 12px; align-items: flex-start; }
 .pedidoImageContainer { width: 72px; height: 72px; flex-shrink: 0; object-fit: cover; border-radius: 4px; }
-.pedidoImagemPlaceholder { width: 72px; height: 72px; background: #eee; flex-shrink: 0; border-radius: 4px; }
+.pedidoImagemPlaceholder { width: 72px; height: 72px; background: var(--app-surface-alt); flex-shrink: 0; border-radius: 4px; color: var(--app-muted-text); display:flex; align-items:center; justify-content:center; font-size:0.7rem; }
 .pedidoProductDetails { flex: 1; min-width: 0; }
 .pedidoProductDetails p { font-family: "Stack Sans Headline", sans-serif; text-transform: uppercase; margin: 0; font-size:1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pedidoTotalContainer { display: flex; justify-content: flex-end; margin-top: 12px; font-weight: 600; }

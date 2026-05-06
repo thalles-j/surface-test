@@ -22,13 +22,13 @@
   width: 400px;
   max-width: 90%;
   height: 100%;
-  background-color: var(--bg-color, #fff);
+  background-color: var(--app-surface);
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   transform: translateX(100%);
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
-  color: var(--text-color, #333);
+  color: var(--app-text);
 }
 
 .cartDrawerOverlay.open .cartDrawer {
@@ -37,7 +37,7 @@
 
 .header {
   padding: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--app-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -45,7 +45,7 @@
   font-optical-sizing: auto;
   font-weight: 500;
   text-transform: uppercase;
-    color: var(--primary-color, #000);
+    color: var(--app-text);
 }
 
 .header h2 {
@@ -70,13 +70,13 @@
 .emptyCart {
   text-align: center;
   margin-top: 50px;
-  color: #888;
+  color: var(--app-muted-text);
 }
 
 .cartItem {
   display: flex;
   margin-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--app-border);
   padding-bottom: 20px;
 }
 
@@ -99,7 +99,7 @@
 
 .itemPrice {
   font-weight: bold;
-  color: var(--primary-color, #007bff);
+  color: var(--app-text);
 }
 
 .quantityControls {
@@ -109,7 +109,7 @@
 }
 
 .qtyButton {
-  background: #eee;
+  background: var(--app-surface-alt);
   border: none;
   width: 25px;
   height: 25px;
@@ -136,8 +136,8 @@
 
 .footer {
   padding: 20px;
-  border-top: 1px solid #eee;
-  background-color: var(--bg-secondary, #f9f9f9);
+  border-top: 1px solid var(--app-border);
+  background-color: var(--app-surface-alt);
 }
 
 .total {
@@ -151,22 +151,20 @@
 .checkoutButton {
   width: 100%;
   padding: 15px;
-  background-color: var(--primary-color, #000);
-  color: #fff;
-  border: none;
+  background-color: var(--app-primary-bg);
+  color: var(--app-primary-text);
+  border: 1px solid var(--app-primary-bg);
   border-radius: 8px;
   font-size: 1.3rem;
   cursor: pointer;
   transition: background-color 0.2s;
   font-optical-sizing: auto;
-  font-weight: 500;
+  font-weight: 800;
   text-transform: uppercase;
-    color: var(--primary-color, #ffffff);
 }
 
 .checkoutButton:hover {
-  opacity: 0.9;
-  background-color: var(--primary-color, #ffffff);
-  color: var(--primary-color, #000000);
-  border: 1px solid var(--primary-color, #000000);
+  opacity: 0.8;
+  filter: brightness(0.92);
+  transition: all 0.2s ease;
 }

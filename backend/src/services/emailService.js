@@ -1,88 +1,152 @@
 /**
- * Serviço de Email / Notificações (Placeholder)
- * 
- * Preparado para integração futura com:
- * - SendGrid
- * - Resend
- * - Amazon SES
- * - Nodemailer (SMTP direto)
+ * Email Service — Surface
+ *
+ * Provedor configurável via env:
+ *   EMAIL_PROVIDER = "smtp" | "sendgrid"
+ *
+ * SMTP → usa Nodemailer direto (Mailtrap, Gmail, Amazon SES, etc.)
+ * SendGrid → usa Nodemailer transport com host smtp.sendgrid.net
+ *
+ * Se EMAIL_PROVIDER não estiver definido, opera em modo preview (log only).
  */
 
-export const EMAIL_TEMPLATES = {
-  ORDER_CONFIRMATION: 'order_confirmation',
-  ORDER_SHIPPED: 'order_shipped',
-  ORDER_DELIVERED: 'order_delivered',
-  ORDER_CANCELLED: 'order_cancelled',
-  WELCOME: 'welcome',
-  PASSWORD_RESET: 'password_reset',
-  ABANDONED_CART: 'abandoned_cart',
-  PROMOTION: 'promotion',
-};
+import nodemailer from 'nodemailer';
+import * as templates from './email/templates.js';
+
+// ─── Config ──────────────────────────────────────────
+
+const provider = (process.env.EMAIL_PROVIDER || '').toLowerCase();
+const isEnabled = !!provider;
+
+function buildTransport() {
+  if (provider === 'sendgrid') {
+    return nodemailer.createTransport({
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY,
+      },
+    });
+  }
+
+  if (provider === 'smtp') {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+
+  return null;
+}
+
+const transporter = buildTransport();
+
+const senderAddress = process.env.EMAIL_FROM || 'noreply@surface.com.br';
+const senderName = process.env.EMAIL_FROM_NAME || 'Surface';
+
+// ─── Core send ───────────────────────────────────────
 
 /**
- * Envia um email transacional
- * @param {Object} params - { to, template, data }
- * @returns {Object} - { messageId, status }
+ * Envia um e-mail. Não lança erro — falhas são logadas silenciosamente.
+ * Retorna { messageId, status } ou { status: 'skipped' | 'error' }.
  */
-export async function sendEmail({ to, template, data }) {
-  // TODO: Integrar com provider real
-  console.log(`[EmailService] Enviando "${template}" para ${to}`);
-  return {
-    messageId: `msg_${Date.now()}`,
-    status: 'queued',
-    to,
-    template,
+export async function sendMail({ to, subject, html }) {
+  if (!to) {
+    console.warn('[Email] Destinatário não informado, e-mail ignorado.');
+    return { status: 'skipped', reason: 'no_recipient' };
+  }
+
+  if (!isEnabled || !transporter) {
+    console.log(`[Email][preview] → ${to} | ${subject}`);
+    return { status: 'preview', to, subject };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"${senderName}" <${senderAddress}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log(`[Email] ✓ Enviado para ${to} (${info.messageId})`);
+    return { status: 'sent', messageId: info.messageId };
+  } catch (err) {
+    console.error(`[Email] ✗ Falha ao enviar para ${to}:`, err.message);
+    return { status: 'error', error: err.message };
+  }
+}
+
+// ─── Helpers de alto nível ───────────────────────────
+
+/**
+ * Wrap assíncrono seguro — nunca propaga exceção ao chamador.
+ * Pode ser chamado sem await para fire-and-forget.
+ */
+function safeSend(fn) {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (err) {
+      console.error('[Email] Erro inesperado:', err.message);
+      return { status: 'error', error: err.message };
+    }
   };
 }
 
-/**
- * Envia notificação de confirmação de pedido
- * @param {Object} order - pedido completo
- */
-export async function sendOrderConfirmation(order) {
-  return sendEmail({
-    to: order.email || order.usuario?.email,
-    template: EMAIL_TEMPLATES.ORDER_CONFIRMATION,
-    data: {
-      orderId: order.id_pedido,
-      total: order.total,
-      items: order.pedidoProdutos?.length || 0,
-    },
-  });
-}
+// ─── Envios de alto nível ────────────────────────────
 
-/**
- * Envia notificação de envio do pedido
- * @param {Object} params - { email, orderId, trackingCode }
- */
-export async function sendShippingNotification({ email, orderId, trackingCode }) {
-  return sendEmail({
-    to: email,
-    template: EMAIL_TEMPLATES.ORDER_SHIPPED,
-    data: { orderId, trackingCode },
-  });
-}
+export const sendOrderConfirmation = safeSend(async (order) => {
+  const email = order.email || order.usuario?.email || order.endereco_entrega?.email || order.endereco_entrega?.contato?.email;
+  const name = order.nome_cliente || order.usuario?.nome;
 
-/**
- * Envia email de boas-vindas
- * @param {Object} params - { email, name }
- */
-export async function sendWelcomeEmail({ email, name }) {
-  return sendEmail({
-    to: email,
-    template: EMAIL_TEMPLATES.WELCOME,
-    data: { name },
-  });
-}
+  const items = (order.pedidoProdutos || []).map(pp => ({
+    nome: pp.produto?.nome_produto || 'Produto',
+    tamanho: pp.sku_variacao?.split('-').pop() || '',
+    quantidade: pp.quantidade,
+    preco: pp.preco_unitario,
+  }));
 
-/**
- * Envia email de recuperação de senha
- * @param {Object} params - { email, resetToken }
- */
-export async function sendPasswordResetEmail({ email, resetToken }) {
-  return sendEmail({
-    to: email,
-    template: EMAIL_TEMPLATES.PASSWORD_RESET,
-    data: { resetToken },
+  const { subject, html } = templates.orderConfirmation({
+    orderId: order.id_pedido,
+    customerName: name,
+    items,
+    subtotal: order.subtotal,
+    desconto: order.desconto,
+    frete: order.frete,
+    total: order.total,
   });
-}
+
+  return sendMail({ to: email, subject, html });
+});
+
+export const sendOrderStatusUpdate = safeSend(async ({ order, statusDe, statusPara }) => {
+  const email = order.email || order.usuario?.email || order.endereco_entrega?.email || order.endereco_entrega?.contato?.email;
+  const name = order.nome_cliente || order.usuario?.nome;
+
+  const { subject, html } = templates.orderStatusUpdate({
+    orderId: order.id_pedido,
+    statusDe,
+    statusPara,
+    customerName: name,
+  });
+
+  return sendMail({ to: email, subject, html });
+});
+
+export const sendWelcomeEmail = safeSend(async ({ email, name }) => {
+  const { subject, html } = templates.welcome({ name, email });
+  return sendMail({ to: email, subject, html });
+});
+
+export const sendPasswordResetEmail = safeSend(async ({ email, name, resetUrl }) => {
+  const { subject, html } = templates.passwordReset({ name, resetUrl });
+  return sendMail({ to: email, subject, html });
+});
+

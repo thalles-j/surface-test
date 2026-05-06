@@ -185,7 +185,7 @@ async function main() {
                 email: 'contato@surface.com',
                 telefone: '+55 11 99999-9999',
                 endereco: 'São Paulo, SP',
-                metodo_pagamento: 'PIX, Cartão',
+                metodo_pagamento: 'WhatsApp',
                 frete: 15.0,
                 frete_gratis_acima: 200.0,
                 moeda: 'BRL',

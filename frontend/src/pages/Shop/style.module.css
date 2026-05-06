@@ -172,15 +172,16 @@ div{
 
 .produtoNome {
   color: #000000;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   margin: 0;
   letter-spacing: 0.6px;
   text-transform: uppercase;
+  font-weight: 500;
 }
 
 .produtoPreco {
-  font-weight: 800;
-  font-size: 1rem;
+  font-weight: 400;
+  font-size: 1.2rem;
   color: #000000;
 }
 .produtoInfo {
@@ -209,7 +210,7 @@ div{
   color: #ff0000;
   padding: 1px 4px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   text-transform: uppercase;
 }

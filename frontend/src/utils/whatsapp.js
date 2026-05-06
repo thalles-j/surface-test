@@ -1,57 +1,103 @@
-const WHATSAPP_NUMBER = '5524992709668';
+const WHATSAPP_NUMBER = '5524988582885';
 
-/**
- * Generates a WhatsApp checkout URL with the order message.
- * @param {Object} params
- * @param {string} params.customerName
- * @param {Array} params.items - Cart items with nome_produto, selectedSize, quantity, preco
- * @param {number} params.total
- * @param {number|null} params.orderId - If order was created in DB
- * @param {number|null} params.subtotal
- * @param {number|null} params.desconto
- * @param {number|null} params.frete
- * @param {string|null} params.codigoCupom
- * @returns {string} wa.me URL
- */
-export function buildWhatsAppCheckoutUrl({ customerName, items, total, orderId, subtotal, desconto, frete, codigoCupom }) {
+function formatBRL(value) {
+  return `R$ ${(Number(value) || 0).toFixed(2).replace('.', ',')}`;
+}
+
+function formatAddress({ logradouro, numero, complemento, bairro, cidade, estado, cep, endereco }) {
+  if (endereco) return endereco;
+  const parts = [
+    [logradouro, numero].filter(Boolean).join(', '),
+    complemento,
+    bairro,
+    [cidade, estado].filter(Boolean).join(' - '),
+    cep ? `CEP: ${cep}` : null,
+  ].filter(Boolean);
+  return parts.join('\n');
+}
+
+function formatItem(item, index) {
+  const size = item.selectedSize ? `Tamanho: ${item.selectedSize}` : '';
   const lines = [
-    `🛒 *Novo Pedido - Surface*`,
+    `${index + 1}. ${item.nome_produto || 'Produto'}`,
+  ];
+  if (size) lines.push(`   ${size}`);
+  lines.push(`   Qtd: ${item.quantity || 1}`);
+  lines.push(`   ${formatBRL(Number(item.preco || 0) * (item.quantity || 1))}`);
+  return lines.join('\n');
+}
+
+export function buildWhatsAppCheckoutUrl({
+  customerName,
+  items,
+  total,
+  orderId,
+  subtotal,
+  desconto,
+  frete,
+  codigoCupom,
+  telefone,
+  cpf,
+  logradouro,
+  numero,
+  complemento,
+  bairro,
+  cidade,
+  estado,
+  cep,
+  endereco,
+}) {
+  const lines = [
+    `*NOVO PEDIDO - SURFACE*`,
     ``,
-    `*Cliente:* ${customerName}`,
+    `*Cliente:* ${customerName || 'Nao informado'}`,
+    `*Telefone:* ${telefone || ''}`,
   ];
 
-  if (orderId) {
-    lines.push(`*Pedido #:* ${orderId}`);
+  if (cpf) {
+    lines.push(`*CPF:* ${cpf}`);
   }
 
-  lines.push(``, `*Itens:*`);
+  lines.push(
+    `*Endereco:*`,
+    formatAddress({ logradouro, numero, complemento, bairro, cidade, estado, cep, endereco }),
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    ``,
+    `*ITENS:*`,
+    ``,
+  );
 
-  items.forEach((item, i) => {
-    const size = item.selectedSize ? ` (${item.selectedSize})` : '';
-    const itemSubtotal = (Number(item.preco) * item.quantity).toFixed(2);
-    lines.push(`${i + 1}. ${item.nome_produto}${size} — ${item.quantity}x R$ ${Number(item.preco).toFixed(2)} = R$ ${itemSubtotal}`);
+  (items || []).forEach((item, i) => {
+    lines.push(formatItem(item, i));
+    lines.push('');
   });
 
-  lines.push(``);
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('');
+  lines.push(`*RESUMO:*`);
+  lines.push('');
 
   if (subtotal != null) {
-    lines.push(`*Subtotal: R$ ${Number(subtotal).toFixed(2)}*`);
+    lines.push(`Subtotal: ${formatBRL(subtotal)}`);
   }
 
-  if (codigoCupom && desconto > 0) {
-    lines.push(`*Cupom (${codigoCupom}): -R$ ${Number(desconto).toFixed(2)}*`);
+  if (codigoCupom && Number(desconto) > 0) {
+    lines.push(`Cupom ${codigoCupom}: -${formatBRL(desconto)}`);
   }
 
   if (frete != null) {
-    if (Number(frete) > 0) {
-      lines.push(`*Frete: R$ ${Number(frete).toFixed(2)}*`);
-    } else {
-      lines.push(`*Frete: Grátis ✨*`);
-    }
+    const freteText = Number(frete) > 0 ? formatBRL(frete) : 'Gratis';
+    lines.push(`Frete: ${freteText}`);
   }
 
-  lines.push(`*Total: R$ ${Number(total).toFixed(2)}*`);
-  lines.push(``, `Aguardo confirmação para finalizar a compra! 🙏`);
+  lines.push('');
+  lines.push(`*TOTAL: ${formatBRL(total)}*`);
+  lines.push('');
+  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('');
+  lines.push(`Aguardamos a confirmacao do pagamento para separar o pedido.`);
+  lines.push(`Obrigado por escolher a Surface.`);
 
   const message = lines.join('\n');
   const encoded = encodeURIComponent(message);

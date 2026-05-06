@@ -1,0 +1,293 @@
+.appContainer {
+  min-height: 100vh;
+  background: #f8f9fa;
+  color: #111827;
+  font-family: sans-serif;
+  padding: 1.5rem;
+}
+
+.wrapper {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebarColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: bold;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.operatorCard {
+  display: none;
+}
+
+.card {
+  background: white;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 20px -4px rgba(0,0,0,0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.cardSpaced {
+  composes: card;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cardHeaderBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.inputBase {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.inputWithIcon {
+  composes: inputBase;
+  padding-left: 2.5rem;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.textareaIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.itemRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.itemLabel {
+  font-size: 10px;
+  font-weight: bold;
+  color: #6b7280;
+}
+
+.itemSelect,
+.itemInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.itemSelectCentered {
+  composes: itemSelect;
+  text-align: center;
+  font-weight: bold;
+}
+
+.itemRemoveBtn {
+  padding: 0.5rem;
+  color: #9ca3af;
+  border-radius: 0.5rem;
+}
+
+.addItemBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.summaryValue {
+  font-weight: 500;
+  color: #111827;
+}
+
+.divider {
+  height: 1px;
+  background: #f3f4f6;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.totalLabel {
+  font-size: 0.875rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.totalValue {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 1rem;
+  font-weight: bold;
+  border-radius: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submitBtnDefault {
+  background: #111827; /* <-- Esse é um tom de cinza/azul muito escuro, quase preto! */
+  color: white;
+}
+
+.submitBtnSuccess {
+  background: #10b981;
+  color: white;
+}
+
+.recentList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recentItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+}
+
+.recentName {
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.recentMeta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.recentTotal {
+  font-weight: bold;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

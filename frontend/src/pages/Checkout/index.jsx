@@ -1,341 +1,569 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Tag,
+  ChevronRight,
+  CreditCard,
+  Loader2,
+  QrCode,
+  MapPin,
+  ArrowLeft,
+} from "lucide-react";
+
 import { useCart } from "../../context/CartContext";
 import useAuth from "../../hooks/useAuth";
 import { api } from "../../services/api";
-import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { normalizeAddress, validatePreCheckoutData, hasCompleteAddress } from "../../utils/preCheckout";
+import { useToast } from "../../context/ToastContext";
 
-export default function Checkout() {
-  const { cartItems, createOrder, checkoutLoading } = useCart();
-  const { user } = useAuth();
+import { resolveImageUrl } from "../../utils/resolveImageUrl";
+import { buildWhatsAppCheckoutUrl } from "../../utils/whatsapp";
+
+import { useCheckoutLogic } from "./hooks/useCheckoutLogic";
+import { formatCurrency } from "./utils/checkoutHelpers";
+
+import styles from "./style.module.css";
+
+export default function CheckoutPage() {
   const navigate = useNavigate();
 
-  const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
-  const [couponError, setCouponError] = useState("");
-  const [couponLoading, setCouponLoading] = useState(false);
+  const { user } = useAuth();
+  const { cartItems, preCheckoutData, setPreCheckoutData, clearCart, setShouldOpenCart } = useCart();
+  const toast = useToast();
 
-  const [preview, setPreview] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState("");
+  const [savedAddress, setSavedAddress] = useState(null);
+  const [errors, setErrors] = useState({});
 
-  const formatCurrency = (value) =>
-    `R$ ${(Number(value) || 0).toFixed(2).replace(".", ",")}`;
+  const [addressMode, setAddressMode] = useState("manual");
 
-  const buildItems = useCallback(
-    () =>
-      cartItems.map((item) => ({
-        id_produto: item.id_produto,
-        selectedSize: item.selectedSize,
-        sku_variacao: item.sku_variacao || null,
-        quantity: item.quantity,
-      })),
-    [cartItems]
-  );
-
-  const fetchPreview = useCallback(
-    async (cupom = null) => {
-      if (cartItems.length === 0) return;
-      setPreviewLoading(true);
-      setPreviewError("");
-      try {
-        const { data } = await api.post("/checkout/preview", {
-          items: buildItems(),
-          codigo_cupom: cupom,
-        });
-        setPreview(data);
-      } catch (err) {
-        const msg =
-          err.response?.data?.mensagem ||
-          err.response?.data?.message ||
-          "Erro ao calcular resumo.";
-        setPreviewError(msg);
-      } finally {
-        setPreviewLoading(false);
-      }
-    },
-    [cartItems, buildItems]
+  const {
+    couponCode,
+    setCouponCode,
+    couponApplied,
+    couponError,
+    couponLoading,
+    handleApplyCoupon,
+    handleRemoveCoupon,
+    preview,
+    previewLoading,
+    submitting,
+    orderError,
+    handleSubmit,
+    orderCompletedRef,
+  } = useCheckoutLogic(
+    cartItems,
+    preCheckoutData,
+    setPreCheckoutData,
+    clearCart
   );
 
   useEffect(() => {
-    if (cartItems.length === 0) {
-      navigate("/shop");
-      return;
-    }
-    fetchPreview(couponApplied);
-  }, [cartItems.length]);
+    let cancelled = false;
 
-  const handleApplyCoupon = async () => {
-    const code = couponCode.trim().toUpperCase();
-    if (!code) return;
-    setCouponError("");
-    setCouponLoading(true);
-    try {
-      await api.post("/checkout/validate-coupon", { codigo: code });
-      setCouponApplied(code);
-      await fetchPreview(code);
-    } catch (err) {
-      const msg =
-        err.response?.data?.mensagem || "Cupom inválido.";
-      setCouponError(msg);
-      setCouponApplied(null);
-    } finally {
-      setCouponLoading(false);
+    async function loadProfileAddress() {
+      try {
+        const { data } = await api.get("/conta?light=true");
+        const profile = data?.usuario || data;
+        
+        if (!profile || typeof profile !== "object") return;
+        if (cancelled) return;
+
+        const normalized = normalizeAddress(profile);
+        
+        if (normalized && normalized.logradouro) {
+          setSavedAddress(normalized);
+          setAddressMode("saved");
+
+          setPreCheckoutData((prev) => ({
+            ...prev,
+            nome: prev.nome || profile.nome || "",
+            email: prev.email || profile.email || "",
+            telefone: prev.telefone || String(profile.telefone || "").replace(/\D/g, ""),
+            cpf: prev.cpf || String(profile.cpf || "").replace(/\D/g, ""),
+            cep: normalized.cep || "",
+            rua: normalized.logradouro || normalized.rua || "",
+            logradouro: normalized.logradouro || normalized.rua || "",
+            numero: normalized.numero || "",
+            bairro: normalized.bairro || "",
+            cidade: normalized.cidade || "",
+            estado: normalized.estado || "",
+            complemento: normalized.complemento || "",
+          }));
+        } else {
+          setPreCheckoutData((prev) => ({
+            ...prev,
+            nome: prev.nome || profile.nome || "",
+            email: prev.email || profile.email || "",
+            telefone: prev.telefone || String(profile.telefone || "").replace(/\D/g, ""),
+            cpf: prev.cpf || String(profile.cpf || "").replace(/\D/g, ""),
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar endereço do perfil:", err);
+      }
+    }
+
+    loadProfileAddress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setPreCheckoutData]);
+
+  const hasSavedAddress = Boolean(savedAddress);
+
+  const handleUseSavedAddress = () => {
+    if (savedAddress) {
+      setAddressMode("saved");
+      setPreCheckoutData((prev) => ({
+        ...prev,
+        cep: savedAddress.cep || "",
+        rua: savedAddress.logradouro || savedAddress.rua || "",
+        logradouro: savedAddress.logradouro || savedAddress.rua || "",
+        numero: savedAddress.numero || "",
+        bairro: savedAddress.bairro || "",
+        cidade: savedAddress.cidade || "",
+        estado: savedAddress.estado || "",
+        complemento: savedAddress.complemento || "",
+      }));
     }
   };
 
-  const handleRemoveCoupon = async () => {
-    setCouponCode("");
-    setCouponApplied(null);
-    setCouponError("");
-    await fetchPreview(null);
+  const handleUseManualAddress = () => {
+    setAddressMode("manual");
+    setPreCheckoutData((prev) => ({
+      ...prev,
+      cep: "",
+      rua: "",
+      logradouro: "",
+      numero: "",
+      bairro: "",
+      cidade: "",
+      estado: "",
+      complemento: "",
+    }));
   };
 
-  const handleFinalize = async () => {
-    const order = await createOrder(couponApplied);
-    if (order) {
-      navigate("/account");
-    }
+  // 🔥 1. Voltar normal (Seta de cima)
+  const handleGoBack = () => {
+    navigate(-1); // Retorna na navegação do histórico
+  };
+
+  const handleEditCart = () => {
+    setShouldOpenCart(true);
+    navigate("/shop");
   };
 
   const getImageUrl = (path) => {
-    if (!path) return "https://via.placeholder.com/60?text=Img";
+    if (!path) return "https://via.placeholder.com/64?text=Img";
     return resolveImageUrl(path);
   };
 
-  const getFrontImage = (fotos) => {
-    if (!fotos || !Array.isArray(fotos) || fotos.length === 0) return null;
-    const sorted = [...fotos].sort((a, b) => {
-      const isFrontA =
-        (a.descricao || "").toLowerCase().includes("front") ||
-        (a.url || "").toLowerCase().includes("front");
-      const isFrontB =
-        (b.descricao || "").toLowerCase().includes("front") ||
-        (b.url || "").toLowerCase().includes("front");
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-    });
-    return sorted[0]?.url;
+  const getFrontImage = (item) => {
+    if (item.imagem && typeof item.imagem === 'string') return item.imagem;
+    if (item.image && typeof item.image === 'string') return item.image;
+    const fotos = item.fotos || item.images || [];
+    if (!Array.isArray(fotos) || fotos.length === 0) return null;
+    const principal = fotos.find((f) => f.principal);
+    return principal?.url || fotos[0]?.url || (typeof fotos[0] === 'string' ? fotos[0] : null);
   };
 
-  if (!user) {
-    navigate("/entrar");
-    return null;
+  if (!preview && previewLoading && !orderCompletedRef.current) {
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <Loader2 className="animate-spin" size={32} style={{ margin: "0 auto 16px" }} />
+        <h2>Calculando seu pedido...</h2>
+      </div>
+    );
   }
 
-  if (cartItems.length === 0) {
-    return null;
+  if ((!cartItems || cartItems.length === 0) && !orderCompletedRef.current) {
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <h2>Seu carrinho está vazio.</h2>
+        <button 
+          onClick={() => navigate("/")} 
+          className={styles.submitBtn}
+          style={{ width: "auto", padding: "10px 24px", margin: "20px auto" }}
+        >
+          Voltar para a loja
+        </button>
+      </div>
+    );
   }
+
+  const finalTotal = preview ? preview.total : 0;
+  const addr = preCheckoutData || {};
+
+  const handleValidateAndSubmit = () => {
+    const validation = validatePreCheckoutData(preCheckoutData);
+    setPreCheckoutData((prev) => ({ ...prev, ...validation.sanitized }));
+    setErrors(validation.errors);
+
+    if (!validation.isValid) {
+      toast.error("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (!hasCompleteAddress(preCheckoutData)) {
+      toast.error("Preencha o endereço completo.");
+      return;
+    }
+
+    handleSubmit(buildWhatsAppCheckoutUrl);
+  };
 
   return (
-    <section style={{ maxWidth: 800, margin: "2rem auto", padding: "0 1rem" }}>
-      <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>
-        Checkout
-      </h2>
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        
+        {/* ================= LEFT ================= */}
+        <div className={styles.leftColumn}>
+          <header className={styles.header} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button 
+                onClick={handleGoBack}
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  padding: "4px",
+                  color: "#111"
+                }}
+                title="Voltar"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className={styles.title} style={{ margin: 0 }}>SURFACE</h1>
+            </div>
+            
+            <nav className={styles.breadcrumb}>
+              <span className={styles.breadcrumbItem} onClick={handleEditCart}>Carrinho</span>
+              <ChevronRight size={12} />
+              <span className={styles.breadcrumbItem}>Informações</span>
+              <ChevronRight size={12} />
+              <span>Pagamento</span>
+            </nav>
+          </header>
 
-      {/* Order Items */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
-          Itens do Pedido
-        </h3>
-        {cartItems.map((item, index) => (
-          <div
-            key={`${item.id_produto}-${item.selectedSize || index}`}
-            style={{
-              display: "flex",
-              gap: "1rem",
-              padding: "0.75rem 0",
-              borderBottom: "1px solid #eee",
-              alignItems: "center",
-            }}
-          >
-            <img
-              src={getImageUrl(getFrontImage(item.fotos))}
-              alt={item.nome_produto}
-              style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 4 }}
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/60?text=Err";
+          <section className={styles.formSection}>
+            {/* CONTATO */}
+            <div>
+              <h2 className={styles.formGroupTitle}>Contato</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <input
+                  type="text" placeholder="Nome completo" value={addr.nome || ""}
+                  onChange={(e) => setPreCheckoutData({ ...addr, nome: e.target.value })}
+                  className={styles.input} style={{ marginBottom: 0 }}
+                />
+                <div className={styles.inputGrid}>
+                  <input
+                    type="email" placeholder="Email" value={addr.email || ""}
+                    onChange={(e) => setPreCheckoutData({ ...addr, email: e.target.value })}
+                    className={styles.input} style={{ marginBottom: 0 }}
+                  />
+                  <input
+                    type="tel" placeholder="Telefone" value={addr.telefone || ""}
+                    onChange={(e) => setPreCheckoutData({ ...addr, telefone: String(e.target.value).replace(/\D/g, "") })}
+                    className={styles.input} style={{ marginBottom: 0 }}
+                  />
+                </div>
+                <input
+                  type="text" placeholder="CPF (opcional)" value={addr.cpf || ""}
+                  onChange={(e) => setPreCheckoutData({ ...addr, cpf: String(e.target.value).replace(/\D/g, "") })}
+                  className={styles.input} style={{ marginBottom: 0 }}
+                />
+              </div>
+            </div>
+
+            {/* ENTREGA */}
+            <div>
+              <h2 className={styles.formGroupTitle}>Entrega</h2>
+              
+              <div style={{ border: "1px solid #d1d5db", borderRadius: "8px", overflow: "hidden", marginBottom: "16px" }}>
+                
+                {/* Opção 1: Endereço Ativo */}
+                {hasSavedAddress && (
+                  <div 
+                    onClick={handleUseSavedAddress}
+                    style={{
+                      padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
+                      backgroundColor: addressMode === "saved" ? "#eff6ff" : "#fff",
+                      borderBottom: "1px solid #d1d5db"
+                    }}
+                  >
+                    <div style={{ 
+                      width: "18px", height: "18px", borderRadius: "50%", 
+                      border: addressMode === "saved" ? "6px solid #2563eb" : "1px solid #d1d5db", 
+                      backgroundColor: "#fff"
+                    }} />
+                    <span style={{ fontSize: "14px", fontWeight: "500", color: "#111", flex: 1 }}>Usar endereço ativo</span>
+                  </div>
+                )}
+
+                {/* Opção 2: Colocar Endereço */}
+                <div 
+                  onClick={handleUseManualAddress}
+                  style={{
+                    padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
+                    backgroundColor: addressMode === "manual" ? "#eff6ff" : "#fff"
+                  }}
+                >
+                  <div style={{ 
+                    width: "18px", height: "18px", borderRadius: "50%", 
+                    border: addressMode === "manual" ? "6px solid #2563eb" : "1px solid #d1d5db", 
+                    backgroundColor: "#fff"
+                  }} />
+                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#111", flex: 1 }}>Colocar endereço</span>
+                </div>
+              </div>
+
+              {/* Inputs para colocar novo endereço */}
+              {addressMode === "manual" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <input
+                    type="text" placeholder="CEP" value={addr.cep || ""}
+                    onChange={(e) => setPreCheckoutData({ ...addr, cep: e.target.value })}
+                    className={styles.input} style={{ marginBottom: 0 }}
+                  />
+                  <input
+                    type="text" placeholder="Rua / Logradouro" value={addr.logradouro || addr.rua || ""}
+                    onChange={(e) => setPreCheckoutData({ ...addr, logradouro: e.target.value, rua: e.target.value })}
+                    className={styles.input} style={{ marginBottom: 0 }}
+                  />
+                  <div className={styles.inputGrid}>
+                    <input
+                      type="text" placeholder="Número" value={addr.numero || ""}
+                      onChange={(e) => setPreCheckoutData({ ...addr, numero: e.target.value })}
+                      className={styles.input} style={{ marginBottom: 0 }}
+                    />
+                    <input
+                      type="text" placeholder="Complemento" value={addr.complemento || ""}
+                      onChange={(e) => setPreCheckoutData({ ...addr, complemento: e.target.value })}
+                      className={styles.input} style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <input
+                    type="text" placeholder="Bairro" value={addr.bairro || ""}
+                    onChange={(e) => setPreCheckoutData({ ...addr, bairro: e.target.value })}
+                    className={styles.input} style={{ marginBottom: 0 }}
+                  />
+                  <div className={styles.inputGrid}>
+                    <input
+                      type="text" placeholder="Cidade" value={addr.cidade || ""}
+                      onChange={(e) => setPreCheckoutData({ ...addr, cidade: e.target.value })}
+                      className={styles.input} style={{ marginBottom: 0 }}
+                    />
+                    <input
+                      type="text" placeholder="Estado (UF)" value={addr.estado || ""}
+                      onChange={(e) => setPreCheckoutData({ ...addr, estado: e.target.value })}
+                      className={styles.input} style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PAGAMENTO */}
+            <div>
+              <h2 className={styles.formGroupTitle}>Pagamento</h2>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "16px" }}>
+                Todas as transações são seguras e criptografadas.
+              </p>
+              
+              <div style={{ border: "1px solid #d1d5db", borderRadius: "8px", overflow: "hidden" }}>
+                <div 
+                  onClick={() => setPreCheckoutData({ ...addr, formaPagamento: "cartao" })}
+                  style={{
+                    padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
+                    backgroundColor: addr.formaPagamento === "cartao" ? "#eff6ff" : "#fff",
+                    borderBottom: "1px solid #d1d5db"
+                  }}
+                >
+                  <div style={{ 
+                    width: "18px", height: "18px", borderRadius: "50%", border: addr.formaPagamento === "cartao" ? "6px solid #2563eb" : "1px solid #d1d5db", backgroundColor: "#fff"
+                  }} />
+                  <CreditCard size={20} color={addr.formaPagamento === "cartao" ? "#111" : "#6b7280"} />
+                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#111", flex: 1 }}>Cartão de crédito</span>
+                </div>
+
+                {addr.formaPagamento === "cartao" && (
+                  <div style={{ padding: "16px", backgroundColor: "#f9fafb", borderBottom: "1px solid #d1d5db" }}>
+                    <select
+                      value={addr.parcelas || "1"}
+                      onChange={(e) => setPreCheckoutData({ ...addr, parcelas: e.target.value })}
+                      className={styles.input} style={{ marginBottom: 0 }}
+                    >
+                      <option value="1">1x (À vista)</option>
+                      {[...Array(11)].map((_, i) => (
+                        <option key={i + 2} value={i + 2}>{i + 2}x (Com juros)</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div 
+                  onClick={() => setPreCheckoutData({ ...addr, formaPagamento: "pix" })}
+                  style={{
+                    padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
+                    backgroundColor: addr.formaPagamento === "pix" ? "#eff6ff" : "#fff"
+                  }}
+                >
+                  <div style={{ 
+                    width: "18px", height: "18px", borderRadius: "50%", border: addr.formaPagamento === "pix" ? "6px solid #2563eb" : "1px solid #d1d5db", backgroundColor: "#fff"
+                  }} />
+                  <QrCode size={20} color={addr.formaPagamento === "pix" ? "#111" : "#6b7280"} />
+                  <span style={{ fontSize: "14px", fontWeight: "500", color: "#111" }}>Pix</span>
+                </div>
+
+                {addr.formaPagamento === "pix" && (
+                  <div style={{ padding: "20px 16px", backgroundColor: "#f9fafb", textAlign: "center", borderTop: "1px solid #d1d5db" }}>
+                    <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                      Depois de clicar em "Finalizar via WhatsApp", nossa equipe gerará o seu código Pix para finalizar a compra com segurança.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {orderError && <div className={styles.errorBox}>{orderError}</div>}
+          </section>
+        </div>
+
+        {/* ================= RIGHT (STICKY) ================= */}
+        <div className={styles.rightColumn}>
+          
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "600", margin: 0, color: "#111" }}>Resumo do pedido</h2>
+            <button 
+              onClick={handleEditCart} 
+              style={{ 
+                background: "none", 
+                border: "none", 
+                color: "#2563eb", 
+                fontSize: "14px", 
+                fontWeight: "500", 
+                cursor: "pointer", 
+                textDecoration: "underline",
+                padding: 0
               }}
-            />
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600 }}>{item.nome_produto}</p>
-              {item.selectedSize && (
-                <p style={{ fontSize: "0.85rem", color: "#666" }}>
-                  Tamanho: {item.selectedSize}
+            >
+              Editar itens
+            </button>
+          </div>
+
+          <div className={styles.itemsList}>
+            {cartItems.map((item, index) => {
+              const nome = item.nome_produto || item.nome || item.name || "Produto";
+              const preco = Number(item.preco_promocional || item.preco || item.price || 0);
+              const quantidade = Number(item.quantidade || item.quantity || 1);
+              const tamanho = item.tamanho || item.selectedSize || item.size;
+
+              return (
+                <div key={`${item.id_produto || item.id}-${index}`} className={styles.itemCard}>
+                  <div className={styles.itemImgContainer}>
+                    <img src={getImageUrl(getFrontImage(item))} alt={nome} className={styles.itemImg} onError={(e) => { e.target.src = "https://via.placeholder.com/64?text=Erro"; }} />
+                    <div className={styles.itemBadge}>{quantidade}</div>
+                  </div>
+                  
+                  <div className={styles.itemInfo}>
+                    <p className={styles.itemName}>{nome}</p>
+                    {tamanho && <p className={styles.itemDetails}>{tamanho}</p>}
+                  </div>
+                  
+                  <span className={styles.itemPrice}>{formatCurrency(preco * quantidade)}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className={styles.couponSection}>
+            {couponApplied ? (
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flex: 1 }}>
+                <Tag size={16} />
+                <span style={{ flex: 1, fontWeight: "500" }}>{couponApplied}</span>
+                <button onClick={handleRemoveCoupon} className={styles.couponBtn}>Remover</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  className={styles.couponInput}
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Código de desconto"
+                />
+                <button onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()} className={styles.couponBtn}>
+                  {couponLoading ? <Loader2 size={18} className="animate-spin" /> : "Aplicar"}
+                </button>
+              </>
+            )}
+          </div>
+          {couponError && <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "-10px", marginBottom: "15px" }}>{couponError}</p>}
+
+          <div>
+            <div className={styles.summaryRow}>
+              <span>Subtotal</span>
+              <span>{formatCurrency(preview ? preview.subtotal : 0)}</span>
+            </div>
+          </div>
+
+          {/* ================= RESUMO DO ENDEREÇO ================= */}
+          <div style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", marginBottom: "20px", border: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", fontWeight: "600", color: "#374151" }}>
+              <MapPin size={18} color="#4f46e5" />
+              <span>Endereço de Entrega</span>
+            </div>
+            
+            <div style={{ fontSize: "14px", color: "#6b7280", lineHeight: "1.5", marginLeft: "26px" }}>
+              {addr.rua || addr.logradouro ? (
+                <>
+                  <p>{addr.logradouro || addr.rua}, {addr.numero} {addr.complemento && `- ${addr.complemento}`}</p>
+                  <p>{addr.bairro}, {addr.cidade} - {addr.estado}</p>
+                  <p>CEP: {addr.cep}</p>
+                </>
+              ) : (
+                <p style={{ fontStyle: "italic", color: "#9ca3af" }}>
+                  Nenhum endereço selecionado ou informado.
                 </p>
               )}
-              <p style={{ fontSize: "0.85rem", color: "#666" }}>
-                {item.quantity}x {formatCurrency(item.preco)}
-              </p>
-            </div>
-            <div style={{ fontWeight: 600 }}>
-              {formatCurrency(Number(item.preco) * item.quantity)}
             </div>
           </div>
-        ))}
-      </div>
+          {/* ======================================================= */}
 
-      {/* Coupon Section */}
-      <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "#f9f9f9", borderRadius: 8 }}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-          Cupom de Desconto
-        </h3>
-        {couponApplied ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span
-              style={{
-                background: "#e8f5e9",
-                padding: "0.35rem 0.75rem",
-                borderRadius: 4,
-                fontWeight: 600,
-                fontSize: "0.9rem",
-              }}
-            >
-              {couponApplied} ✓
+          <div className={styles.totalBox}>
+            <span>Total</span>
+            <span style={{ fontSize: "24px" }}>
+              <span style={{ fontSize: "14px", color: "#6b7280", marginRight: "8px", fontWeight: "400" }}>BRL</span>
+              {formatCurrency(finalTotal)}
             </span>
-            <button
-              onClick={handleRemoveCoupon}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#d32f2f",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-                textDecoration: "underline",
-              }}
-            >
-              Remover
-            </button>
           </div>
-        ) : (
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <input
-              type="text"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              placeholder="Digite o código"
-              style={{
-                flex: 1,
-                padding: "0.5rem",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-                fontSize: "0.9rem",
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-            />
-            <button
-              onClick={handleApplyCoupon}
-              disabled={couponLoading || !couponCode.trim()}
-              style={{
-                padding: "0.5rem 1rem",
-                background: "#222",
-                color: "#fff",
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-                fontSize: "0.9rem",
-              }}
-            >
-              {couponLoading ? "..." : "Aplicar"}
-            </button>
-          </div>
-        )}
-        {couponError && (
-          <p style={{ color: "#d32f2f", fontSize: "0.85rem", marginTop: "0.4rem" }}>
-            {couponError}
-          </p>
-        )}
-      </div>
 
-      {/* Order Summary */}
-      <div style={{ padding: "1rem", background: "#f9f9f9", borderRadius: 8, marginBottom: "1.5rem" }}>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.75rem" }}>
-          Resumo do Pedido
-        </h3>
-
-        {previewLoading && <p style={{ color: "#666" }}>Calculando...</p>}
-        {previewError && <p style={{ color: "#d32f2f" }}>{previewError}</p>}
-
-        {preview && !previewLoading && (
-          <>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-              <span>Subtotal</span>
-              <span>{formatCurrency(preview.subtotal)}</span>
-            </div>
-
-            {preview.desconto > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.4rem",
-                  color: "#2e7d32",
-                }}
-              >
-                <span>Desconto {preview.cupom ? `(${preview.cupom.codigo})` : ""}</span>
-                <span>-{formatCurrency(preview.desconto)}</span>
-              </div>
+          <button
+            onClick={handleValidateAndSubmit}
+            disabled={submitting || previewLoading || !preview || !addr.formaPagamento}
+            className={styles.submitBtn}
+          >
+            {submitting ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : (
+              <>Pagar agora via WhatsApp</>
             )}
+          </button>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-              <span>Frete</span>
-              <span style={{ color: preview.frete === 0 ? "#2e7d32" : "inherit" }}>
-                {preview.frete === 0 ? "Grátis ✨" : formatCurrency(preview.frete)}
-              </span>
-            </div>
+          {!addr.formaPagamento && (
+            <p style={{ textAlign: "center", color: "#ef4444", fontSize: "12px", marginTop: "12px" }}>
+              Selecione uma forma de pagamento na etapa anterior.
+            </p>
+          )}
 
-            <hr style={{ margin: "0.75rem 0", border: "none", borderTop: "1px solid #ddd" }} />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontWeight: 700,
-                fontSize: "1.1rem",
-              }}
-            >
-              <span>Total</span>
-              <span>{formatCurrency(preview.total)}</span>
-            </div>
-          </>
-        )}
+          <p className={styles.securityText}>
+            <CreditCard size={14} /> Transação segura via WhatsApp
+          </p>
+        </div>
       </div>
-
-      {/* Actions */}
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <button
-          onClick={() => navigate("/shop")}
-          style={{
-            flex: 1,
-            padding: "0.75rem",
-            background: "#fff",
-            border: "1px solid #222",
-            borderRadius: 4,
-            cursor: "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          Continuar Comprando
-        </button>
-        <button
-          onClick={handleFinalize}
-          disabled={checkoutLoading || previewLoading}
-          style={{
-            flex: 1,
-            padding: "0.75rem",
-            background: "#222",
-            color: "#fff",
-            border: "none",
-            borderRadius: 4,
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: 600,
-          }}
-        >
-          {checkoutLoading ? "Processando..." : "Finalizar via WhatsApp"}
-        </button>
-      </div>
-    </section>
+    </div>
   );
 }

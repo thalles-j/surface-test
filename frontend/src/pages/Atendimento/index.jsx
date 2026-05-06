@@ -32,7 +32,7 @@ export default function Atendimento() {
             <div className="space-y-2">
               <AccordionItem title="Qual o prazo de entrega?" content="O prazo varia de acordo com a sua região. Geralmente entre 5 a 12 dias úteis." />
               <AccordionItem title="Como funciona a troca de Drops?" content="Drops limitados podem não ter reposição imediata para troca de tamanho." />
-              <AccordionItem title="Quais as formas de pagamento?" content="Aceitamos PIX, Cartão de Crédito e Boleto Bancário." />
+              <AccordionItem title="Quais as formas de pagamento?" content="Aceitamos pagamento via WhatsApp." />
             </div>
           </div>
 

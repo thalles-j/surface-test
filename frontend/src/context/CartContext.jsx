@@ -1,96 +1,283 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import { AuthContext } from "./AuthContext";
-import { useNavigate } from "react-router-dom";
+import { createContext, useState, useContext, useEffect, useCallback, useRef } from "react";
+import { api } from "../services/api";
 import AlertModal from "../components/AlertModal";
 
 export const CartContext = createContext({});
 
+const PRE_CHECKOUT_DEFAULTS = {
+  nome: "",
+  email: "",
+  telefone: "",
+  endereco: "",
+  tipo_pagamento: "DINHEIRO",
+  formaPagamento: "DINHEIRO",
+  logradouro: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "",
+  cep: "",
+  cpf: "",
+};
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const [preCheckoutData, setPreCheckoutData] = useState(PRE_CHECKOUT_DEFAULTS);
 
-  // Load cart from localStorage on mount (optional, if we want persistence across refreshes)
+  const [shouldOpenCart, setShouldOpenCart] = useState(false);
+
+  // ANTI DUPLICACAO
+  const lastAddedRef = useRef(null);
+
+  // LOAD LOCAL STORAGE
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
+
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch {
+        localStorage.removeItem("cartItems");
+      }
+    }
+
+    const savedPreCheckout = localStorage.getItem("preCheckoutData");
+    if (savedPreCheckout) {
+      try {
+        const parsed = JSON.parse(savedPreCheckout);
+        setPreCheckoutData({
+          ...PRE_CHECKOUT_DEFAULTS,
+          nome: parsed?.nome ?? "",
+          email: parsed?.email ?? "",
+          telefone: parsed?.telefone ?? "",
+          tipo_pagamento: parsed?.tipo_pagamento ?? "DINHEIRO",
+          cpf: parsed?.cpf ?? "",
+        });
+      } catch {
+        localStorage.removeItem("preCheckoutData");
+      }
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // SAVE LOCAL STORAGE
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
+  useEffect(() => {
+    localStorage.setItem("preCheckoutData", JSON.stringify(preCheckoutData));
+  }, [preCheckoutData]);
+
+  // ALERT MODAL
   const [alertModal, setAlertModal] = useState({
     isOpen: false,
-    title: '',
-    message: '',
-    type: 'info',
+    title: "",
+    message: "",
+    type: "info",
     actionLabel: null,
     actionCallback: null,
+    dismissLabel: null,
+    dismissCallback: null,
   });
 
-  const showAlertModal = ({ title = '', message = '', type = 'info', actionLabel = null, actionCallback = null }) => {
-    setAlertModal({ isOpen: true, title, message, type, actionLabel, actionCallback });
+  const showAlertModal = ({
+    title = "",
+    message = "",
+    type = "info",
+    actionLabel = null,
+    actionCallback = null,
+    dismissLabel = null,
+    dismissCallback = null,
+  }) => {
+    setAlertModal({
+      isOpen: true,
+      title,
+      message,
+      type,
+      actionLabel,
+      actionCallback,
+      dismissLabel,
+      dismissCallback,
+    });
   };
 
-  const hideAlertModal = () => setAlertModal(prev => ({ ...prev, isOpen: false }));
+  const hideAlertModal = () =>
+    setAlertModal((prev) => ({ ...prev, isOpen: false }));
 
-  const toggleCart = () => {
-    setIsCartOpen(!isCartOpen);
-  };
+  // CART CONTROL
+  const toggleCart = () => setIsCartOpen((prev) => !prev);
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
 
-  const addToCart = (product) => {
-    if (!user) {
+  // ADD TO CART
+  const addToCart = (product, options = {}) => {
+    const { openDrawer = true } = options;
+    const quantityToAdd = Math.max(1, Number(product?.quantity) || 1);
+    const productStatus = String(product?.status || "").toLowerCase();
+    const variations = Array.isArray(product?.variacoes_estoque)
+      ? product.variacoes_estoque
+      : [];
+    const hasVariations = variations.length > 0;
+    const selectedVariation = variations.find(
+      (item) =>
+        item?.tamanho === product?.selectedSize ||
+        item?.sku === product?.sku_variacao
+    );
+
+    if (productStatus && productStatus !== "ativo") {
       showAlertModal({
-        title: 'Login necessário',
-        message: 'Você precisa estar logado para adicionar itens ao carrinho.',
-        type: 'auth',
-        actionLabel: 'Entrar',
-        actionCallback: () => navigate('/entrar')
+        title: "Produto indisponivel",
+        message: "Este produto esta inativo e nao pode ser adicionado ao carrinho.",
+        type: "error",
       });
       return;
     }
 
+    if (hasVariations && !selectedVariation) {
+      showAlertModal({
+        title: "Tamanho indisponivel",
+        message: "Selecione um tamanho disponivel para continuar.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (selectedVariation && Number(selectedVariation.estoque || 0) <= 0) {
+      showAlertModal({
+        title: "Sem estoque",
+        message: "O tamanho selecionado esta indisponivel no momento.",
+        type: "error",
+      });
+      return;
+    }
+
+    const key = `${product.id_produto}-${product.selectedSize}`;
+
+    // Bloqueia duplicacao em milissegundos (StrictMode / double click)
+    if (lastAddedRef.current === key) return;
+    lastAddedRef.current = key;
+
+    setTimeout(() => {
+      lastAddedRef.current = null;
+    }, 300);
+
     setCartItems((prevItems) => {
-      const itemExists = prevItems.find((item) => item.id_produto === product.id_produto && item.selectedSize === product.selectedSize);
-      if (itemExists) {
-        return prevItems.map((item) =>
-          item.id_produto === product.id_produto && item.selectedSize === product.selectedSize
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
+      const index = prevItems.findIndex(
+        (item) =>
+          item.id_produto === product.id_produto &&
+          item.selectedSize === product.selectedSize
+      );
+
+      if (index !== -1) {
+        const updated = [...prevItems];
+        updated[index] = {
+          ...updated[index],
+          quantity: updated[index].quantity + quantityToAdd,
+        };
+        return updated;
       }
+
+      return [
+        ...prevItems,
+        {
+          ...product,
+          quantity: quantityToAdd,
+        },
+      ];
     });
-    setIsCartOpen(true); // Open cart when item is added
+
+    if (openDrawer) openCart();
   };
 
+  // REMOVE
   const removeFromCart = (productId, selectedSize) => {
-    setCartItems((prevItems) => prevItems.filter((item) => !(item.id_produto === productId && item.selectedSize === selectedSize)));
-  };
-
-  const updateQuantity = (productId, selectedSize, amount) => {
     setCartItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id_produto === productId && item.selectedSize === selectedSize) {
-          const newQuantity = item.quantity + amount;
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
-        }
-        return item;
-      })
+      prevItems.filter(
+        (item) =>
+          !(
+            item.id_produto === productId &&
+            item.selectedSize === selectedSize
+          )
+      )
     );
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  // UPDATE QTD
+  const updateQuantity = (productId, selectedSize, amount) => {
+    setCartItems((prevItems) =>
+      prevItems
+        .map((item) => {
+          if (
+            item.id_produto === productId &&
+            item.selectedSize === selectedSize
+          ) {
+            const newQuantity = item.quantity + amount;
+
+            if (newQuantity <= 0) return null;
+
+            return { ...item, quantity: newQuantity };
+          }
+          return item;
+        })
+        .filter(Boolean)
+    );
   };
 
-  const cartTotal = cartItems.reduce((total, item) => total + Number(item.preco) * item.quantity, 0);
+  // CLEAR
+  const clearCart = () => {
+    setCartItems([]);
+    setPreCheckoutData(PRE_CHECKOUT_DEFAULTS);
+  };
+
+  // TOTAL
+  const cartTotal = cartItems.reduce(
+    (total, item) => total + Number(item.preco) * item.quantity,
+    0
+  );
+
+  // CREATE ORDER
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const createOrder = useCallback(async (codigoCupom = null, cliente = null) => {
+    if (cartItems.length === 0) return null;
+
+    setCheckoutLoading(true);
+
+    try {
+      const items = cartItems.map((item) => ({
+        id_produto: item.id_produto,
+        selectedSize: item.selectedSize,
+        sku_variacao: item.sku_variacao || null,
+        quantity: item.quantity,
+      }));
+
+      const { data } = await api.post("/orders", {
+        items,
+        codigo_cupom: codigoCupom,
+        cliente: cliente || preCheckoutData,
+      });
+
+      clearCart();
+      return data;
+    } catch (error) {
+      const message =
+        error?.response?.data?.mensagem ||
+        error?.response?.data?.message ||
+        "Nao foi possivel finalizar o pedido.";
+
+      showAlertModal({
+        title: "Erro no pedido",
+        message,
+        type: "error",
+      });
+
+      throw error;
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [cartItems, preCheckoutData]);
 
   return (
     <CartContext.Provider
@@ -98,6 +285,8 @@ export function CartProvider({ children }) {
         cartItems,
         isCartOpen,
         toggleCart,
+        openCart,
+        closeCart,
         addToCart,
         removeFromCart,
         updateQuantity,
@@ -105,9 +294,16 @@ export function CartProvider({ children }) {
         cartTotal,
         showAlertModal,
         hideAlertModal,
+        createOrder,
+        checkoutLoading,
+        preCheckoutData,
+        setPreCheckoutData,
+        shouldOpenCart,
+        setShouldOpenCart,
       }}
     >
       {children}
+
       <AlertModal
         isOpen={alertModal.isOpen}
         onClose={hideAlertModal}
@@ -116,6 +312,8 @@ export function CartProvider({ children }) {
         type={alertModal.type}
         actionLabel={alertModal.actionLabel}
         actionCallback={alertModal.actionCallback}
+        dismissLabel={alertModal.dismissLabel}
+        dismissCallback={alertModal.dismissCallback}
       />
     </CartContext.Provider>
   );
@@ -123,8 +321,10 @@ export function CartProvider({ children }) {
 
 export function useCart() {
   const context = useContext(CartContext);
+
   if (!context) {
     throw new Error("useCart deve ser usado dentro de um CartProvider");
   }
+
   return context;
 }

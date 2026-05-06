@@ -10,15 +10,8 @@ import { resolveImageUrl } from '../../../../utils/resolveImageUrl';
 export default function ImageGallery({ fotos, productName }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
-  // Ordena as fotos para que a "front" seja a primeira
-  const sortedFotos = fotos ? [...fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-  }) : [];
+  // Fotos já vêm ordenadas pelo backend (principal primeiro)
+  const sortedFotos = fotos || [];
 
   if (!sortedFotos || sortedFotos.length === 0) {
     return (

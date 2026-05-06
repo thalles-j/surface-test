@@ -1,26 +1,47 @@
-import { useEffect, useState } from "react"; // Adicionei useState
+import { useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter as Router, useLocation } from 'react-router-dom'; 
-import { AuthProvider } from './context/AuthContext.jsx'; 
+import { AuthProvider } from './context/AuthContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
+import { ThemeProvider, applyThemeAttribute, LIGHT_THEME } from './context/ThemeContext.jsx';
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import AppRoutes from './routes';
 import PageLoader from "./components/PageLoader";
 import { CartProvider } from './context/CartContext.jsx';
 import CartDrawer from "./components/CartDrawer";
+import StoreClosed from "./components/StoreClosed";
+import { setOnMaintenance, setEarlyAccessEmail } from './services/api';
+import useTheme from "./hooks/useTheme";
 
-// Componente que renderiza condicionalmente Header/Footer
+function ThemeRouteSync() {
+  const location = useLocation();
+  const { theme } = useTheme();
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  useLayoutEffect(() => {
+    applyThemeAttribute(isAdmin ? theme : LIGHT_THEME);
+  }, [isAdmin, theme]);
+
+  return null;
+}
+
+// 🔥 Componente modificado para esconder Header/Footer no Checkout
 function AppLayout() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  
+  // Verifica se a página atual deve esconder o Header e o Footer
+  const hideHeaderFooter = 
+    location.pathname.startsWith('/admin') || 
+    location.pathname === '/checkout';
 
   return (
     <>
-      {!isAdmin && <Header />}
+      {!hideHeaderFooter && <Header />}
       <CartDrawer />
       <main>
         <AppRoutes />
       </main>
-      {!isAdmin && <Footer />}
+      {!hideHeaderFooter && <Footer />}
     </>
   );
 }
@@ -28,45 +49,47 @@ function AppLayout() {
 export default function App() {
 
   const [loading, setLoading] = useState(true);
+  const [storeClosed, setStoreClosed] = useState(false);
 
   useEffect(() => {
+    // Listen for 503 maintenance responses
+    setOnMaintenance(() => {
+      setStoreClosed(true);
+    });
+  }, []);
 
-    function autoLightMode() {
-      const bodyBg = getComputedStyle(document.body).backgroundColor;
-      const rgb = bodyBg.match(/\d+/g);
-      if (!rgb) return;
+  const handleEarlyAccess = (email) => {
+    setEarlyAccessEmail(email);
+    setStoreClosed(false);
+  };
 
-      const brightness = (parseInt(rgb[0])*299 + parseInt(rgb[1])*587 + parseInt(rgb[2])*114)/1000;
-      if (brightness > 200) {
-        document.body.classList.add("light-mode");
-      } else {
-        document.body.classList.remove("light-mode");
-      }
-    }
-
-    autoLightMode();
-    const observer = new MutationObserver(autoLightMode);
-    observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
-
-
+  useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 2000);
 
     return () => {
-      observer.disconnect();
       clearTimeout(timer); 
     };
   }, []);
 
   return (
-    <AuthProvider>
-      <Router> 
-        <CartProvider>
-          {loading && <PageLoader />}
-          <AppLayout />
-        </CartProvider>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <Router> 
+            <CartProvider>
+              <ThemeRouteSync />
+              {loading && <PageLoader />}
+              {storeClosed ? (
+                <StoreClosed onEarlyAccess={handleEarlyAccess} />
+              ) : (
+                <AppLayout />
+              )}
+            </CartProvider>
+          </Router>
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

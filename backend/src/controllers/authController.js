@@ -1,4 +1,10 @@
-import { loginService, registerService } from "../services/authService.js";
+import {
+  loginService,
+  registerService,
+  requestPasswordResetService,
+  resetPasswordService,
+  getFirstAccessStatusService,
+} from "../services/authService.js";
 
 export const loginController = async (req, res, next) => {
   try {
@@ -35,6 +41,38 @@ export const registerController = async (req, res, next) => {
       },
     });
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestPasswordResetController = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await requestPasswordResetService(email);
+    res.status(200).json({
+      mensagem: "Se o email existir, enviaremos as instrucoes para redefinicao.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPasswordController = async (req, res, next) => {
+  try {
+    const { token, novaSenha } = req.body;
+    await resetPasswordService(token, novaSenha);
+    res.status(200).json({ mensagem: "Senha atualizada com sucesso." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const firstAccessStatusController = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const data = await getFirstAccessStatusService(email);
+    res.status(200).json(data);
   } catch (error) {
     next(error);
   }

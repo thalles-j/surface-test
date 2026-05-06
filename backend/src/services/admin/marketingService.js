@@ -1,5 +1,6 @@
 import prisma from '../../database/prisma.js';
 import { erro } from '../../helpers/apiResponse.js';
+import { normalizeCouponData } from '../couponService.js';
 
 export const getCategories = async (req, res) => {
   try {
@@ -53,18 +54,21 @@ export const getCoupons = async (req, res) => {
 export const createCoupon = async (req, res) => {
   try {
     const { codigo, desconto, tipo, validade, limite_usos } = req.body;
+    const couponData = normalizeCouponData({
+      codigo,
+      desconto,
+      tipo,
+      validade,
+      limite_usos,
+      ativo: req.body?.ativo,
+    });
+
     const coupon = await prisma.cupons.create({
-      data: {
-        codigo: codigo.trim().toUpperCase(),
-        desconto: parseFloat(desconto),
-        tipo,
-        validade: validade ? new Date(validade) : null,
-        limite_usos: limite_usos ? parseInt(limite_usos) : null,
-      },
+      data: couponData,
     });
     return res.status(201).json(coupon);
   } catch (error) {
-    return erro(res, error.message, 500);
+    return erro(res, error.message, Number(error?.status) || 500);
   }
 };
 

@@ -5,24 +5,28 @@ import ShopHeader from "../../components/ShopHeader";
 import PageLoader from "../../components/PageLoader";
 import { useCart } from "../../context/CartContext";
 import { FaCartPlus } from "react-icons/fa";
+import { Check } from "lucide-react"; 
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import { api } from "../../services/api";
-
-const categoryMap = {
-  1: "Exclusivo",
-  2: "Times",
-};
+import ProductModal from "../../components/ProductModal";
 
 // ---------------------------------------------------------
-// 1. NOVO COMPONENTE: ProductCard
-// Ele gerencia qual imagem mostrar baseado no mouse
+// 1. COMPONENTE: ProductCard 
 // ---------------------------------------------------------
-const ProductCard = ({ produto }) => {
+// Adicionamos a prop "categoriaNome" que já virá resolvida pelo componente pai
+const ProductCard = ({ produto, categoriaNome, onQuickAdd }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
 
-  // Função para criar slug a partir do nome
+  const { shouldOpenCart, toggleCart, setShouldOpenCart } = useCart();
+  useEffect(() => {
+    if (shouldOpenCart) {
+      toggleCart();
+      setShouldOpenCart(false);
+    }
+  }, [shouldOpenCart]);
+
   const createSlug = (name) => {
+    if (!name) return "";
     return name
       .toLowerCase()
       .normalize('NFD')
@@ -31,28 +35,14 @@ const ProductCard = ({ produto }) => {
       .replace(/^-|-$/g, '');
   };
 
-  // Ordena as fotos para que a "front" seja a primeira
-  const sortedFotos = produto.fotos ? [...produto.fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-  }) : [];
-
-  // Pega a primeira e a segunda imagem (se existir)
-  const fotoPrincipal = sortedFotos?.[0]?.url ? resolveImageUrl(sortedFotos[0].url) : null;
-  const fotoSecundaria = sortedFotos?.[1]?.url ? resolveImageUrl(sortedFotos[1].url) : null;
-
-  // Lógica: Se o mouse estiver em cima E existir uma segunda foto, mostra ela.
-  // Caso contrário, mostra a principal.
+  const fotos = produto?.fotos || [];
+  const fotoPrincipal = fotos[0]?.url ? resolveImageUrl(fotos[0].url) : null;
+  const fotoSecundaria = fotos[1]?.url ? resolveImageUrl(fotos[1].url) : null;
   const imagemAtual = (isHovered && fotoSecundaria) ? fotoSecundaria : fotoPrincipal;
 
   return (
     <div 
       className={styles.card}
-      // Eventos para detectar o mouse
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -74,9 +64,9 @@ const ProductCard = ({ produto }) => {
           <button 
             className={styles.cartIconButton}
             onClick={(e) => {
-              e.preventDefault();
+              e.preventDefault(); 
               e.stopPropagation();
-              addToCart(produto);
+              onQuickAdd(produto); 
             }}
             title="Adicionar ao Carrinho"
           >
@@ -85,12 +75,13 @@ const ProductCard = ({ produto }) => {
         </div>
 
         <div className={styles.produtoInfo}>
+          {/* Exibe o nome que buscamos dinamicamente na rota de categorias */}
           <span className={styles.produtoTag}>
-            {categoryMap[produto.id_categoria] || "Geral"}
+            {categoriaNome}
           </span>
           <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
           <p className={styles.produtoPreco}>
-            R$ {parseFloat(produto.preco).toFixed(2)}
+            R$ {parseFloat(produto.preco || 0).toFixed(2)}
           </p>
         </div>
       </Link>
@@ -100,29 +91,63 @@ const ProductCard = ({ produto }) => {
 // ---------------------------------------------------------
 
 export default function Shop() {
+  const { addToCart } = useCart(); 
   const [loading, setLoading] = useState(true);
+  
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
+  // Novo estado para guardar o mapa de categorias: { 1: "Times", 2: "Blusas" }
+  const [categoriasMap, setCategoriasMap] = useState({});
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
 
+  // Estados para Modal e Notificação
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
+
   useEffect(() => {
     setLoading(true);
-    api.get('/products')
-      .then(res => setRawProdutos(res.data || []))
-      .catch((err) => console.error("Erro ao carregar produtos:", err))
-      .finally(() => setLoading(false));
+    
+    // Executa as duas requisições ao mesmo tempo
+    // Mude '/categories' para a rota correta da sua API se for diferente (ex: '/categorias')
+    Promise.all([
+      api.get('/products'),
+      api.get('/categories') 
+    ])
+    .then(([resProdutos, resCategorias]) => {
+      // 1. Cria um dicionário com as categorias
+      const catMap = {};
+      const listaCategorias = resCategorias.data || [];
+      
+      listaCategorias.forEach((cat) => {
+        // Se a sua API retorna { id_categoria: 1, nome: "Blusas" }
+        // Ajuste 'cat.nome' se a chave for 'cat.nome_categoria'
+        const id = cat.id_categoria || cat.id;
+        const nome = cat.nome || cat.nome_categoria || cat.categoria || "Geral";
+        if (id) {
+          catMap[id] = nome;
+        }
+      });
+      
+      setCategoriasMap(catMap);
+      setRawProdutos(resProdutos.data || []);
+    })
+    .catch((err) => console.error("Erro ao carregar dados:", err))
+    .finally(() => setLoading(false));
   }, []);
 
   const categories = useMemo(() => {
     const set = new Set();
     rawProdutos.forEach((p) => {
-      const cat = categoryMap[p.id_categoria] || "Geral";
-      set.add(cat);
+      // Pega o nome no dicionário usando o ID que veio no produto
+      const nomeCategoria = categoriasMap[p.id_categoria] || "Geral";
+      set.add(nomeCategoria);
     });
     return ["All", ...Array.from(set)];
-  }, [rawProdutos]);
+  }, [rawProdutos, categoriasMap]);
 
   const types = useMemo(() => {
     const set = new Set();
@@ -137,8 +162,8 @@ export default function Shop() {
 
     if (selectedCategory && selectedCategory !== "All") {
       list = list.filter((p) => {
-        const cat = categoryMap[p.id_categoria] || "Geral";
-        return cat === selectedCategory;
+        const nomeCategoria = categoriasMap[p.id_categoria] || "Geral";
+        return nomeCategoria === selectedCategory;
       });
     }
 
@@ -172,7 +197,26 @@ export default function Shop() {
     }
 
     setProdutos(list);
-  }, [rawProdutos, selectedCategory, selectedType, sortOption]);
+  }, [rawProdutos, selectedCategory, selectedType, sortOption, categoriasMap]);
+
+  const handleOpenModal = (produto) => {
+    setSelectedProduct(produto);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
+    const produtoFinalParaCarrinho = {
+      ...produto,
+      tamanho: tamanhoSelecionado || "Único"
+    };
+    
+    addToCart(produtoFinalParaCarrinho);
+    
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000); 
+  };
 
   if (loading) {
     return <PageLoader />;
@@ -200,15 +244,36 @@ export default function Shop() {
               <p>Nenhum produto encontrado na categoria selecionada.</p>
             ) : (
               <div className={styles.grid}>
-                {/* 2. USANDO O NOVO COMPONENTE AQUI */}
                 {produtos.map((produto) => (
-                  <ProductCard key={produto.id_produto} produto={produto} />
+                  <ProductCard 
+                    key={produto.id_produto} 
+                    produto={produto} 
+                    // Passa o nome da categoria resolvido para o Card
+                    categoriaNome={categoriasMap[produto.id_categoria] || "Geral"}
+                    onQuickAdd={handleOpenModal} 
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <ProductModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        produto={selectedProduct}
+        onAddToCart={handleConfirmAddToCart}
+      />
+
+      {showNotification && (
+        <div className="fixed bottom-8 right-8 bg-black text-white px-8 py-5 flex items-center gap-4 shadow-2xl animate-in slide-in-from-bottom-5 z-[200]">
+          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
+            <Check className="w-4 h-4" strokeWidth={3} />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-wider">Adicionado ao carrinho</span>
+        </div>
+      )}
     </section>
   );
 }

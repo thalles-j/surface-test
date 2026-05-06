@@ -42,6 +42,27 @@ export const authMiddleware = (req, res, next) => {
     }
 };
 
+export const optionalAuthMiddleware = (req, _res, next) => {
+    try {
+        const authHeader = req.headers["authorization"];
+        const token = authHeader?.startsWith("Bearer ")
+            ? authHeader.split(" ")[1]
+            : authHeader;
+
+        if (!token) return next();
+
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = {
+            id: payload.id,
+            email: payload.email,
+            id_role: payload.id_role,
+        };
+    } catch {
+        // Optional auth should not block request when token is absent/invalid.
+    }
+    return next();
+};
+
 export const adminMiddleware = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ message: "Usuário não autenticado" });

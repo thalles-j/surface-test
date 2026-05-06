@@ -1,5 +1,6 @@
 import React from "react";
 import { useCart } from "../../context/CartContext";
+import useAuth from "../../hooks/useAuth";
 import styles from "./style.module.css";
 import { useNavigate } from "react-router-dom";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
@@ -12,8 +13,12 @@ export default function CartDrawer() {
     removeFromCart,
     updateQuantity,
     cartTotal,
+    showAlertModal,
+    hideAlertModal,
   } = useCart();
-  
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/80?text=No+Image";
     return resolveImageUrl(path);
@@ -21,26 +26,37 @@ export default function CartDrawer() {
 
   const getFrontImage = (fotos) => {
     if (!fotos || !Array.isArray(fotos) || fotos.length === 0) return null;
-
-    // Ordena usando a mesma lógica da Shop/ProductDetail
-    const sorted = [...fotos].sort((a, b) => {
-      const isFrontA = /front\.[a-zA-Z0-9]+$/i.test(a.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(a.url || "") || (a.descricao || "").toLowerCase().includes('front') || (a.url || "").toLowerCase().includes('front');
-      const isFrontB = /front\.[a-zA-Z0-9]+$/i.test(b.descricao || "") || /front\.[a-zA-Z0-9]+$/i.test(b.url || "") || (b.descricao || "").toLowerCase().includes('front') || (b.url || "").toLowerCase().includes('front');
-      
-      if (isFrontA && !isFrontB) return -1;
-      if (!isFrontA && isFrontB) return 1;
-      return 0;
-    });
-
-    return sorted[0]?.url;
+    const principal = fotos.find((f) => f.principal);
+    if (principal) return principal.url;
+    return fotos[0]?.url;
   };
 
   if (!isCartOpen) return null;
 
+  const proceedToCheckout = () => {
+    toggleCart();
+    navigate('/checkout');
+  };
+
   const handleCheckout = () => {
-    // Implement checkout logic here or navigate to checkout page
-    // For now, maybe just alert or navigate to a checkout route if it existed
-    alert("Funcionalidade de checkout a ser implementada!");
+    if (user) {
+      proceedToCheckout();
+      return;
+    }
+    showAlertModal({
+      title: 'Identificacao',
+      message: 'Voce nao esta logado. Entre para salvar seus dados ou continue como convidado.',
+      type: 'auth',
+      actionLabel: 'Entrar',
+      actionCallback: () => {
+        toggleCart();
+        navigate('/entrar');
+      },
+      dismissLabel: 'Continuar como convidado',
+      dismissCallback: () => {
+        proceedToCheckout();
+      },
+    });
   };
 
   return (

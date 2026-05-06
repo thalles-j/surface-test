@@ -4,15 +4,9 @@
     font-family: 'Inter', sans-serif;
 }
 
-:root {
-    --brand-black: #000000;
-    --brand-white: #ffffff;
-    --brand-gray-muted: #9CA3AF;
-}
-
 .page {
     min-height: 100vh;
-    color: var(--brand-black);
+    color: var(--app-text);
     margin: 8rem 0 0;
 }
 
@@ -38,7 +32,7 @@
 }
 
 .accordionItem {
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--app-border);
     padding: 0.75rem 0;
 }
 
@@ -59,7 +53,7 @@
 
 .accordionContent {
     margin-top: 0.5rem;
-    color: #9ca3af;
+    color: var(--app-muted-text);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 11px;
@@ -71,8 +65,9 @@
 
 .surfaceInput {
     width: 100%;
-    background-color: var(--brand-white);
-    border: 1px solid #E5E7EB;
+    background-color: var(--app-input-bg);
+    border: 1px solid var(--app-input-border);
+    color: var(--app-input-text);
     padding: 12px;
     font-size: 12px;
     font-weight: 700;
@@ -82,5 +77,32 @@
 }
 
 .surfaceInput:focus {
-    border-color: var(--brand-black);
+    border-color: var(--app-text);
+}
+
+.page :global(.text-gray-400) {
+    color: var(--app-muted-text) !important;
+}
+
+.page :global(.border-gray-50),
+.page :global(.border-gray-100),
+.page :global(.border-gray-200) {
+    border-color: var(--app-border) !important;
+}
+
+.page :global(.bg-gray-50),
+.page :global(.bg-zinc-50) {
+    background-color: var(--app-surface-alt) !important;
+}
+
+.page :global(.hover\\:border-black:hover) {
+    border-color: var(--app-text) !important;
+}
+
+.page :global(.bg-black) {
+    background-color: var(--app-primary-bg) !important;
+}
+
+.page :global(.text-white) {
+    color: var(--app-primary-text) !important;
 }
