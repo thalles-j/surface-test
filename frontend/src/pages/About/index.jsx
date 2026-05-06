@@ -83,7 +83,7 @@ export default function About() {
         rel="noopener noreferrer" 
         className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] border border-white py-4 px-10 hover:bg-white hover:text-black transition-colors duration-500"
       >
-        Siga a Visão
+        ACESSAR
       </a>
     </div>
 
