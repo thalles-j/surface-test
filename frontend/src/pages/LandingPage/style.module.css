@@ -24,8 +24,8 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--app-overlay-strong) 90%, transparent) 0%,
-      color-mix(in srgb, var(--app-overlay) 72%, transparent) 42%,
+      color-mix(in srgb, var(--app-overlay-strong) 95%, transparent) 0%,
+      color-mix(in srgb, var(--app-overlay) 85%, transparent) 42%,
       color-mix(in srgb, var(--app-overlay-strong) 82%, transparent) 100%
     );
   z-index: 1;
@@ -36,8 +36,8 @@
   background:
     linear-gradient(
       180deg,
-      rgba(15, 23, 42, 0.74) 0%,
-      rgba(15, 23, 42, 0.48) 42%,
+      rgba(73, 26, 26, 0.74) 0%,
+      rgba(63, 22, 22, 0.48) 42%,
       rgba(15, 23, 42, 0.6) 100%
     );
 }
