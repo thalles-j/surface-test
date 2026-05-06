@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
   Tag,
   ChevronRight,
-  MessageCircle,
   CreditCard,
   Loader2,
   QrCode,
+  MapPin,
+  ArrowLeft,
 } from "lucide-react";
 
 import { useCart } from "../../context/CartContext";
@@ -27,13 +28,13 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
 
   const { user } = useAuth();
-  const { cartItems, preCheckoutData, setPreCheckoutData, clearCart } = useCart();
+  // 🔥 Tentei puxar o setIsCartOpen do seu contexto caso ele exista
+  const { cartItems, preCheckoutData, setPreCheckoutData, clearCart, setIsCartOpen } = useCart();
   const toast = useToast();
 
   const [savedAddress, setSavedAddress] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // Controle das duas opções de endereço
   const [addressMode, setAddressMode] = useState("manual");
 
   const {
@@ -57,9 +58,6 @@ export default function CheckoutPage() {
     clearCart
   );
 
-  // =========================
-  // Buscar Perfil / Endereço na API
-  // =========================
   useEffect(() => {
     let cancelled = false;
 
@@ -75,7 +73,7 @@ export default function CheckoutPage() {
         
         if (normalized && normalized.logradouro) {
           setSavedAddress(normalized);
-          setAddressMode("saved"); // Seleciona "Usar endereço ativo" por padrão
+          setAddressMode("saved");
 
           setPreCheckoutData((prev) => ({
             ...prev,
@@ -115,9 +113,9 @@ export default function CheckoutPage() {
 
   const hasSavedAddress = Boolean(savedAddress);
 
-  // Ação ao selecionar "Usar endereço ativo"
   const handleUseSavedAddress = () => {
     if (savedAddress) {
+      setAddressMode("saved");
       setPreCheckoutData((prev) => ({
         ...prev,
         cep: savedAddress.cep || "",
@@ -132,9 +130,36 @@ export default function CheckoutPage() {
     }
   };
 
-  // =========================
-  // Helpers de Imagem
-  // =========================
+  const handleUseManualAddress = () => {
+    setAddressMode("manual");
+    setPreCheckoutData((prev) => ({
+      ...prev,
+      cep: "",
+      rua: "",
+      logradouro: "",
+      numero: "",
+      bairro: "",
+      cidade: "",
+      estado: "",
+      complemento: "",
+    }));
+  };
+
+  // 🔥 1. Voltar normal (Seta de cima)
+  const handleGoBack = () => {
+    navigate(-1); // Retorna na navegação do histórico
+  };
+
+  // 🔥 2. Opção de Editar (Abre o /shop e o carrinho)
+  const handleEditCart = () => {
+    navigate("/shop"); // Vai para a rota /shop
+    
+    // Se a função setIsCartOpen existir no seu CartContext, ela abre o carrinho
+    if (typeof setIsCartOpen === "function") {
+      setIsCartOpen(true);
+    }
+  };
+
   const getImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/64?text=Img";
     return resolveImageUrl(path);
@@ -149,9 +174,6 @@ export default function CheckoutPage() {
     return principal?.url || fotos[0]?.url || (typeof fotos[0] === 'string' ? fotos[0] : null);
   };
 
-  // =========================
-  // Verificações Iniciais
-  // =========================
   if (!preview && previewLoading && !orderCompletedRef.current) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
@@ -203,10 +225,29 @@ export default function CheckoutPage() {
         
         {/* ================= LEFT ================= */}
         <div className={styles.leftColumn}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>SURFACE</h1>
+          <header className={styles.header} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <button 
+                onClick={handleGoBack}
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  padding: "4px",
+                  color: "#111"
+                }}
+                title="Voltar"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className={styles.title} style={{ margin: 0 }}>SURFACE</h1>
+            </div>
+            
             <nav className={styles.breadcrumb}>
-              <span className={styles.breadcrumbItem} onClick={() => navigate("/cart")}>Carrinho</span>
+              <span className={styles.breadcrumbItem} onClick={handleEditCart}>Carrinho</span>
               <ChevronRight size={12} />
               <span className={styles.breadcrumbItem}>Informações</span>
               <ChevronRight size={12} />
@@ -253,10 +294,7 @@ export default function CheckoutPage() {
                 {/* Opção 1: Endereço Ativo */}
                 {hasSavedAddress && (
                   <div 
-                    onClick={() => {
-                      setAddressMode("saved");
-                      handleUseSavedAddress();
-                    }}
+                    onClick={handleUseSavedAddress}
                     style={{
                       padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
                       backgroundColor: addressMode === "saved" ? "#eff6ff" : "#fff",
@@ -274,7 +312,7 @@ export default function CheckoutPage() {
 
                 {/* Opção 2: Colocar Endereço */}
                 <div 
-                  onClick={() => setAddressMode("manual")}
+                  onClick={handleUseManualAddress}
                   style={{
                     padding: "16px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer",
                     backgroundColor: addressMode === "manual" ? "#eff6ff" : "#fff"
@@ -288,8 +326,6 @@ export default function CheckoutPage() {
                   <span style={{ fontSize: "14px", fontWeight: "500", color: "#111", flex: 1 }}>Colocar endereço</span>
                 </div>
               </div>
-
-              {/* 🔥 ESPAÇO VAZIO (MapPin) REMOVIDO DAQUI */}
 
               {/* Inputs para colocar novo endereço */}
               {addressMode === "manual" && (
@@ -345,7 +381,6 @@ export default function CheckoutPage() {
               </p>
               
               <div style={{ border: "1px solid #d1d5db", borderRadius: "8px", overflow: "hidden" }}>
-                {/* Opção CARTÃO */}
                 <div 
                   onClick={() => setPreCheckoutData({ ...addr, formaPagamento: "cartao" })}
                   style={{
@@ -361,7 +396,6 @@ export default function CheckoutPage() {
                   <span style={{ fontSize: "14px", fontWeight: "500", color: "#111", flex: 1 }}>Cartão de crédito</span>
                 </div>
 
-                {/* Se Cartão selecionado: Mostra Parcelas */}
                 {addr.formaPagamento === "cartao" && (
                   <div style={{ padding: "16px", backgroundColor: "#f9fafb", borderBottom: "1px solid #d1d5db" }}>
                     <select
@@ -377,7 +411,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Opção PIX */}
                 <div 
                   onClick={() => setPreCheckoutData({ ...addr, formaPagamento: "pix" })}
                   style={{
@@ -392,7 +425,6 @@ export default function CheckoutPage() {
                   <span style={{ fontSize: "14px", fontWeight: "500", color: "#111" }}>Pix</span>
                 </div>
 
-                {/* Se Pix selecionado: Aviso */}
                 {addr.formaPagamento === "pix" && (
                   <div style={{ padding: "20px 16px", backgroundColor: "#f9fafb", textAlign: "center", borderTop: "1px solid #d1d5db" }}>
                     <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
@@ -410,6 +442,25 @@ export default function CheckoutPage() {
         {/* ================= RIGHT (STICKY) ================= */}
         <div className={styles.rightColumn}>
           
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "600", margin: 0, color: "#111" }}>Resumo do pedido</h2>
+            <button 
+              onClick={handleEditCart} 
+              style={{ 
+                background: "none", 
+                border: "none", 
+                color: "#2563eb", 
+                fontSize: "14px", 
+                fontWeight: "500", 
+                cursor: "pointer", 
+                textDecoration: "underline",
+                padding: 0
+              }}
+            >
+              Editar itens
+            </button>
+          </div>
+
           <div className={styles.itemsList}>
             {cartItems.map((item, index) => {
               const nome = item.nome_produto || item.nome || item.name || "Produto";
@@ -463,8 +514,30 @@ export default function CheckoutPage() {
               <span>Subtotal</span>
               <span>{formatCurrency(preview ? preview.subtotal : 0)}</span>
             </div>
-            {/* 🔥 ABA DE FRETE REMOVIDA DAQUI */}
           </div>
+
+          {/* ================= RESUMO DO ENDEREÇO ================= */}
+          <div style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", marginBottom: "20px", border: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", fontWeight: "600", color: "#374151" }}>
+              <MapPin size={18} color="#4f46e5" />
+              <span>Endereço de Entrega</span>
+            </div>
+            
+            <div style={{ fontSize: "14px", color: "#6b7280", lineHeight: "1.5", marginLeft: "26px" }}>
+              {addr.rua || addr.logradouro ? (
+                <>
+                  <p>{addr.logradouro || addr.rua}, {addr.numero} {addr.complemento && `- ${addr.complemento}`}</p>
+                  <p>{addr.bairro}, {addr.cidade} - {addr.estado}</p>
+                  <p>CEP: {addr.cep}</p>
+                </>
+              ) : (
+                <p style={{ fontStyle: "italic", color: "#9ca3af" }}>
+                  Nenhum endereço selecionado ou informado.
+                </p>
+              )}
+            </div>
+          </div>
+          {/* ======================================================= */}
 
           <div className={styles.totalBox}>
             <span>Total</span>

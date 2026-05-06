@@ -10,17 +10,11 @@ import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import { api } from "../../services/api";
 import ProductModal from "../../components/ProductModal";
 
-const categoryMap = {
-  1: "Exclusivo",
-  2: "Times",
-};
-
-
-
 // ---------------------------------------------------------
 // 1. COMPONENTE: ProductCard 
 // ---------------------------------------------------------
-const ProductCard = ({ produto, onQuickAdd }) => {
+// Adicionamos a prop "categoriaNome" que já virá resolvida pelo componente pai
+const ProductCard = ({ produto, categoriaNome, onQuickAdd }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const { shouldOpenCart, toggleCart, setShouldOpenCart } = useCart();
@@ -31,7 +25,6 @@ const ProductCard = ({ produto, onQuickAdd }) => {
     }
   }, [shouldOpenCart]);
 
-  
   const createSlug = (name) => {
     if (!name) return "";
     return name
@@ -82,8 +75,9 @@ const ProductCard = ({ produto, onQuickAdd }) => {
         </div>
 
         <div className={styles.produtoInfo}>
+          {/* Exibe o nome que buscamos dinamicamente na rota de categorias */}
           <span className={styles.produtoTag}>
-            {categoryMap[produto.id_categoria] || "Geral"}
+            {categoriaNome}
           </span>
           <h3 className={styles.produtoNome}>{produto.nome_produto}</h3>
           <p className={styles.produtoPreco}>
@@ -99,8 +93,12 @@ const ProductCard = ({ produto, onQuickAdd }) => {
 export default function Shop() {
   const { addToCart } = useCart(); 
   const [loading, setLoading] = useState(true);
+  
   const [rawProdutos, setRawProdutos] = useState([]);
   const [produtos, setProdutos] = useState([]);
+  // Novo estado para guardar o mapa de categorias: { 1: "Times", 2: "Blusas" }
+  const [categoriasMap, setCategoriasMap] = useState({});
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("All");
   const [sortOption, setSortOption] = useState("destaque");
@@ -112,22 +110,44 @@ export default function Shop() {
 
   useEffect(() => {
     setLoading(true);
-    api.get('/products')
-      .then(res => {
-        setRawProdutos(res.data || []);
-      })
-      .catch((err) => console.error("Erro ao carregar produtos:", err))
-      .finally(() => setLoading(false));
+    
+    // Executa as duas requisições ao mesmo tempo
+    // Mude '/categories' para a rota correta da sua API se for diferente (ex: '/categorias')
+    Promise.all([
+      api.get('/products'),
+      api.get('/categories') 
+    ])
+    .then(([resProdutos, resCategorias]) => {
+      // 1. Cria um dicionário com as categorias
+      const catMap = {};
+      const listaCategorias = resCategorias.data || [];
+      
+      listaCategorias.forEach((cat) => {
+        // Se a sua API retorna { id_categoria: 1, nome: "Blusas" }
+        // Ajuste 'cat.nome' se a chave for 'cat.nome_categoria'
+        const id = cat.id_categoria || cat.id;
+        const nome = cat.nome || cat.nome_categoria || cat.categoria || "Geral";
+        if (id) {
+          catMap[id] = nome;
+        }
+      });
+      
+      setCategoriasMap(catMap);
+      setRawProdutos(resProdutos.data || []);
+    })
+    .catch((err) => console.error("Erro ao carregar dados:", err))
+    .finally(() => setLoading(false));
   }, []);
 
   const categories = useMemo(() => {
     const set = new Set();
     rawProdutos.forEach((p) => {
-      const cat = categoryMap[p.id_categoria] || "Geral";
-      set.add(cat);
+      // Pega o nome no dicionário usando o ID que veio no produto
+      const nomeCategoria = categoriasMap[p.id_categoria] || "Geral";
+      set.add(nomeCategoria);
     });
     return ["All", ...Array.from(set)];
-  }, [rawProdutos]);
+  }, [rawProdutos, categoriasMap]);
 
   const types = useMemo(() => {
     const set = new Set();
@@ -142,8 +162,8 @@ export default function Shop() {
 
     if (selectedCategory && selectedCategory !== "All") {
       list = list.filter((p) => {
-        const cat = categoryMap[p.id_categoria] || "Geral";
-        return cat === selectedCategory;
+        const nomeCategoria = categoriasMap[p.id_categoria] || "Geral";
+        return nomeCategoria === selectedCategory;
       });
     }
 
@@ -177,7 +197,7 @@ export default function Shop() {
     }
 
     setProdutos(list);
-  }, [rawProdutos, selectedCategory, selectedType, sortOption]);
+  }, [rawProdutos, selectedCategory, selectedType, sortOption, categoriasMap]);
 
   const handleOpenModal = (produto) => {
     setSelectedProduct(produto);
@@ -185,10 +205,9 @@ export default function Shop() {
   };
 
   const handleConfirmAddToCart = (produto, tamanhoSelecionado) => {
-    // Monta o objeto final. A chave 'tamanho' é enviada de forma explícita.
     const produtoFinalParaCarrinho = {
       ...produto,
-      tamanho: tamanhoSelecionado || "Único" // Fallback seguro
+      tamanho: tamanhoSelecionado || "Único"
     };
     
     addToCart(produtoFinalParaCarrinho);
@@ -229,6 +248,8 @@ export default function Shop() {
                   <ProductCard 
                     key={produto.id_produto} 
                     produto={produto} 
+                    // Passa o nome da categoria resolvido para o Card
+                    categoriaNome={categoriasMap[produto.id_categoria] || "Geral"}
                     onQuickAdd={handleOpenModal} 
                   />
                 ))}
