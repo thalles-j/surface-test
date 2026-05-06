@@ -37,6 +37,7 @@ export function buildWhatsAppCheckoutUrl({
   frete,
   codigoCupom,
   telefone,
+  cpf,
   logradouro,
   numero,
   complemento,
@@ -50,8 +51,14 @@ export function buildWhatsAppCheckoutUrl({
     `*NOVO PEDIDO - SURFACE*`,
     ``,
     `*Cliente:* ${customerName || 'Nao informado'}`,
-    `*Pedido:* #${orderId || ''}`,
     `*Telefone:* ${telefone || ''}`,
+  ];
+
+  if (cpf) {
+    lines.push(`*CPF:* ${cpf}`);
+  }
+
+  lines.push(
     `*Endereco:*`,
     formatAddress({ logradouro, numero, complemento, bairro, cidade, estado, cep, endereco }),
     ``,
@@ -59,7 +66,7 @@ export function buildWhatsAppCheckoutUrl({
     ``,
     `*ITENS:*`,
     ``,
-  ];
+  );
 
   (items || []).forEach((item, i) => {
     lines.push(formatItem(item, i));

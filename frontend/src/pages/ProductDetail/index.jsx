@@ -24,15 +24,27 @@ export default function ProductDetail() {
       try {
         const res = await api.get(`/products/slug/${slug}`);
         const { produto: found, related } = res.data;
-        
+
         if (!found) {
           setError("Produto não encontrado");
           return;
         }
-        
+
+        // Defesa: garantir que variacoes_estoque seja sempre um array
+        if (found.variacoes_estoque && typeof found.variacoes_estoque === 'string') {
+          try {
+            found.variacoes_estoque = JSON.parse(found.variacoes_estoque);
+          } catch {
+            found.variacoes_estoque = [];
+          }
+        }
+        if (!Array.isArray(found.variacoes_estoque)) {
+          found.variacoes_estoque = [];
+        }
+
         setProduto(found);
         setRelatedProducts(related || []);
-        
+
       } catch (err) {
         console.error("Erro ao carregar produto:", err);
         if (err.response?.status === 404) {

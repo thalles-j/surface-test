@@ -33,10 +33,16 @@ export default function App() {
   const [items, setItems] = useState([{ id_produto: '', tamanho: '', quantidade: 1, preco_unitario: '' }]);
 
   useEffect(() => {
-    api.get('/products?oculto=all')
+    api.get('/admin/products?oculto=all&status=ativo')
       .then((res) => {
         const data = res.data?.data || res.data || [];
-        setProducts(data);
+        // Filtra apenas produtos ativos com pelo menos uma variação em estoque
+        const available = data.filter((p) => {
+          if (p.status !== 'ativo') return false;
+          const vars = Array.isArray(p.variacoes_estoque) ? p.variacoes_estoque : [];
+          return vars.some((v) => Number(v?.estoque || 0) > 0);
+        });
+        setProducts(available);
       })
       .catch(() => toast.error('Erro ao carregar produtos'));
   }, [toast]);

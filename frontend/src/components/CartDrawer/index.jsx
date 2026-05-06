@@ -1,5 +1,6 @@
 import React from "react";
 import { useCart } from "../../context/CartContext";
+import useAuth from "../../hooks/useAuth";
 import styles from "./style.module.css";
 import { useNavigate } from "react-router-dom";
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
@@ -12,8 +13,10 @@ export default function CartDrawer() {
     removeFromCart,
     updateQuantity,
     cartTotal,
+    showAlertModal,
+    hideAlertModal,
   } = useCart();
-  
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const getImageUrl = (path) => {
@@ -30,9 +33,30 @@ export default function CartDrawer() {
 
   if (!isCartOpen) return null;
 
-  const handleCheckout = () => {
+  const proceedToCheckout = () => {
     toggleCart();
-    navigate('/pre-checkout');
+    navigate('/checkout');
+  };
+
+  const handleCheckout = () => {
+    if (user) {
+      proceedToCheckout();
+      return;
+    }
+    showAlertModal({
+      title: 'Identificacao',
+      message: 'Voce nao esta logado. Entre para salvar seus dados ou continue como convidado.',
+      type: 'auth',
+      actionLabel: 'Entrar',
+      actionCallback: () => {
+        toggleCart();
+        navigate('/entrar');
+      },
+      dismissLabel: 'Continuar como convidado',
+      dismissCallback: () => {
+        proceedToCheckout();
+      },
+    });
   };
 
   return (

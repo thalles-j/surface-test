@@ -46,6 +46,7 @@ export function sanitizePreCheckoutData(data = {}) {
     estado: String(data?.estado || "").trim().toUpperCase(),
     cep: String(data?.cep || "").replace(/\D/g, ""),
     endereco: String(data?.endereco || "").trim(),
+    cpf: String(data?.cpf || "").replace(/\D/g, ""),
   };
 }
 

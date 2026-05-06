@@ -50,6 +50,9 @@ router.get('/analytics/channels', adminController.getChannelData);
 router.get('/analytics/category-sales', adminController.getCategorySales);
 router.get('/analytics/recent-orders', adminController.getRecentOrders);
 
+// ===== PRODUCTS (admin-only listing, bypasses store maintenance) =====
+router.get('/products', adminController.getAdminProducts);
+
 // ===== INVENTORY =====
 router.get('/inventory/status', adminController.getInventoryStatus);
 router.get('/inventory/low-stock', adminController.getLowStockProducts);

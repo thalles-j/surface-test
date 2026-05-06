@@ -7,19 +7,23 @@ const CustomBarChart = ({ data }) => {
   const maxVal = Math.max(...data.map(d => Number(d.value || 0)));
   return (
     <div className="flex items-end justify-between h-48 gap-2 pt-4">
-      {data.map((item, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-          <div
-            className="w-full bg-zinc-700 group-hover:bg-white transition-all duration-300 rounded-t-sm relative"
-            style={{ height: `${(item.value / maxVal) * 100}%` }}
-          >
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-bold z-10">
-              {item.value}
+      {data.map((item, i) => {
+        const val = Number(item.value || 0);
+        const heightPct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+        return (
+          <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+            <div
+              className="w-full bg-zinc-700 group-hover:bg-white transition-all duration-300 rounded-t-sm relative"
+              style={{ height: `${heightPct}%` }}
+            >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-bold z-10">
+                {val}
+              </div>
             </div>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase">{item.month}</span>
           </div>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">{item.month}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

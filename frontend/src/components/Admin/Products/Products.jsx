@@ -95,7 +95,7 @@ export default function Catalog() {
       // Isso avisa o backend para pular o filtro e trazer TUDO (incluindo ocultos)
       params.set('oculto', 'all'); 
 
-      const res = await api.get(`/products?${params}`);
+      const res = await api.get(`/admin/products?${params}`);
       
       let fetchedProducts = res.data?.data || res.data || [];
       fetchedProducts.sort((a, b) => {

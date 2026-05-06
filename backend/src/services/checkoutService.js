@@ -1,6 +1,5 @@
 import { calculateOrderPricing } from './orderService.js';
 import { ErroValidation } from '../errors/index.js';
-import { buildWhatsAppMessage } from '../helpers/whatsapp.js';
 import prisma from '../database/prisma.js';
 
 export async function getCheckoutPreview(items, codigoCupom, cepDestino = null) {
@@ -32,8 +31,7 @@ export async function getCheckoutPreview(items, codigoCupom, cepDestino = null) 
   };
 }
 
-const ALLOWED_PAYMENT_TYPES = ['DINHEIRO'];
-const PRE_CHECKOUT_WHATSAPP_NUMBER = '5524988582885';
+const ALLOWED_PAYMENT_TYPES = ['DINHEIRO', 'CARTAO', 'PIX'];
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
@@ -43,7 +41,7 @@ function sanitizeText(value) {
   return String(value || '').trim();
 }
 
-function validatePreCheckoutPayload(payload = {}) {
+function validateCheckoutPayload(payload = {}) {
   const nome = sanitizeText(payload.nome);
   const email = sanitizeText(payload.email);
   const telefone = String(payload.telefone || '').replace(/\D/g, '');
@@ -94,63 +92,11 @@ function validatePreCheckoutPayload(payload = {}) {
   };
 }
 
-export function buildPreCheckoutWhatsAppMessage(payload = {}) {
-  const data = validatePreCheckoutPayload(payload);
-
-  return `NOVO PRE-CHECKOUT
-
-Nome: ${data.nome}
-Email: ${data.email}
-Telefone: ${data.telefone}
-Endereco: ${data.endereco}
-Pagamento: ${data.tipo_pagamento}`;
-}
-
-export function generatePreCheckoutWhatsAppUrl(message) {
-  return `https://wa.me/${PRE_CHECKOUT_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-}
-
-export async function createPreCheckoutWhatsApp(payload = {}) {
-  const customer = validatePreCheckoutPayload(payload);
-  const items = Array.isArray(payload.items) ? payload.items : [];
-  const codigoCupom = payload?.codigo ?? payload?.codigo_cupom ?? null;
-  const cepDestino = payload?.cep ?? null;
-
-  if (items.length === 0) {
-    const message = buildPreCheckoutWhatsAppMessage(customer);
-    const whatsappUrl = generatePreCheckoutWhatsAppUrl(message);
-    return { message, whatsappUrl, preview: null };
-  }
-
-  const preview = await getCheckoutPreview(items, codigoCupom, cepDestino);
-
-  const message = buildWhatsAppMessage({
-    nome_cliente: customer.nome,
-    subtotal: preview.subtotal,
-    desconto: preview.desconto,
-    frete: preview.frete,
-    total: preview.total,
-    codigo_cupom: preview.cupom?.codigo || null,
-    pedidoProdutos: preview.itens.map((item) => ({
-      quantidade: item.quantidade,
-      preco_unitario: item.preco_unitario,
-      sku_variacao: item.sku,
-      produto: {
-        nome_produto: item.nome_produto,
-      },
-    })),
-  });
-
-  const whatsappUrl = generatePreCheckoutWhatsAppUrl(message);
-
-  return { message, whatsappUrl, preview };
-}
-
 /**
  * Cria um pedido real no banco de dados a partir do checkout.
  */
 export async function createOrderFromCheckout(payload = {}, user = null) {
-  const customer = validatePreCheckoutPayload(payload);
+  const customer = validateCheckoutPayload(payload);
   const items = Array.isArray(payload.items) ? payload.items : [];
   const codigoCupom = payload?.codigo ?? payload?.codigo_cupom ?? null;
   const cepDestino = payload?.cep ?? null;

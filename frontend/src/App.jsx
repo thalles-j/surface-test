@@ -32,8 +32,7 @@ function AppLayout() {
   // Verifica se a página atual deve esconder o Header e o Footer
   const hideHeaderFooter = 
     location.pathname.startsWith('/admin') || 
-    location.pathname === '/checkout' || 
-    location.pathname === '/pre-checkout';
+    location.pathname === '/checkout';
 
   return (
     <>

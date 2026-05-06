@@ -10,6 +10,7 @@ const PRE_CHECKOUT_DEFAULTS = {
   telefone: "",
   endereco: "",
   tipo_pagamento: "DINHEIRO",
+  formaPagamento: "DINHEIRO",
   logradouro: "",
   numero: "",
   complemento: "",
@@ -17,6 +18,7 @@ const PRE_CHECKOUT_DEFAULTS = {
   cidade: "",
   estado: "",
   cep: "",
+  cpf: "",
 };
 
 export function CartProvider({ children }) {
@@ -51,6 +53,7 @@ export function CartProvider({ children }) {
           email: parsed?.email ?? "",
           telefone: parsed?.telefone ?? "",
           tipo_pagamento: parsed?.tipo_pagamento ?? "DINHEIRO",
+          cpf: parsed?.cpf ?? "",
         });
       } catch {
         localStorage.removeItem("preCheckoutData");
@@ -75,6 +78,8 @@ export function CartProvider({ children }) {
     type: "info",
     actionLabel: null,
     actionCallback: null,
+    dismissLabel: null,
+    dismissCallback: null,
   });
 
   const showAlertModal = ({
@@ -83,6 +88,8 @@ export function CartProvider({ children }) {
     type = "info",
     actionLabel = null,
     actionCallback = null,
+    dismissLabel = null,
+    dismissCallback = null,
   }) => {
     setAlertModal({
       isOpen: true,
@@ -91,6 +98,8 @@ export function CartProvider({ children }) {
       type,
       actionLabel,
       actionCallback,
+      dismissLabel,
+      dismissCallback,
     });
   };
 
@@ -303,6 +312,8 @@ export function CartProvider({ children }) {
         type={alertModal.type}
         actionLabel={alertModal.actionLabel}
         actionCallback={alertModal.actionCallback}
+        dismissLabel={alertModal.dismissLabel}
+        dismissCallback={alertModal.dismissCallback}
       />
     </CartContext.Provider>
   );

@@ -1,8 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from "../hooks/useAuth";
-import { useCart } from "../context/CartContext";
-import { isPreCheckoutComplete } from "../utils/preCheckout";
-
 //pages
 import LandingPage from '../pages/LandingPage';
 import Shop from '../pages/Shop';
@@ -17,7 +14,6 @@ import TrocasDevolucoes from '../pages/TrocasDevolucoes';
 import TermosDeUso from '../pages/TermosDeUso';
 import Privacidade from '../pages/Privacidade';
 import Checkout from '../pages/Checkout';
-import PreCheckout from '../pages/PreCheckout';
 
 // ======================
 // ProtectedRoute
@@ -60,16 +56,6 @@ function AdminRoute({ children }) {
   return children;
 }
 
-function CheckoutGuard({ children }) {
-  const { preCheckoutData } = useCart();
-
-  if (!isPreCheckoutComplete(preCheckoutData)) {
-    return <Navigate to="/pre-checkout" replace />;
-  }
-
-  return children;
-}
-
 // =========================================
 // Rotas Principais
 // =========================================
@@ -87,16 +73,8 @@ export default function AppRoutes() {
       <Route path="/trocas-devolucoes" element={<TrocasDevolucoes />} />
       <Route path="/termos-de-uso" element={<TermosDeUso />} />
       <Route path="/privacidade" element={<Privacidade />} />
-      <Route path="/pre-checkout" element={<PreCheckout />} />
 
-      <Route
-        path="/checkout"
-        element={
-          <CheckoutGuard>
-            <Checkout />
-          </CheckoutGuard>
-        }
-      />
+      <Route path="/checkout" element={<Checkout />} />
 
       <Route 
         path="/admin/*" 

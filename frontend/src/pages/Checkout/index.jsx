@@ -12,7 +12,8 @@ import {
 import { useCart } from "../../context/CartContext";
 import useAuth from "../../hooks/useAuth";
 import { api } from "../../services/api";
-import { normalizeAddress } from "../../utils/preCheckout";
+import { normalizeAddress, validatePreCheckoutData, hasCompleteAddress } from "../../utils/preCheckout";
+import { useToast } from "../../context/ToastContext";
 
 import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import { buildWhatsAppCheckoutUrl } from "../../utils/whatsapp";
@@ -27,9 +28,11 @@ export default function CheckoutPage() {
 
   const { user } = useAuth();
   const { cartItems, preCheckoutData, setPreCheckoutData, clearCart } = useCart();
-  
+  const toast = useToast();
+
   const [savedAddress, setSavedAddress] = useState(null);
-  
+  const [errors, setErrors] = useState({});
+
   // Controle das duas opções de endereço
   const [addressMode, setAddressMode] = useState("manual");
 
@@ -73,9 +76,13 @@ export default function CheckoutPage() {
         if (normalized && normalized.logradouro) {
           setSavedAddress(normalized);
           setAddressMode("saved"); // Seleciona "Usar endereço ativo" por padrão
-          
+
           setPreCheckoutData((prev) => ({
             ...prev,
+            nome: prev.nome || profile.nome || "",
+            email: prev.email || profile.email || "",
+            telefone: prev.telefone || String(profile.telefone || "").replace(/\D/g, ""),
+            cpf: prev.cpf || String(profile.cpf || "").replace(/\D/g, ""),
             cep: normalized.cep || "",
             rua: normalized.logradouro || normalized.rua || "",
             logradouro: normalized.logradouro || normalized.rua || "",
@@ -84,6 +91,14 @@ export default function CheckoutPage() {
             cidade: normalized.cidade || "",
             estado: normalized.estado || "",
             complemento: normalized.complemento || "",
+          }));
+        } else {
+          setPreCheckoutData((prev) => ({
+            ...prev,
+            nome: prev.nome || profile.nome || "",
+            email: prev.email || profile.email || "",
+            telefone: prev.telefone || String(profile.telefone || "").replace(/\D/g, ""),
+            cpf: prev.cpf || String(profile.cpf || "").replace(/\D/g, ""),
           }));
         }
       } catch (err) {
@@ -161,9 +176,26 @@ export default function CheckoutPage() {
     );
   }
 
-  // 🔥 FRETE REMOVIDO DO TOTAL
-  const finalTotal = preview ? preview.subtotal - preview.desconto : 0;
+  const finalTotal = preview ? preview.total : 0;
   const addr = preCheckoutData || {};
+
+  const handleValidateAndSubmit = () => {
+    const validation = validatePreCheckoutData(preCheckoutData);
+    setPreCheckoutData((prev) => ({ ...prev, ...validation.sanitized }));
+    setErrors(validation.errors);
+
+    if (!validation.isValid) {
+      toast.error("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (!hasCompleteAddress(preCheckoutData)) {
+      toast.error("Preencha o endereço completo.");
+      return;
+    }
+
+    handleSubmit(buildWhatsAppCheckoutUrl);
+  };
 
   return (
     <div className={styles.container}>
@@ -176,7 +208,7 @@ export default function CheckoutPage() {
             <nav className={styles.breadcrumb}>
               <span className={styles.breadcrumbItem} onClick={() => navigate("/cart")}>Carrinho</span>
               <ChevronRight size={12} />
-              <span className={styles.breadcrumbItem} onClick={() => navigate("/pre-checkout")}>Informações</span>
+              <span className={styles.breadcrumbItem}>Informações</span>
               <ChevronRight size={12} />
               <span>Pagamento</span>
             </nav>
@@ -204,6 +236,11 @@ export default function CheckoutPage() {
                     className={styles.input} style={{ marginBottom: 0 }}
                   />
                 </div>
+                <input
+                  type="text" placeholder="CPF (opcional)" value={addr.cpf || ""}
+                  onChange={(e) => setPreCheckoutData({ ...addr, cpf: String(e.target.value).replace(/\D/g, "") })}
+                  className={styles.input} style={{ marginBottom: 0 }}
+                />
               </div>
             </div>
 
@@ -438,7 +475,7 @@ export default function CheckoutPage() {
           </div>
 
           <button
-            onClick={() => handleSubmit(buildWhatsAppCheckoutUrl)}
+            onClick={handleValidateAndSubmit}
             disabled={submitting || previewLoading || !preview || !addr.formaPagamento}
             className={styles.submitBtn}
           >

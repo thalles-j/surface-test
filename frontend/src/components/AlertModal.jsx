@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, CheckCircle2, XCircle, Info, AlertCircle, ShieldAlert, ServerCrash, UserX } from 'lucide-react';
 
-const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabel, actionCallback }) => {
+const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabel, actionCallback, dismissLabel, dismissCallback }) => {
   if (!isOpen) return null;
 
   const iconColors = {
@@ -27,6 +27,14 @@ const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabe
   const handleAction = () => {
     try {
       if (actionCallback) actionCallback();
+    } finally {
+      onClose();
+    }
+  };
+
+  const handleDismiss = () => {
+    try {
+      if (dismissCallback) dismissCallback();
     } finally {
       onClose();
     }
@@ -72,8 +80,8 @@ const AlertModal = ({ isOpen, onClose, title, message, type = 'info', actionLabe
               </button>
             )}
 
-            <button onClick={onClose} className="admin-btn-secondary w-full py-3 text-xs font-bold uppercase tracking-widest">
-              Fechar
+            <button onClick={handleDismiss} className="admin-btn-secondary w-full py-3 text-xs font-bold uppercase tracking-widest">
+              {dismissLabel || 'Fechar'}
             </button>
           </div>
         </div>

@@ -20,10 +20,15 @@ export function AuthProvider({ children }) {
           setUser(data.usuario || data);
 
         } catch (err) {
-          // Se o token expirou, limpa tudo
-          localStorage.removeItem("token");
-          api.defaults.headers.common['Authorization'] = undefined;
-          setUser(null);
+          // Só remove o token se o erro for 401 (não autorizado) ou 403 (proibido).
+          // Erros de rede ou 500 não devem invalidar a sessão.
+          const status = err?.response?.status;
+          if (status === 401 || status === 403) {
+            localStorage.removeItem("token");
+            api.defaults.headers.common['Authorization'] = undefined;
+            setUser(null);
+          }
+          // Mantém o token para tentar novamente em erros transientes
         }
       }
       

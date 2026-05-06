@@ -1,4 +1,7 @@
 import {
+  getProductController,
+} from '../controllers/productsController.js';
+import {
   getDashboardStats,
   getRevenueData,
   getTopProducts,
@@ -134,4 +137,5 @@ export default {
   listEarlyAccessEmails,
   grantEarlyAccess,
   revokeEarlyAccess,
+  getAdminProducts: getProductController,
 };
