@@ -45,7 +45,10 @@ function getCouponExpiryDate(validade) {
     expiry.getUTCMilliseconds() === 0;
 
   if (isDateOnly) {
-    expiry.setUTCHours(23, 59, 59, 999);
+    const year = expiry.getUTCFullYear();
+    const month = expiry.getUTCMonth();
+    const day = expiry.getUTCDate();
+    return new Date(year, month, day, 23, 59, 59, 999);
   }
 
   return expiry;

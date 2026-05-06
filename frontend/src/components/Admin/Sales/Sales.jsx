@@ -213,7 +213,6 @@ export default function Sales() {
         setTempOrder(prev => ({ ...prev, status: nextStatus }));
         if (Array.isArray(res?.data?.pedido?.historico)) setOrderHistory(res.data.pedido.historico);
       }
-      loadOrders();
     } catch (err) {
       toast.error(err.response?.data?.mensagem || 'Erro ao alterar status');
     } finally {

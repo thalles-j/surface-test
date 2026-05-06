@@ -172,8 +172,11 @@ export async function calculateOrderPricing(items, codigoCupom = null, cepDestin
   }
 
   const subtotalComDesconto = subtotal - desconto;
-  const shippingResult = await calculateShipping(cepDestino, subtotalComDesconto);
-  const frete = shippingResult?.frete ?? 0;
+  let frete = 0;
+  if (cepDestino) {
+    const shippingResult = await calculateShipping(cepDestino, subtotalComDesconto);
+    frete = shippingResult?.frete ?? 0;
+  }
   const total = subtotalComDesconto + frete;
 
   return {

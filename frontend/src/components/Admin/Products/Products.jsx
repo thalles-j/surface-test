@@ -43,6 +43,7 @@ export default function Catalog() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const [sortOrder, setSortOrder] = useState("A-Z");
   
   // --- ESTADOS DE SELEÇÃO E MODAIS ---
@@ -56,7 +57,7 @@ export default function Catalog() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    nome_produto: "", descricao: "", preco: "", id_categoria: "", status: "ativo", 
+    nome_produto: "", descricao: "", preco: "", id_categoria: "", tipo: "", status: "ativo",
     oculto: false, destaque: false, sku: "", tags: "",
     peso: "", dimensoes: "", ficha_tecnica: "", seo_titulo: "", seo_descricao: ""
   });
@@ -90,6 +91,7 @@ export default function Catalog() {
       if (debouncedSearch) params.set('search', debouncedSearch);
       if (filterCategory !== 'all') params.set('category', filterCategory);
       if (filterStatus !== 'all') params.set('status', filterStatus);
+      if (filterType !== 'all') params.set('tipo', filterType);
       
       // ADICIONE ESTA LINHA:
       // Isso avisa o backend para pular o filtro e trazer TUDO (incluindo ocultos)
@@ -112,7 +114,7 @@ export default function Catalog() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, filterCategory, filterStatus, sortOrder, toast]);
+  }, [page, debouncedSearch, filterCategory, filterStatus, filterType, sortOrder, toast]);
 
   useEffect(() => {
     loadCategories();
@@ -122,7 +124,7 @@ export default function Catalog() {
   // --- LÓGICA DO FORMULÁRIO ---
   const resetForm = () => {
     setFormData({
-      nome_produto: "", descricao: "", preco: "", id_categoria: "", status: "ativo", 
+      nome_produto: "", descricao: "", preco: "", id_categoria: "", tipo: "", status: "ativo",
       oculto: false, destaque: false, sku: "", tags: "",
       peso: "", dimensoes: "", ficha_tecnica: "", seo_titulo: "", seo_descricao: ""
     });
@@ -144,6 +146,7 @@ export default function Catalog() {
         descricao: product.descricao ?? "",
         preco: product.preco ?? "",
         id_categoria: product.id_categoria ?? "",
+        tipo: product.tipo ?? "",
         status: product.status ?? "ativo",
         oculto: product.oculto ?? false,
         destaque: product.destaque ?? false,
@@ -224,7 +227,7 @@ export default function Catalog() {
         preco: Number(formData.preco),
         id_categoria: Number(formData.id_categoria),
         peso: formData.peso ? Number(formData.peso) : null,
-        tipo: 'Produto',
+        tipo: formData.tipo || null,
         variacoes_estoque: variations.map(v => ({
           tamanho: v.tamanho, sku: v.sku, estoque: Number(v.estoque || 0), preco: Number(formData.preco)
         }))
@@ -505,6 +508,16 @@ export default function Catalog() {
                 </div>
               </div>
               <div>
+                <label className={styles.label} style={{ marginBottom: '0.5rem' }}>Tipo</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Ex: Produto, Servico..."
+                  value={filterType === 'all' ? '' : filterType}
+                  onChange={(e) => setFilterType(e.target.value || 'all')}
+                />
+              </div>
+              <div>
                 <label className={styles.label} style={{ marginBottom: '0.5rem' }}>Ordem</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                   <button onClick={()=>setSortOrder('A-Z')} className={`${styles.btnFilter} ${sortOrder==='A-Z' ? styles.btnFilterActive : styles.btnFilterInactive}`} style={{ padding: '0.75rem', justifyContent: 'center' }}><ArrowUpAz size={16}/> A-Z</button>
@@ -579,6 +592,11 @@ export default function Catalog() {
                           {categories.map(c => <option key={c.id_categoria} value={c.id_categoria}>{c.nome_categoria}</option>)}
                         </select>
                       </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Tipo</label>
+                      <input type="text" className={styles.input} value={formData.tipo} onChange={(e)=>setFormData({...formData, tipo: e.target.value})} placeholder="Ex: Produto" />
                     </div>
 
                     <div className={styles.formGroup}>

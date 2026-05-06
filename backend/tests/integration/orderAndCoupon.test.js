@@ -370,8 +370,8 @@ describe('orderService — calculateOrderPricing', () => {
 
     expect(result.subtotal).toBe(179.8);
     expect(result.desconto).toBe(17.98);
-    expect(result.frete).toBe(20);
-    expect(result.total).toBe(181.82);
+    expect(result.frete).toBe(0);
+    expect(result.total).toBe(161.82);
     expect(result.cupomValidado.codigo).toBe('DESCONTO10');
   });
 });

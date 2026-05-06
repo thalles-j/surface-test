@@ -28,8 +28,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
 
   const { user } = useAuth();
-  // 🔥 Tentei puxar o setIsCartOpen do seu contexto caso ele exista
-  const { cartItems, preCheckoutData, setPreCheckoutData, clearCart, setIsCartOpen } = useCart();
+  const { cartItems, preCheckoutData, setPreCheckoutData, clearCart, setShouldOpenCart } = useCart();
   const toast = useToast();
 
   const [savedAddress, setSavedAddress] = useState(null);
@@ -150,14 +149,9 @@ export default function CheckoutPage() {
     navigate(-1); // Retorna na navegação do histórico
   };
 
-  // 🔥 2. Opção de Editar (Abre o /shop e o carrinho)
   const handleEditCart = () => {
-    navigate("/shop"); // Vai para a rota /shop
-    
-    // Se a função setIsCartOpen existir no seu CartContext, ela abre o carrinho
-    if (typeof setIsCartOpen === "function") {
-      setIsCartOpen(true);
-    }
+    setShouldOpenCart(true);
+    navigate("/shop");
   };
 
   const getImageUrl = (path) => {

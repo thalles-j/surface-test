@@ -13,7 +13,7 @@ const productInclude = {
 export const getProductController = async (req, res) => {
   try {
     const { id } = req.params;
-    const { search, page, limit, category, status, destaque, oculto } = req.query;
+    const { search, page, limit, category, status, destaque, oculto, tipo } = req.query;
 
     // GET /products/:id - busca por ID
     if (id) {
@@ -37,6 +37,7 @@ export const getProductController = async (req, res) => {
     if (status && status !== 'all') {
       where.status = status;
     }
+    if (tipo && tipo !== 'all') where.tipo = tipo;
     if (destaque === 'true') where.destaque = true;
     if (oculto === 'all') { /* admin: sem filtro */ }
     else if (oculto === 'true') where.oculto = true;
