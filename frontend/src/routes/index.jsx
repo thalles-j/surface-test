@@ -1,19 +1,27 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from "../hooks/useAuth";
-//pages
+
+// Páginas críticas no boot (eager)
 import LandingPage from '../pages/LandingPage';
-import Shop from '../pages/Shop';
-import ProductDetail from '../pages/ProductDetail';
-import Entrar from '../pages/Entrar';
 import Page404 from '../pages/Page404';
-import Profile from '../pages/Profile';
-import AdminPainel from '../pages/Admin';
-import About from '../pages/About';
-import Atendimento from '../pages/Atendimento';
-import TrocasDevolucoes from '../pages/TrocasDevolucoes';
-import TermosDeUso from '../pages/TermosDeUso';
-import Privacidade from '../pages/Privacidade';
-import Checkout from '../pages/Checkout';
+
+// Páginas pesadas carregadas sob demanda
+const Shop = lazy(() => import('../pages/Shop'));
+const ProductDetail = lazy(() => import('../pages/ProductDetail'));
+const Entrar = lazy(() => import('../pages/Entrar'));
+const Profile = lazy(() => import('../pages/Profile'));
+const AdminPainel = lazy(() => import('../pages/Admin'));
+const About = lazy(() => import('../pages/About'));
+const Atendimento = lazy(() => import('../pages/Atendimento'));
+const TrocasDevolucoes = lazy(() => import('../pages/TrocasDevolucoes'));
+const TermosDeUso = lazy(() => import('../pages/TermosDeUso'));
+const Privacidade = lazy(() => import('../pages/Privacidade'));
+const Checkout = lazy(() => import('../pages/Checkout'));
+
+function LazyFallback() {
+  return <div style={{ display: 'flex', justifyContent: 'center', padding: 50 }}>Carregando...</div>;
+}
 
 // ======================
 // ProtectedRoute
@@ -60,8 +68,8 @@ function AdminRoute({ children }) {
 // Rotas Principais
 // =========================================
 export default function AppRoutes() {
-  
   return (
+    <Suspense fallback={<LazyFallback />}>
     <Routes>
       {/* Rotas Públicas */}
       <Route path="/" element={<LandingPage />} />
@@ -96,5 +104,6 @@ export default function AppRoutes() {
       
       <Route path="*" element={<Page404 />} />
     </Routes>
+    </Suspense>
   );
 }

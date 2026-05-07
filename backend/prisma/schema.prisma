@@ -172,6 +172,7 @@ model configuracoes_loja {
   early_access_ativo    Boolean   @default(false)
 }
 
+<<<<<<< Updated upstream
 model early_access_emails {
   id_email  Int      @id @default(autoincrement())
   email     String   @unique
@@ -179,6 +180,8 @@ model early_access_emails {
   criado_em DateTime @default(now())
 }
 
+=======
+>>>>>>> Stashed changes
 model colecoes {
   id_colecao    Int                @id @default(autoincrement())
   nome          String             @unique
@@ -237,6 +240,7 @@ model historico_pedidos {
   @@index([id_pedido])
 }
 
+<<<<<<< Updated upstream
 model exclusoes_seguranca {
   id_exclusao Int      @id @default(autoincrement())
   tipo        String
@@ -250,4 +254,11 @@ model exclusoes_seguranca {
 
   @@unique([tipo, valor])
   @@index([tipo, ativo])
+=======
+model early_access_emails {
+  id_email  Int      @id @default(autoincrement())
+  email     String   @unique
+  liberado  Boolean  @default(false)
+  criado_em DateTime @default(now())
+>>>>>>> Stashed changes
 }
